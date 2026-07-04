@@ -1,0 +1,819 @@
+# The Everyday Co. — Schéma SQL Supabase
+
+> À saisir directement dans le SQL Editor de Supabase.
+> Projet : **The Everyday Co.** (un seul projet, une seule base, tables préfixées par app).
+
+---
+
+## ÉTAPE 1 — Tables partagées (auth, profiles, OTP)
+
+```sql
+-- ============================================================
+-- TABLE: profiles
+-- Extension de auth.users avec les infos communes
+-- ============================================================
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  phone text not null unique,
+  full_name text,
+  avatar_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Index pour recherche par téléphone
+create index if not exists idx_profiles_phone on public.profiles(phone);
+
+-- Auto-création du profil à l'inscription
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, phone, full_name)
+  values (
+    new.id,
+    coalesce(new.phone, ''),
+    coalesce(new.raw_user_meta_data->>'full_name', '')
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- RLS : chaque user ne voit que son propre profil
+alter table public.profiles enable row level security;
+
+create policy "Users can view own profile"
+  on public.profiles for select
+  using (auth.uid() = id);
+
+create policy "Users can update own profile"
+  on public.profiles for update
+  using (auth.uid() = id);
+
+-- ============================================================
+-- TABLE: otp_codes
+-- Stockage temporaire des codes OTP WhatsApp
+-- ============================================================
+create table if not exists public.otp_codes (
+  id uuid primary key default gen_random_uuid(),
+  phone text not null,
+  code text not null,
+  expires_at timestamptz not null,
+  consumed boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_otp_phone on public.otp_codes(phone);
+create index if not exists idx_otp_expires on public.otp_codes(expires_at);
+
+-- RLS : pas de accès direct depuis le client (Edge Function only)
+alter table public.otp_codes enable row level security;
+-- Aucune policy = aucun accès depuis le client via l'API
+-- L'Edge Function utilise le service_role key qui bypass RLS
+
+-- Nettoyage automatique des OTP expirés (via pg_cron si disponible)
+-- À activer dans Supabase Dashboard > Database > Extensions > pg_cron
+-- (optionnel, les OTP expirés sont ignorés de toute façon)
+```
+
+---
+
+## ÉTAPE 2 — Tables Rondo (tontines)
+
+```sql
+-- ============================================================
+-- RONDO: Gestion de tontines
+-- Préfixe: rondo_
+-- ============================================================
+
+-- Table: rondo_tontines
+create table if not exists public.rondo_tontines (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  admin_id uuid not null references public.profiles(id) on delete cascade,
+  mise integer not null check (mise > 0), -- montant de la cotisation en FCFA
+  frequence text not null check (frequence in ('hebdomadaire', 'mensuelle')),
+  nb_membres integer not null check (nb_membres >= 2 and nb_membres <= 50),
+  date_debut date not null,
+  statut text not null default 'en_attente' check (statut in ('en_attente', 'active', 'terminee', 'annulee')),
+  invitation_code text unique default upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6)),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_rondo_tontines_admin on public.rondo_tontines(admin_id);
+create index if not exists idx_rondo_tontines_code on public.rondo_tontines(invitation_code);
+
+alter table public.rondo_tontines enable row level security;
+
+-- Un user peut voir les tontines où il est admin OU membre
+create policy "Admin can manage own tontines"
+  on public.rondo_tontines for all
+  using (auth.uid() = admin_id);
+
+create policy "Members can view their tontines"
+  on public.rondo_tontines for select
+  using (
+    exists (
+      select 1 from public.rondo_membres m
+      where m.tontine_id = rondo_tontines.id
+      and m.user_id = auth.uid()
+      and m.statut = 'actif'
+    )
+  );
+
+-- Table: rondo_membres
+create table if not exists public.rondo_membres (
+  id uuid primary key default gen_random_uuid(),
+  tontine_id uuid not null references public.rondo_tontines(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  ordre_tour integer, -- position dans l'ordre des tours (1 à nb_membres)
+  statut text not null default 'actif' check (statut in ('actif', 'exclu', 'parti')),
+  joined_at timestamptz not null default now(),
+  unique(tontine_id, user_id)
+);
+
+create index if not exists idx_rondo_membres_tontine on public.rondo_membres(tontine_id);
+create index if not exists idx_rondo_membres_user on public.rondo_membres(user_id);
+
+alter table public.rondo_membres enable row level security;
+
+create policy "Admin can manage members"
+  on public.rondo_membres for all
+  using (
+    exists (
+      select 1 from public.rondo_tontines t
+      where t.id = rondo_membres.tontine_id
+      and t.admin_id = auth.uid()
+    )
+  );
+
+create policy "Members can view co-members"
+  on public.rondo_membres for select
+  using (
+    auth.uid() = user_id
+    or exists (
+      select 1 from public.rondo_membres m
+      join public.rondo_tontines t on m.tontine_id = t.id
+      where m.tontine_id = rondo_membres.tontine_id
+      and (m.user_id = auth.uid() or t.admin_id = auth.uid())
+      and m.statut = 'actif'
+    )
+  );
+
+-- Table: rondo_tours
+create table if not exists public.rondo_tours (
+  id uuid primary key default gen_random_uuid(),
+  tontine_id uuid not null references public.rondo_tontines(id) on delete cascade,
+  numero integer not null, -- 1 à nb_membres
+  date_debut date not null,
+  date_fin date not null,
+  beneficiaire_id uuid references public.rondo_membres(id) on delete set null,
+  statut text not null default 'a_venir' check (statut in ('a_venir', 'en_cours', 'termine')),
+  created_at timestamptz not null default now(),
+  unique(tontine_id, numero)
+);
+
+create index if not exists idx_rondo_tours_tontine on public.rondo_tours(tontine_id);
+
+alter table public.rondo_tours enable row level security;
+
+create policy "Admin can manage tours"
+  on public.rondo_tours for all
+  using (
+    exists (
+      select 1 from public.rondo_tontines t
+      where t.id = rondo_tours.tontine_id
+      and t.admin_id = auth.uid()
+    )
+  );
+
+create policy "Members can view tours"
+  on public.rondo_tours for select
+  using (
+    exists (
+      select 1 from public.rondo_membres m
+      where m.tontine_id = rondo_tours.tontine_id
+      and m.user_id = auth.uid()
+      and m.statut = 'actif'
+    )
+  );
+
+-- Table: rondo_paiements
+create table if not exists public.rondo_paiements (
+  id uuid primary key default gen_random_uuid(),
+  tour_id uuid not null references public.rondo_tours(id) on delete cascade,
+  membre_id uuid not null references public.rondo_membres(id) on delete cascade,
+  montant integer not null check (montant >= 0),
+  mode text not null check (mode in ('especes', 'wave', 'orange_money', 'mtn_money')),
+  note text,
+  confirmed_by uuid not null references public.profiles(id), -- l'admin qui a enregistré
+  confirmed_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  unique(tour_id, membre_id) -- un seul paiement par membre par tour
+);
+
+create index if not exists idx_rondo_paiements_tour on public.rondo_paiements(tour_id);
+create index if not exists idx_rondo_paiements_membre on public.rondo_paiements(membre_id);
+
+alter table public.rondo_paiements enable row level security;
+
+create policy "Admin can manage payments"
+  on public.rondo_paiements for all
+  using (
+    exists (
+      select 1 from public.rondo_tours t
+      join public.rondo_tontines ton on t.tontine_id = ton.id
+      where t.id = rondo_paiements.tour_id
+      and ton.admin_id = auth.uid()
+    )
+  );
+
+create policy "Members can view payments in their tontines"
+  on public.rondo_paiements for select
+  using (
+    exists (
+      select 1 from public.rondo_membres m
+      join public.rondo_tours t on m.tontine_id = t.tontine_id
+      where t.id = rondo_paiements.tour_id
+      and m.user_id = auth.uid()
+      and m.statut = 'actif'
+    )
+  );
+
+-- Table: rondo_notifications
+create table if not exists public.rondo_notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  tontine_id uuid references public.rondo_tontines(id) on delete cascade,
+  type text not null check (type in ('rappel_cotisation', 'paiement_confirme', 'nouveau_membre', 'tour_atteint', 'message_admin', 'retard_paiement')),
+  titre text not null,
+  corps text not null,
+  lu boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rondo_notifs_user on public.rondo_notifications(user_id, lu, created_at desc);
+
+alter table public.rondo_notifications enable row level security;
+
+create policy "Users can view own notifications"
+  on public.rondo_notifications for select
+  using (auth.uid() = user_id);
+
+create policy "Users can update own notifications"
+  on public.rondo_notifications for update
+  using (auth.uid() = user_id);
+
+-- L'insertion de notifications se fait via Edge Function (service_role)
+```
+
+---
+
+## ÉTAPE 3 — Fonctions RPC (logique métier Rondo)
+
+```sql
+-- ============================================================
+-- RPC: Rejoindre une tontine avec un code d'invitation
+-- ============================================================
+create or replace function public.rondo_rejoindre_tontine(p_code text)
+returns uuid
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_tontine record;
+  v_membre_id uuid;
+begin
+  -- Trouver la tontine par code
+  select * into v_tontine
+  from public.rondo_tontines
+  where invitation_code = upper(p_code)
+  and statut in ('en_attente', 'active');
+
+  if not found then
+    raise exception 'Code d''invitation invalide ou tontine non disponible';
+  end if;
+
+  -- Vérifier que l'user n'est pas déjà membre
+  if exists (
+    select 1 from public.rondo_membres
+    where tontine_id = v_tontine.id
+    and user_id = auth.uid()
+    and statut = 'actif'
+  ) then
+    raise exception 'Vous êtes déjà membre de cette tontine';
+  end if;
+
+  -- Vérifier que la tontine n'est pas complète
+  if (
+    select count(*) from public.rondo_membres
+    where tontine_id = v_tontine.id and statut = 'actif'
+  ) >= v_tontine.nb_membres then
+    raise exception 'Cette tontine est complète';
+  end if;
+
+  -- Ajouter le membre
+  insert into public.rondo_membres (tontine_id, user_id)
+  values (v_tontine.id, auth.uid())
+  returning id into v_membre_id;
+
+  -- Notifier l'admin
+  insert into public.rondo_notifications (user_id, tontine_id, type, titre, corps)
+  values (
+    v_tontine.admin_id,
+    v_tontine.id,
+    'nouveau_membre',
+    'Nouveau membre',
+    'Un nouveau membre a rejoint la tontine "' || v_tontine.name || '"'
+  );
+
+  return v_membre_id;
+end;
+$$;
+
+-- ============================================================
+-- RPC: Calculer la cagnotte d'un tour
+-- ============================================================
+create or replace function public.rondo_cagnotte_tour(p_tour_id uuid)
+returns integer
+language sql
+security definer set search_path = public
+as $$
+  select coalesce(sum(p.montant), 0)
+  from public.rondo_paiements p
+  where p.tour_id = p_tour_id;
+$$;
+
+-- ============================================================
+-- RPC: Statut des cotisations d'un tour
+-- ============================================================
+create or replace function public.rondo_statut_tour(p_tour_id uuid)
+returns table (
+  membre_id uuid,
+  user_id uuid,
+  full_name text,
+  avatar_url text,
+  paye boolean,
+  montant_paye integer,
+  mode text
+)
+language sql
+security definer set search_path = public
+as $$
+  select
+    m.id as membre_id,
+    m.user_id,
+    pr.full_name,
+    pr.avatar_url,
+    (p.id is not null) as paye,
+    coalesce(p.montant, 0) as montant_paye,
+    p.mode
+  from public.rondo_membres m
+  join public.profiles pr on m.user_id = pr.id
+  left join public.rondo_paiements p on p.tour_id = p_tour_id and p.membre_id = m.id
+  where m.tontine_id = (select tontine_id from public.rondo_tours where id = p_tour_id)
+  and m.statut = 'actif'
+  order by m.ordre_tour;
+$$;
+
+-- ============================================================
+-- RPC: Tableau de bord membre (mes tontines + prochain paiement)
+-- ============================================================
+create or replace function public.rondo_home_membre()
+returns table (
+  tontine_id uuid,
+  tontine_name text,
+  mise integer,
+  frequence text,
+  statut text,
+  mon_tour_numero integer,
+  mon_tour_date date,
+  prochain_paiement_date date,
+  cotisation_due boolean
+)
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  return query
+  select
+    t.id,
+    t.name,
+    t.mise,
+    t.frequence,
+    t.statut,
+    tr.numero as mon_tour_numero,
+    tr.date_debut as mon_tour_date,
+    (
+      select min(tr2.date_debut)
+      from public.rondo_tours tr2
+      join public.rondo_membres m2 on tr2.beneficiaire_id = m2.id
+      where tr2.tontine_id = t.id
+      and m2.user_id = auth.uid()
+      and tr2.statut != 'termine'
+      and not exists (
+        select 1 from public.rondo_paiements p
+        where p.tour_id = tr2.id and p.membre_id = m2.id
+      )
+    ) as prochain_paiement_date,
+    (
+      select exists (
+        select 1 from public.rondo_tours tr3
+        join public.rondo_membres m3 on tr3.beneficiaire_id = m3.id
+        where tr3.tontine_id = t.id
+        and m3.user_id = auth.uid()
+        and tr3.statut = 'en_cours'
+        and not exists (
+          select 1 from public.rondo_paiements p
+          where p.tour_id = tr3.id and p.membre_id = m3.id
+        )
+      )
+    ) as cotisation_due
+  from public.rondo_tontines t
+  join public.rondo_membres m on t.id = m.tontine_id
+  left join public.rondo_tours tr on tr.beneficiaire_id = m.id and tr.statut = 'en_cours'
+  where m.user_id = auth.uid()
+  and m.statut = 'actif'
+  order by t.created_at desc;
+end;
+$$;
+
+-- ============================================================
+-- RPC: Tableau de bord admin (mes tontines gérées)
+-- ============================================================
+create or replace function public.rondo_home_admin()
+returns table (
+  tontine_id uuid,
+  tontine_name text,
+  mise integer,
+  nb_membres_actifs integer,
+  nb_membres_total integer,
+  statut text,
+  tour_actuel_numero integer,
+  cagnotte_actuelle integer
+)
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  return query
+  select
+    t.id,
+    t.name,
+    t.mise,
+    (select count(*) from public.rondo_membres where tontine_id = t.id and statut = 'actif')::integer,
+    t.nb_membres,
+    t.statut,
+    (select numero from public.rondo_tours where tontine_id = t.id and statut = 'en_cours' limit 1)::integer,
+    (
+      select coalesce(sum(p.montant), 0)::integer
+      from public.rondo_paiements p
+      join public.rondo_tours tr on p.tour_id = tr.id
+      where tr.tontine_id = t.id and tr.statut = 'en_cours'
+    )
+  from public.rondo_tontines t
+  where t.admin_id = auth.uid()
+  order by t.created_at desc;
+end;
+$$;
+
+-- ============================================================
+-- RPC: Générer les tours automatiquement
+-- Appelée par l'admin après avoir défini l'ordre des membres
+-- ============================================================
+create or replace function public.rondo_generer_tours(p_tontine_id uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_tontine record;
+  v_membre record;
+  v_date_debut date;
+  v_date_fin date;
+  v_numero integer := 1;
+  v_interval text;
+begin
+  -- Vérifier que l'user est admin
+  select * into v_tontine
+  from public.rondo_tontines
+  where id = p_tontine_id and admin_id = auth.uid();
+
+  if not found then
+    raise exception 'Tontine non trouvée ou vous n''êtes pas admin';
+  end if;
+
+  -- Supprimer les tours existants s'il y en a
+  delete from public.rondo_tours where tontine_id = p_tontine_id;
+
+  v_date_debut := v_tontine.date_debut;
+
+  -- Générer un tour par membre dans l'ordre défini
+  for v_membre in
+    select * from public.rondo_membres
+    where tontine_id = p_tontine_id and statut = 'actif'
+    order by ordre_tour
+  loop
+    if v_tontine.frequence = 'hebdomadaire' then
+      v_date_fin := v_date_debut + interval '7 days';
+    else
+      v_date_fin := v_date_debut + interval '1 month';
+    end if;
+
+    insert into public.rondo_tours (tontine_id, numero, date_debut, date_fin, beneficiaire_id, statut)
+    values (p_tontine_id, v_numero, v_date_debut, v_date_fin, v_membre.id,
+      case when v_numero = 1 then 'en_cours' else 'a_venir' end);
+
+    v_date_debut := v_date_fin;
+    v_numero := v_numero + 1;
+  end loop;
+
+  -- Activer la tontine
+  update public.rondo_tontines
+  set statut = 'active', updated_at = now()
+  where id = p_tontine_id;
+end;
+$$;
+```
+
+---
+
+## ÉTAPE 4 — Trigger updated_at automatique
+
+```sql
+-- ============================================================
+-- Fonction générique pour updated_at
+-- ============================================================
+create or replace function public.update_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+-- Appliquer aux tables qui ont updated_at
+drop trigger if exists set_updated_at_profiles on public.profiles;
+create trigger set_updated_at_profiles
+  before update on public.profiles
+  for each row execute function public.update_updated_at();
+
+drop trigger if exists set_updated_at_tontines on public.rondo_tontines;
+create trigger set_updated_at_tontines
+  before update on public.rondo_tontines
+  for each row execute function public.update_updated_at();
+```
+
+---
+
+## ÉTAPE 5 — Edge Function pour OTP WhatsApp
+
+À créer dans Supabase Dashboard > Edge Functions > New Function.
+
+**Nom :** `send-whatsapp-otp`
+
+```typescript
+// supabase/functions/send-whatsapp-otp/index.ts
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const WHATSAPP_TOKEN = Deno.env.get("WHATSAPP_TOKEN")!;
+const PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID")!;
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+);
+
+function generateCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function sendWhatsAppOTP(phone: string, code: string) {
+  // Normaliser le numéro (format international sans +)
+  const normalizedPhone = phone.replace(/\D/g, "").replace(/^0/, "225");
+
+  const response = await fetch(
+    `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: normalizedPhone,
+        type: "template",
+        template: {
+          name: "otp_message", // À créer dans Meta Business Manager
+          language: { code: "fr" },
+          components: [
+            {
+              type: "body",
+              parameters: [
+                { type: "text", text: code },
+              ],
+            },
+          ],
+        },
+      }),
+    }
+  );
+
+  return response.ok;
+}
+
+Deno.serve(async (req) => {
+  try {
+    const { phone } = await req.json();
+
+    if (!phone) {
+      return new Response(JSON.stringify({ error: "Phone required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Générer le code
+    const code = generateCode();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Sauvegarder en base
+    const { error: dbError } = await supabase
+      .from("otp_codes")
+      .insert({
+        phone,
+        code,
+        expires_at: expiresAt.toISOString(),
+      });
+
+    if (dbError) {
+      throw dbError;
+    }
+
+    // Envoyer via WhatsApp
+    const sent = await sendWhatsAppOTP(phone, code);
+
+    if (!sent) {
+      return new Response(
+        JSON.stringify({ error: "Failed to send WhatsApp message" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, message: "OTP sent via WhatsApp" }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+});
+```
+
+**Edge Function pour vérifier l'OTP :** `verify-whatsapp-otp`
+
+```typescript
+// supabase/functions/verify-whatsapp-otp/index.ts
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+);
+
+Deno.serve(async (req) => {
+  try {
+    const { phone, code } = await req.json();
+
+    if (!phone || !code) {
+      return new Response(
+        JSON.stringify({ error: "Phone and code required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Chercher le code le plus récent non consommé
+    const { data, error } = await supabase
+      .from("otp_codes")
+      .select("*")
+      .eq("phone", phone)
+      .eq("consumed", false)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "No OTP found" }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Vérifier l'expiration
+    if (new Date(data.expires_at) < new Date()) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "OTP expired" }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Vérifier le code
+    if (data.code !== code) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Invalid code" }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Marquer comme consommé
+    await supabase
+      .from("otp_codes")
+      .update({ consumed: true })
+      .eq("id", data.id);
+
+    return new Response(
+      JSON.stringify({ valid: true }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+});
+```
+
+---
+
+## ÉTAPE 6 — Variables d'environnement Supabase
+
+À configurer dans Supabase Dashboard > Edge Functions > Secrets :
+
+```
+WHATSAPP_TOKEN=EAAXxxxxxxxxxxxxxxxxxxxx
+WHATSAPP_PHONE_NUMBER_ID=123456789
+```
+
+> Le token et le Phone Number ID se récupèrent sur
+> [Meta for Developers](https://developers.facebook.com/apps/) >
+> WhatsApp Business API > Configuration.
+
+---
+
+## ÉTAPE 7 — Template WhatsApp à créer dans Meta Business Manager
+
+Dans Meta Business Manager > WhatsApp Manager > Modèles de messages :
+
+- **Nom :** `otp_message`
+- **Langue :** Français
+- **Catégorie :** Authentification
+- **Corps :** `Votre code de vérification The Everyday Co. est {{1}}. Ne le partagez avec personne.`
+
+> Les modèles d'authentification sont gratuits et illimités dans la plupart des cas.
+> Vérifier les conditions actuelles de Meta pour la Côte d'Ivoire.
+
+---
+
+## RÉCAPITULATIF DES TABLES
+
+| Table | App | Rôle |
+|---|---|---|
+| `profiles` | Shared | Infos utilisateur (phone, name, avatar) |
+| `otp_codes` | Shared | Codes OTP WhatsApp temporaires |
+| `rondo_tontines` | Rondo | Tontines créées |
+| `rondo_membres` | Rondo | Membres de chaque tontine |
+| `rondo_tours` | Rondo | Tours de cotisation |
+| `rondo_paiements` | Rondo | Paiements enregistrés |
+| `rondo_notifications` | Rondo | Notifications utilisateurs |
+
+## RPCs CRÉÉS
+
+| Fonction | Rôle |
+|---|---|
+| `handle_new_user()` | Auto-création du profil à l'inscription |
+| `update_updated_at()` | Mise à jour automatique du updated_at |
+| `rondo_rejoindre_tontine(code)` | Rejoindre une tontine par code |
+| `rondo_cagnotte_tour(tour_id)` | Calculer la cagnotte d'un tour |
+| `rondo_statut_tour(tour_id)` | Statut des cotisations d'un tour |
+| `rondo_home_membre()` | Dashboard membre |
+| `rondo_home_admin()` | Dashboard admin |
+| `rondo_generer_tours(tontine_id)` | Générer les tours automatiquement |
+
+---
+
+*The Everyday Co. — Schéma SQL v1 | Juillet 2026*
