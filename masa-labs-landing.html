@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masa Labs — Des solutions numériques pour l'Afrique qui avance</title>
+<meta name="description" content="Masa Labs construit des applications mobiles simples et abordables pour les communautés, commerces et jeunes d'Afrique de l'Ouest.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090E;
+  --bg2:#0D0F18;
+  --card:#111320;
+  --card2:#161929;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --text:#F2F3F7;
+  --muted:#6B7280;
+  --muted2:#4B5563;
+  --accent:#4361EE;
+  --rondo:#FF6B2B;
+  --kassa:#10B981;
+  --kredi:#8B5CF6;
+  --vitae:#38BDF8;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 2.5rem;
+  background:rgba(8,9,14,0.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;font-size:1.1rem;
+  letter-spacing:0.08em;color:var(--text);
+  text-decoration:none;
+}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{
+  font-size:0.85rem;color:var(--muted);
+  text-decoration:none;letter-spacing:0.02em;
+  transition:color 0.2s;
+}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{
+  background:var(--accent);color:#fff;
+  font-size:0.82rem;font-weight:500;
+  padding:0.55rem 1.3rem;border-radius:50px;
+  text-decoration:none;letter-spacing:0.03em;
+  transition:opacity 0.2s;
+}
+.nav-cta:hover{opacity:0.85}
+
+/* HERO */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:8rem 2.5rem 4rem;
+  max-width:1100px;margin:0 auto;
+}
+.hero-label{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-size:0.78rem;font-weight:500;
+  color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;
+  border:1px solid rgba(67,97,238,0.3);
+  padding:0.4rem 1rem;border-radius:50px;
+  margin-bottom:2.5rem;width:fit-content;
+}
+.hero-label span{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--accent);animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.hero h1{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(2.8rem,6vw,5.5rem);
+  font-weight:700;line-height:1.08;
+  letter-spacing:-0.02em;
+  margin-bottom:2rem;
+}
+.hero h1 em{
+  font-style:normal;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(255,255,255,0.25);
+}
+.hero-sub{
+  font-size:clamp(1rem,2vw,1.2rem);
+  color:var(--muted);max-width:560px;
+  line-height:1.7;margin-bottom:3rem;
+}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+.btn-primary{
+  background:var(--text);color:#08090E;
+  font-size:0.9rem;font-weight:600;
+  padding:0.85rem 2rem;border-radius:50px;
+  text-decoration:none;transition:opacity 0.2s;
+}
+.btn-primary:hover{opacity:0.88}
+.btn-secondary{
+  color:var(--muted);font-size:0.9rem;
+  text-decoration:none;display:flex;
+  align-items:center;gap:0.4rem;
+  transition:color 0.2s;
+}
+.btn-secondary:hover{color:var(--text)}
+.btn-secondary svg{width:16px;height:16px}
+
+/* TICKER */
+.ticker-wrap{
+  padding:1.5rem 0;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  overflow:hidden;white-space:nowrap;
+  margin-top:5rem;
+}
+.ticker-inner{
+  display:inline-flex;gap:0;
+  animation:ticker 22s linear infinite;
+}
+.ticker-inner:hover{animation-play-state:paused}
+.ticker-item{
+  display:inline-flex;align-items:center;gap:0.8rem;
+  padding:0 3rem;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:1.1rem;font-weight:600;
+  color:var(--muted2);
+  transition:color 0.3s;
+}
+.ticker-item:hover{color:var(--text)}
+.ticker-dot{
+  width:8px;height:8px;border-radius:50%;
+  flex-shrink:0;
+}
+@keyframes ticker{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-50%)}
+}
+
+/* SECTION BASE */
+section{padding:6rem 2.5rem;max-width:1100px;margin:0 auto}
+.section-label{
+  font-size:0.75rem;font-weight:500;
+  letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:1rem;
+}
+.section-label::before{
+  content:'';display:inline-block;
+  width:20px;height:1px;background:var(--muted2);
+  vertical-align:middle;margin-right:0.7rem;
+}
+
+/* STATEMENT */
+.statement{
+  padding:7rem 2.5rem;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.statement-inner{max-width:900px;margin:0 auto}
+.statement h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(1.6rem,3.5vw,2.8rem);
+  font-weight:600;line-height:1.3;
+  margin-bottom:1.5rem;
+}
+.statement h2 strong{color:var(--text)}
+.statement h2 span{color:var(--muted)}
+.statement-coda{
+  font-size:1.1rem;color:var(--accent);
+  font-weight:500;margin-top:2rem;
+  display:flex;align-items:center;gap:0.6rem;
+}
+
+/* APPS GRID */
+.apps-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:1.2rem;
+  margin-top:3rem;
+}
+.app-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:2rem;
+  position:relative;overflow:hidden;
+  transition:border-color 0.3s,transform 0.3s;
+  cursor:default;
+}
+.app-card:hover{transform:translateY(-3px)}
+.app-card::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+  border-radius:20px 20px 0 0;
+}
+.app-card.rondo::before{background:var(--rondo)}
+.app-card.rondo:hover{border-color:rgba(255,107,43,0.25)}
+.app-card.kassa::before{background:var(--kassa)}
+.app-card.kassa:hover{border-color:rgba(16,185,129,0.25)}
+.app-card.kredi::before{background:var(--kredi)}
+.app-card.kredi:hover{border-color:rgba(139,92,246,0.25)}
+.app-card.vitae::before{background:var(--vitae)}
+.app-card.vitae:hover{border-color:rgba(56,189,248,0.25)}
+
+.app-icon{
+  width:52px;height:52px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:1.5rem;
+}
+.rondo .app-icon{background:rgba(255,107,43,0.12)}
+.kassa .app-icon{background:rgba(16,185,129,0.12)}
+.kredi .app-icon{background:rgba(139,92,246,0.12)}
+.vitae .app-icon{background:rgba(56,189,248,0.12)}
+.app-icon svg{width:26px;height:26px}
+.rondo .app-icon svg{color:var(--rondo)}
+.kassa .app-icon svg{color:var(--kassa)}
+.kredi .app-icon svg{color:var(--kredi)}
+.vitae .app-icon svg{color:var(--vitae)}
+
+.app-tag{
+  font-size:0.7rem;font-weight:600;
+  letter-spacing:0.1em;text-transform:uppercase;
+  padding:0.25rem 0.7rem;border-radius:50px;
+  margin-bottom:1rem;display:inline-block;
+}
+.rondo .app-tag{color:var(--rondo);background:rgba(255,107,43,0.1)}
+.kassa .app-tag{color:var(--kassa);background:rgba(16,185,129,0.1)}
+.kredi .app-tag{color:var(--kredi);background:rgba(139,92,246,0.1)}
+.vitae .app-tag{color:var(--vitae);background:rgba(56,189,248,0.1)}
+
+.app-name{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:1.7rem;font-weight:700;
+  margin-bottom:0.6rem;letter-spacing:-0.02em;
+}
+.app-desc{
+  font-size:0.92rem;color:var(--muted);
+  line-height:1.65;margin-bottom:1.5rem;
+}
+.app-features{list-style:none;display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.8rem}
+.app-features li{
+  font-size:0.82rem;color:var(--muted);
+  display:flex;align-items:center;gap:0.5rem;
+}
+.app-features li::before{
+  content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0;
+}
+.rondo .app-features li::before{background:var(--rondo)}
+.kassa .app-features li::before{background:var(--kassa)}
+.kredi .app-features li::before{background:var(--kredi)}
+.vitae .app-features li::before{background:var(--vitae)}
+
+.app-status{
+  font-size:0.75rem;font-weight:600;
+  color:var(--muted2);letter-spacing:0.08em;
+  display:flex;align-items:center;gap:0.4rem;
+}
+.app-status span{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--muted2);
+}
+.app-status.soon span{background:#F59E0B}
+.app-status.soon{color:#F59E0B}
+
+/* MANIFESTO */
+.manifesto{
+  padding:8rem 2.5rem;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  text-align:center;
+}
+.manifesto-inner{max-width:750px;margin:0 auto}
+.manifesto h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(1.8rem,4vw,3.2rem);
+  font-weight:700;line-height:1.2;
+  letter-spacing:-0.02em;margin-bottom:1.5rem;
+}
+.manifesto h2 .word-outline{
+  color:transparent;
+  -webkit-text-stroke:1px rgba(255,255,255,0.3);
+}
+.manifesto p{
+  font-size:1.05rem;color:var(--muted);
+  line-height:1.8;max-width:600px;margin:0 auto 2rem;
+}
+
+/* PILLARS */
+.pillars{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;
+  margin-top:3rem;
+}
+.pillar{
+  padding:2.5rem 2rem;
+  background:var(--bg);
+}
+.pillar-num{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:2.5rem;font-weight:700;
+  color:var(--border2);margin-bottom:1rem;
+  letter-spacing:-0.03em;
+}
+.pillar h3{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:1rem;font-weight:600;
+  margin-bottom:0.5rem;
+}
+.pillar p{font-size:0.88rem;color:var(--muted);line-height:1.65}
+
+/* STATS */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:1.2rem;margin-top:3rem;
+}
+.stat-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;padding:1.8rem 1.5rem;
+}
+.stat-num{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:2.2rem;font-weight:700;
+  color:var(--accent);letter-spacing:-0.02em;
+  margin-bottom:0.3rem;
+}
+.stat-label{font-size:0.82rem;color:var(--muted);line-height:1.5}
+
+/* PHONE MOCKUP */
+.phone-section{
+  display:flex;align-items:center;
+  gap:5rem;padding:6rem 2.5rem;
+  max-width:1100px;margin:0 auto;
+  flex-wrap:wrap;
+}
+.phone-text{flex:1;min-width:280px}
+.phone-text h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(1.8rem,3.5vw,2.8rem);
+  font-weight:700;line-height:1.2;
+  letter-spacing:-0.02em;margin-bottom:1rem;
+}
+.phone-text p{font-size:1rem;color:var(--muted);line-height:1.75;margin-bottom:1.5rem}
+.phone-text ul{list-style:none;display:flex;flex-direction:column;gap:0.8rem}
+.phone-text ul li{
+  font-size:0.9rem;color:var(--muted);
+  display:flex;align-items:center;gap:0.75rem;
+}
+.check-icon{
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(67,97,238,0.15);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.check-icon svg{width:11px;height:11px;color:var(--accent)}
+
+.phones{flex:1;min-width:280px;display:flex;gap:1rem;justify-content:center}
+.phone-frame{
+  width:160px;
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-radius:28px;
+  padding:12px;
+  position:relative;
+}
+.phone-frame::before{
+  content:'';
+  display:block;
+  width:50px;height:5px;
+  background:var(--border2);
+  border-radius:50px;
+  margin:0 auto 10px;
+}
+.phone-screen{
+  border-radius:18px;
+  overflow:hidden;
+  background:var(--bg2);
+  padding:14px;
+  min-height:260px;
+}
+.phone-frame.shifted{
+  margin-top:2.5rem;
+}
+.p-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.p-dot{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+.p-title{font-size:9px;font-weight:700;font-family:'Space Grotesk',sans-serif}
+.p-time{font-size:7px;color:var(--muted)}
+.p-card{
+  border-radius:10px;padding:10px;margin-bottom:8px;
+}
+.p-card-label{font-size:7px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.p-card-val{font-size:12px;font-weight:700;font-family:'Space Grotesk',sans-serif}
+.p-bar-wrap{margin:8px 0}
+.p-bar-label{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);margin-bottom:4px}
+.p-bar{height:4px;border-radius:50px;background:var(--border2);overflow:hidden}
+.p-bar-fill{height:100%;border-radius:50px}
+.p-list-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 0;border-bottom:1px solid var(--border);
+}
+.p-list-item:last-child{border-bottom:none}
+.p-list-name{font-size:8px;font-weight:600}
+.p-list-sub{font-size:6px;color:var(--muted)}
+.p-list-val{font-size:9px;font-weight:700}
+.p-badge{
+  font-size:6px;font-weight:600;letter-spacing:0.05em;
+  padding:2px 6px;border-radius:50px;
+}
+
+/* CTA */
+.cta-section{
+  padding:7rem 2.5rem;
+  text-align:center;
+}
+.cta-inner{
+  max-width:600px;margin:0 auto;
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:28px;padding:4rem 3rem;
+}
+.cta-inner h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(1.8rem,3vw,2.4rem);
+  font-weight:700;letter-spacing:-0.02em;
+  margin-bottom:0.8rem;
+}
+.cta-inner p{font-size:0.95rem;color:var(--muted);margin-bottom:2rem;line-height:1.7}
+.email-form{
+  display:flex;gap:0.6rem;
+  max-width:420px;margin:0 auto;
+  flex-wrap:wrap;justify-content:center;
+}
+.email-input{
+  flex:1;min-width:200px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--border2);
+  border-radius:50px;
+  padding:0.8rem 1.3rem;
+  color:var(--text);font-size:0.88rem;
+  outline:none;font-family:'Inter',sans-serif;
+  transition:border-color 0.2s;
+}
+.email-input:focus{border-color:rgba(67,97,238,0.5)}
+.email-input::placeholder{color:var(--muted)}
+.email-btn{
+  background:var(--accent);color:#fff;
+  border:none;border-radius:50px;
+  padding:0.8rem 1.5rem;
+  font-size:0.88rem;font-weight:600;
+  cursor:pointer;transition:opacity 0.2s;
+  font-family:'Inter',sans-serif;
+  white-space:nowrap;
+}
+.email-btn:hover{opacity:0.85}
+.cta-note{font-size:0.75rem;color:var(--muted2);margin-top:1rem}
+
+/* FOOTER */
+footer{
+  padding:3rem 2.5rem;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;gap:1rem;
+  max-width:1100px;margin:0 auto;
+}
+.footer-logo{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:0.95rem;font-weight:700;
+  letter-spacing:0.05em;color:var(--muted);
+}
+.footer-logo span{color:var(--accent)}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{
+  font-size:0.82rem;color:var(--muted2);
+  text-decoration:none;transition:color 0.2s;
+}
+.footer-links a:hover{color:var(--muted)}
+.footer-copy{font-size:0.78rem;color:var(--muted2);width:100%;text-align:center;padding-top:1.5rem;border-top:1px solid var(--border)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem}
+  .nav-links{display:none}
+  section,footer,.phone-section,.cta-section{padding:4rem 1.5rem}
+  .statement,.manifesto{padding:5rem 1.5rem}
+  .phone-section{gap:3rem}
+  .cta-inner{padding:2.5rem 1.5rem}
+  .phones{gap:0.7rem}
+  .phone-frame{width:140px}
+  .hero{padding:7rem 1.5rem 3rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">MASA<span>.</span>LABS</a>
+  <div class="nav-links">
+    <a href="#apps">Nos apps</a>
+    <a href="#mission">Notre mission</a>
+    <a href="#waitlist">Rejoindre</a>
+  </div>
+  <a href="#waitlist" class="nav-cta">Être notifié →</a>
+</nav>
+
+<!-- HERO -->
+<div style="max-width:1100px;margin:0 auto">
+  <div class="hero">
+    <div class="hero-label">
+      <span></span>
+      Abidjan, Côte d'Ivoire
+    </div>
+    <h1>
+      Des solutions<br>
+      <em>numériques</em> pour<br>
+      l'Afrique qui avance.
+    </h1>
+    <p class="hero-sub">
+      On construit des applications mobiles simples, abordables et bâties pour les réalités du terrain. Un problème. Une app. Réglé.
+    </p>
+    <div class="hero-actions">
+      <a href="#apps" class="btn-primary">Voir nos apps</a>
+      <a href="#mission" class="btn-secondary">
+        Notre mission
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    <!-- First set -->
+    <span class="ticker-item">
+      <span class="ticker-dot" style="background:var(--rondo)"></span>
+      Rondo
+    </span>
+    <span class="ticker-item">
+      <span class="ticker-dot" style="background:var(--kassa)"></span>
+      Kassa
+    </span>
+    <span class="ticker-item">
+      <span class="ticker-dot" style="background:var(--kredi)"></span>
+      Krédi
+    </span>
+    <span class="ticker-item">
+      <span class="ticker-dot" style="background:var(--vitae)"></span>
+      Vitae
+    </span>
+    <span class="ticker-item" style="color:var(--muted2)">—</span>
+    <span class="ticker-item" style="font-style:italic">Mobile First</span>
+    <span class="ticker-item" style="color:var(--muted2)">—</span>
+    <span class="ticker-item" style="font-style:italic">Communauté d'abord</span>
+    <span class="ticker-item" style="color:var(--muted2)">—</span>
+    <!-- Duplicate for seamless loop -->
+    <span class="ticker-item">
+      <span class="ticker-dot" style="background:var(--rondo)"></span>
+      Rondo
+    </span>
+    <span class="ticker-item">
+      <span class="ticker-dot" style="background:var(--kassa)"></span>
+      Kassa
+    </span>
+    <span class="ticker-item">
+      <span class="ticker-dot" style="background:var(--kredi)"></span>
+      Krédi
+    </span>
+    <span class="ticker-item">
+      <span class="ticker-dot" style="background:var(--vitae)"></span>
+      Vitae
+    </span>
+    <span class="ticker-item" style="color:var(--muted2)">—</span>
+    <span class="ticker-item" style="font-style:italic">Mobile First</span>
+    <span class="ticker-item" style="color:var(--muted2)">—</span>
+    <span class="ticker-item" style="font-style:italic">Communauté d'abord</span>
+    <span class="ticker-item" style="color:var(--muted2)">—</span>
+  </div>
+</div>
+
+<!-- STATEMENT -->
+<div class="statement">
+  <div class="statement-inner">
+    <div class="section-label">Le constat</div>
+    <h2>
+      <span>Une génération entière gère ses tontines dans des cahiers, ses créances sur WhatsApp et son avenir sans les bons outils.</span>
+      <br><br>
+      <strong>Il est temps que ça change.</strong>
+    </h2>
+    <p class="statement-coda">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v20M2 12h20"/>
+      </svg>
+      Nous construisons les outils que cette génération attendait.
+    </p>
+  </div>
+</div>
+
+<!-- APPS -->
+<section id="apps">
+  <div class="section-label">Nos applications</div>
+  <h2 style="font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;letter-spacing:-0.02em;margin-bottom:0.8rem">
+    Quatre apps. Quatre problèmes réels.
+  </h2>
+  <p style="color:var(--muted);max-width:520px;font-size:0.95rem;line-height:1.7;margin-bottom:0.5rem">
+    Chaque application est conçue pour résoudre un seul problème, parfaitement. Simple, mobile, abordable.
+  </p>
+
+  <div class="apps-grid">
+
+    <!-- RONDO -->
+    <div class="app-card rondo">
+      <div class="app-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+          <path d="M6.3 17.7l2.8-2.8M17.7 17.7l-2.8-2.8M12 2v2M12 20v2M2 12h2M20 12h2"/>
+        </svg>
+      </div>
+      <div class="app-tag">Communautés</div>
+      <div class="app-name">Rondo</div>
+      <p class="app-desc">La tontine réinventée. Gérez vos cercles d'épargne collectifs avec transparence et zéro friction.</p>
+      <ul class="app-features">
+        <li>Suivi des tours et cotisations en temps réel</li>
+        <li>Rappels automatiques aux membres</li>
+        <li>Historique transparent pour tout le groupe</li>
+        <li>Paiement Wave / Orange Money natif</li>
+      </ul>
+      <div class="app-status soon"><span></span>Bientôt disponible</div>
+    </div>
+
+    <!-- KASSA -->
+    <div class="app-card kassa">
+      <div class="app-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+          <line x1="12" y1="12" x2="12" y2="16"/>
+          <line x1="10" y1="14" x2="14" y2="14"/>
+        </svg>
+      </div>
+      <div class="app-tag">Commerces</div>
+      <div class="app-name">Kassa</div>
+      <p class="app-desc">Votre caisse journalière dans votre poche. Suivez ventes, dépenses et bénéfices sans être comptable.</p>
+      <ul class="app-features">
+        <li>Enregistrement rapide des ventes et dépenses</li>
+        <li>Rapport journalier, hebdomadaire, mensuel</li>
+        <li>Graphiques simples sans jargon comptable</li>
+        <li>Fonctionne hors connexion</li>
+      </ul>
+      <div class="app-status soon"><span></span>Bientôt disponible</div>
+    </div>
+
+    <!-- KRÉDI -->
+    <div class="app-card kredi">
+      <div class="app-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+          <path d="M12 12h.01"/>
+          <path d="M7 15V9M17 15V9"/>
+        </svg>
+      </div>
+      <div class="app-tag">Créances</div>
+      <div class="app-name">Krédi</div>
+      <p class="app-desc">Plus jamais de dettes oubliées. Suivez ce qu'on vous doit et ce que vous devez, simplement.</p>
+      <ul class="app-features">
+        <li>Enregistrement instantané des créances clients</li>
+        <li>Rappels SMS / WhatsApp automatiques</li>
+        <li>Vue globale de votre trésorerie réelle</li>
+        <li>Historique par client ou fournisseur</li>
+      </ul>
+      <div class="app-status soon"><span></span>Bientôt disponible</div>
+    </div>
+
+    <!-- VITAE -->
+    <div class="app-card vitae">
+      <div class="app-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <div class="app-tag">Emploi</div>
+      <div class="app-name">Vitae</div>
+      <p class="app-desc">Un CV professionnel en 3 minutes. Conçu pour les codes du marché ivoirien et ouest-africain.</p>
+      <ul class="app-features">
+        <li>Templates adaptés aux secteurs locaux</li>
+        <li>Export PDF partageable sur WhatsApp</li>
+        <li>Aucune compétence en design requise</li>
+        <li>Gratuit pour commencer</li>
+      </ul>
+      <div class="app-status soon"><span></span>Bientôt disponible</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PHONE MOCKUP SECTION -->
+<div class="phone-section">
+  <div class="phone-text">
+    <div class="section-label">Philosophie</div>
+    <h2>Conçu pour ton téléphone.<br>Pensé pour ton quotidien.</h2>
+    <p>
+      En Afrique de l'Ouest, le smartphone est déjà la banque, le shop, le bureau. Nos apps sont pensées dès le départ pour le mobile — pas adaptées après coup.
+    </p>
+    <ul>
+      <li>
+        <div class="check-icon">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 6l3 3 5-5"/>
+          </svg>
+        </div>
+        Interface simple, aucun manuel nécessaire
+      </li>
+      <li>
+        <div class="check-icon">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 6l3 3 5-5"/>
+          </svg>
+        </div>
+        Fonctionne avec une connexion lente ou hors ligne
+      </li>
+      <li>
+        <div class="check-icon">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 6l3 3 5-5"/>
+          </svg>
+        </div>
+        Paiement Mobile Money intégré (Wave, Orange Money)
+      </li>
+      <li>
+        <div class="check-icon">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 6l3 3 5-5"/>
+          </svg>
+        </div>
+        Tarifs accessibles, sans engagement
+      </li>
+    </ul>
+  </div>
+
+  <div class="phones">
+    <!-- Phone 1 - Rondo mockup -->
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="p-header">
+          <div>
+            <div class="p-title" style="color:var(--rondo)">Rondo</div>
+            <div class="p-time">Groupe famille</div>
+          </div>
+          <div class="p-dot" style="background:rgba(255,107,43,0.15)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--rondo)" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          </div>
+        </div>
+        <div class="p-card" style="background:rgba(255,107,43,0.1)">
+          <div class="p-card-label">Cagnotte du mois</div>
+          <div class="p-card-val" style="color:var(--rondo)">85 000 FCFA</div>
+        </div>
+        <div class="p-bar-wrap">
+          <div class="p-bar-label"><span>Cotisations reçues</span><span style="color:var(--rondo)">6/8</span></div>
+          <div class="p-bar"><div class="p-bar-fill" style="width:75%;background:var(--rondo)"></div></div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="p-list-item" style="padding:5px 0">
+            <div>
+              <div class="p-list-name">Awa Koné</div>
+              <div class="p-list-sub">Cotisé</div>
+            </div>
+            <div class="p-badge" style="background:rgba(16,185,129,0.15);color:var(--kassa)">✓ Payé</div>
+          </div>
+          <div class="p-list-item" style="padding:5px 0">
+            <div>
+              <div class="p-list-name">Koffi Brou</div>
+              <div class="p-list-sub">En attente</div>
+            </div>
+            <div class="p-badge" style="background:rgba(245,158,11,0.15);color:#F59E0B">En attente</div>
+          </div>
+          <div class="p-list-item" style="padding:5px 0">
+            <div>
+              <div class="p-list-name">Marie N'Goran</div>
+              <div class="p-list-sub">Tour suivant</div>
+            </div>
+            <div class="p-badge" style="background:rgba(255,107,43,0.15);color:var(--rondo)">→ Tour</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone 2 - Kassa mockup -->
+    <div class="phone-frame shifted">
+      <div class="phone-screen">
+        <div class="p-header">
+          <div>
+            <div class="p-title" style="color:var(--kassa)">Kassa</div>
+            <div class="p-time">Aujourd'hui</div>
+          </div>
+          <div class="p-dot" style="background:rgba(16,185,129,0.15)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--kassa)" stroke-width="2.5">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+            </svg>
+          </div>
+        </div>
+        <div class="p-card" style="background:rgba(16,185,129,0.1);margin-bottom:6px">
+          <div class="p-card-label">Bénéfice du jour</div>
+          <div class="p-card-val" style="color:var(--kassa)">+ 42 500 FCFA</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <div class="p-card" style="flex:1;background:rgba(255,255,255,0.03);padding:8px">
+            <div class="p-card-label">Ventes</div>
+            <div class="p-card-val" style="font-size:10px;color:var(--text)">67 000</div>
+          </div>
+          <div class="p-card" style="flex:1;background:rgba(255,255,255,0.03);padding:8px">
+            <div class="p-card-label">Dépenses</div>
+            <div class="p-card-val" style="font-size:10px;color:#F87171">24 500</div>
+          </div>
+        </div>
+        <div style="font-size:7px;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.06em">DERNIÈRES VENTES</div>
+        <div class="p-list-item">
+          <div class="p-list-name">Pagnes ×3</div>
+          <div class="p-list-val" style="color:var(--kassa)">18 000</div>
+        </div>
+        <div class="p-list-item">
+          <div class="p-list-name">Robe sur commande</div>
+          <div class="p-list-val" style="color:var(--kassa)">25 000</div>
+        </div>
+        <div class="p-list-item">
+          <div class="p-list-name">Retouche pantalon</div>
+          <div class="p-list-val" style="color:var(--kassa)">5 000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MANIFESTO -->
+<div class="manifesto" id="mission">
+  <div class="manifesto-inner">
+    <div class="section-label" style="display:inline-block">Notre mission</div>
+    <h2 style="margin-top:1.2rem">
+      Nous construisons des outils<br>
+      <span class="word-outline">plus jeunes</span><br>
+      que les problèmes qu'ils résolvent.
+    </h2>
+    <p>
+      Notre mission est simple : créer des applications que les entrepreneurs africains adorent utiliser. Des outils modernes, intuitifs et au juste prix — construits sur le terrain, pour le terrain.
+    </p>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pillar-num">01</div>
+        <h3>Mobile d'abord</h3>
+        <p>Toutes nos apps sont pensées pour le smartphone. Pas adaptées — conçues.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">02</div>
+        <h3>Un problème. Une app.</h3>
+        <p>Chaque produit résout un seul problème, parfaitement. Pas de complexité inutile.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">03</div>
+        <h3>Accessible à tous</h3>
+        <p>Tarifs adaptés aux réalités locales. Gratuit pour commencer, premium quand tu grandis.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<section>
+  <div class="section-label">Le marché</div>
+  <h2 style="font-family:'Space Grotesk',sans-serif;font-size:clamp(1.5rem,2.8vw,2.2rem);font-weight:700;letter-spacing:-0.02em;margin-bottom:0.6rem">
+    Un continent sous-outillé. Un marché immense.
+  </h2>
+  <p style="color:var(--muted);max-width:480px;font-size:0.92rem;line-height:1.7;margin-bottom:0">
+    Les chiffres parlent d'eux-mêmes. L'Afrique de l'Ouest numérique n'attend que les bons outils.
+  </p>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num">15M+</div>
+      <div class="stat-label">Internautes connectés en Côte d'Ivoire en 2025</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">89%</div>
+      <div class="stat-label">Des emplois sont informels — sans outil de gestion adapté</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">40K</div>
+      <div class="stat-label">Diplômés par an en Côte d'Ivoire cherchant leur voie</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">10M</div>
+      <div class="stat-label">Emplois numériques attendus en Afrique d'ici 2030 (BM)</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section" id="waitlist">
+  <div class="cta-inner">
+    <div style="font-size:2rem;margin-bottom:1rem">📲</div>
+    <h2>Soyez parmi les premiers.</h2>
+    <p>
+      Nos apps sont en développement. Laissez votre email pour être notifié en avant-première et tester gratuitement.
+    </p>
+    <div class="email-form">
+      <input type="email" class="email-input" placeholder="votre@email.com">
+      <button class="email-btn">Je veux tester →</button>
+    </div>
+    <p class="cta-note">Zéro spam. Juste l'essentiel.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="border-top:1px solid var(--border)">
+  <footer>
+    <div class="footer-logo">MASA<span>.</span>LABS</div>
+    <div class="footer-links">
+      <a href="#">Rondo</a>
+      <a href="#">Kassa</a>
+      <a href="#">Krédi</a>
+      <a href="#">Vitae</a>
+    </div>
+    <div class="footer-links">
+      <a href="#">LinkedIn</a>
+      <a href="#">Instagram</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-copy">
+      © 2026 Masa Labs · Abidjan, Côte d'Ivoire · Bâtisseurs de solutions communautaires
+    </div>
+  </footer>
+</div>
+
+<script>
+document.querySelector('.email-btn').addEventListener('click',function(){
+  const inp=document.querySelector('.email-input');
+  const val=inp.value.trim();
+  if(val&&val.includes('@')){
+    this.textContent='Merci ! On revient vers vous.';
+    this.style.background='var(--kassa)';
+    this.disabled=true;
+    inp.disabled=true;
+  } else {
+    inp.style.borderColor='rgba(239,68,68,0.5)';
+    setTimeout(()=>inp.style.borderColor='',2000);
+  }
+});
+</script>
+</body>
+</html>
