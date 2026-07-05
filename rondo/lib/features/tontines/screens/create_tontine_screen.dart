@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../services/tontine_service.dart';
@@ -206,8 +207,8 @@ class _CreateTontineScreenState extends ConsumerState<CreateTontineScreen> {
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: '${_dateDebut.day}/${_dateDebut.month}/${_dateDebut.year}',
-                      prefixIcon: const Icon(Icons.event_outlined),
-                      suffixIcon: const Icon(Icons.keyboard_arrow_down),
+                      prefixIcon: const Icon(LucideIcons.calendar, size: 20),
+                      suffixIcon: const Icon(LucideIcons.chevronDown, size: 20),
                     ),
                   ),
                 ),
@@ -225,7 +226,7 @@ class _CreateTontineScreenState extends ConsumerState<CreateTontineScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.info_outline, color: AppTheme.rondo, size: 20),
+                    const Icon(LucideIcons.info, color: AppTheme.rondo, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(

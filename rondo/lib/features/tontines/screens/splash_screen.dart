@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
 
@@ -72,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Icon(
-                        Icons.groups_rounded,
+                        LucideIcons.users,
                         color: Colors.white,
                         size: 40,
                       ),

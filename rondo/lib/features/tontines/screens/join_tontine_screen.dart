@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers.dart';
@@ -94,7 +95,7 @@ class _JoinTontineScreenState extends ConsumerState<JoinTontineScreen> {
                   color: AppTheme.rondoSoft,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(Icons.group_add_outlined, color: AppTheme.rondo, size: 28),
+                child: const Icon(LucideIcons.userPlus, color: AppTheme.rondo, size: 28),
               ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.8, 0.8)),
 
               const SizedBox(height: 24),

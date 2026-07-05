@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers.dart';
@@ -71,7 +72,7 @@ class _TontineDetailScreenState extends ConsumerState<TontineDetailScreen> {
         title: Text(_tontine?['name'] ?? 'Tontine'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_outlined),
+            icon: const Icon(LucideIcons.share2, size: 20),
             onPressed: _tontine != null ? () => _shareCode(_tontine!['invitation_code']) : null,
           ),
         ],
@@ -115,7 +116,7 @@ class _TontineDetailScreenState extends ConsumerState<TontineDetailScreen> {
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.link, color: AppTheme.rondo),
+                                    const Icon(LucideIcons.link, color: AppTheme.rondo),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
@@ -141,7 +142,7 @@ class _TontineDetailScreenState extends ConsumerState<TontineDetailScreen> {
                                       ),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.copy, color: AppTheme.rondo),
+                                      icon: const Icon(LucideIcons.copy, color: AppTheme.rondo, size: 20),
                                       onPressed: () => _shareCode(_tontine!['invitation_code']),
                                     ),
                                   ],
