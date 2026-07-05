@@ -1,29 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
-import '../../features/auth/services/auth_service.dart';
+import '../../features/tontines/screens/create_tontine_screen.dart';
 import '../../features/tontines/screens/home_screen.dart';
+import '../../features/tontines/screens/join_tontine_screen.dart';
+import '../../features/tontines/screens/members_screen.dart';
+import '../../features/tontines/screens/notifications_screen.dart';
+import '../../features/tontines/screens/record_payment_screen.dart';
+import '../../features/tontines/screens/settings_screen.dart';
 import '../../features/tontines/screens/splash_screen.dart';
-
-// Provider pour le AuthService
-final authServiceProvider = Provider((ref) => AuthService());
-
-// Provider qui écoute l'état d'auth Supabase
-final authStateProvider = StreamProvider<AuthState>((ref) {
-  return Supabase.instance.client.auth.onAuthStateChange;
-});
-
-// Provider pour savoir si l'user est connecté
-final isLoggedInProvider = Provider<bool>((ref) {
-  final authState = ref.watch(authStateProvider);
-  return authState.maybeWhen(
-    data: (state) => state.session != null,
-    orElse: () => Supabase.instance.client.auth.currentSession != null,
-  );
-});
+import '../../features/tontines/screens/tontine_detail_screen.dart';
+import '../providers.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final isLoggedIn = ref.watch(isLoggedInProvider);
@@ -47,6 +36,39 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/home',
         builder: (context, state) => const HomeScreen(),
       ),
+      GoRoute(
+        path: '/create-tontine',
+        builder: (context, state) => const CreateTontineScreen(),
+      ),
+      GoRoute(
+        path: '/join-tontine',
+        builder: (context, state) => const JoinTontineScreen(),
+      ),
+      GoRoute(
+        path: '/tontine/:id',
+        builder: (context, state) =>
+            TontineDetailScreen(tontineId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/tontine/:id/members',
+        builder: (context, state) =>
+            MembersScreen(tontineId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/tontine/:id/tour/:tourId',
+        builder: (context, state) => RecordPaymentScreen(
+          tontineId: state.pathParameters['id']!,
+          tourId: state.pathParameters['tourId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
     ],
     redirect: (context, state) {
       final loggedIn = isLoggedIn;
@@ -54,12 +76,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
 
-      // Si pas connecté et pas sur une route auth → rediriger vers login
       if (!loggedIn && !isAuthRoute) {
         return '/login';
       }
 
-      // Si connecté et sur une route auth (sauf splash) → rediriger vers home
       if (loggedIn && isAuthRoute && state.matchedLocation != '/') {
         return '/home';
       }

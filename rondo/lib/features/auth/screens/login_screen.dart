@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/router/app_router.dart';
+import '../../../core/providers.dart';
 import '../utils/phone_formatter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -139,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 keyboardType: TextInputType.number,
                 inputFormatters: [PhoneInputFormatter()],
                 decoration: const InputDecoration(
-                  hintText: '07 00 00 00 00',
+                  hintText: '0700000000',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
               ).animate().fadeIn(delay: 250.ms, duration: 400.ms),
