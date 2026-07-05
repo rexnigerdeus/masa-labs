@@ -69,74 +69,110 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.bg,
-      body: tontinesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.rondo)),
-        error: (error, _) => _EmptyState(
-          onRefresh: () => ref.invalidate(myTontinesProvider),
-        ),
-        data: (tontines) {
-          if (tontines.isEmpty) {
-            // État vide : écran fixe, non scrollable
-            return _EmptyState(
-              onCreate: () => context.push('/create-tontine'),
-              onJoin: () => context.push('/join-tontine'),
-            );
-          }
-
-          // État avec tontines : scrollable
-          return CustomScrollView(
-            slivers: [
-              // Header
-              SliverToBoxAdapter(
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: CustomScrollView(
+        slivers: [
+          // Header
+          SliverToBoxAdapter(
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Mes tontines',
-                              style: GoogleFonts.inter(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.text,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Gérez vos cercles d\'épargne',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: AppTheme.muted,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'Mes tontines',
+                          style: GoogleFonts.inter(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.text,
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(LucideIcons.bell, color: AppTheme.muted, size: 22),
-                              onPressed: () => context.push('/notifications'),
-                            ),
-                            IconButton(
-                              icon: const Icon(LucideIcons.settings, color: AppTheme.muted, size: 22),
-                              onPressed: () => context.push('/settings'),
-                            ),
-                          ],
+                        const SizedBox(height: 4),
+                        Text(
+                          'Gérez vos cercles d\'épargne',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: AppTheme.muted,
+                          ),
                         ),
                       ],
                     ),
-                  ).animate().fadeIn(duration: 400.ms),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(LucideIcons.bell, color: AppTheme.muted, size: 22),
+                          onPressed: () => context.push('/notifications'),
+                        ),
+                        IconButton(
+                          icon: const Icon(LucideIcons.settings, color: AppTheme.muted, size: 22),
+                          onPressed: () => context.push('/settings'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
+              ).animate().fadeIn(duration: 400.ms),
+            ),
+          ),
 
-              // Tontines list
-              SliverList(
+          // Content
+          tontinesAsync.when(
+            loading: () => const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator(color: AppTheme.rondo)),
+            ),
+            error: (error, _) => SliverFillRemaining(
+              hasScrollBody: false,
+              child: _EmptyState(
+                icon: LucideIcons.alertCircle,
+                title: 'Une erreur est survenue',
+                subtitle: 'Tirez pour réessayer',
+                onRefresh: () => ref.invalidate(myTontinesProvider),
+              ),
+            ),
+            data: (tontines) {
+              if (tontines.isEmpty) {
+                // État vide : hasScrollBody = false → écran fixe, non scrollable
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _EmptyState(
+                    icon: LucideIcons.users,
+                    title: 'Aucune tontine',
+                    subtitle: 'Créez une tontine ou rejoignez-en une avec un code',
+                    actions: [
+                      const SizedBox(height: 24),
+                      // Bouton Créer agrandi (pleine largeur)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: () => context.push('/create-tontine'),
+                          child: const Text('Créer une tontine'),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Bouton Rejoindre
+                      TextButton(
+                        onPressed: () => context.push('/join-tontine'),
+                        child: Text(
+                          'Rejoindre',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.rondo,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final t = tontines[index];
@@ -150,156 +186,72 @@ class HomeScreen extends ConsumerWidget {
                   },
                   childCount: tontines.length,
                 ),
-              ),
+              );
+            },
+          ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
-          );
-        },
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
       ),
-      // FAB (visible seulement quand il y a des tontines)
-      floatingActionButton: tontinesAsync.maybeWhen(
-        data: (tontines) => tontines.isEmpty
-            ? null
-            : FloatingActionButton.extended(
-                onPressed: () => context.push('/create-tontine'),
-                backgroundColor: AppTheme.rondo,
-                foregroundColor: Colors.white,
-                icon: const Icon(LucideIcons.plus, size: 22),
-                label: Text(
-                  'Nouvelle tontine',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                ),
-              ),
-        orElse: () => null,
+      // FAB
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/create-tontine'),
+        backgroundColor: AppTheme.rondo,
+        foregroundColor: Colors.white,
+        icon: const Icon(LucideIcons.plus, size: 22),
+        label: Text(
+          'Nouvelle tontine',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
 }
 
-/// État vide : écran fixe centré, non scrollable
 class _EmptyState extends StatelessWidget {
-  final VoidCallback? onCreate;
-  final VoidCallback? onJoin;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Widget>? actions;
   final VoidCallback? onRefresh;
 
-  const _EmptyState({this.onCreate, this.onJoin, this.onRefresh});
+  const _EmptyState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.actions,
+    this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Si onRefresh est défini, c'est une erreur
-    if (onRefresh != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(LucideIcons.alertCircle, size: 48, color: AppTheme.muted2),
-            const SizedBox(height: 16),
-            Text(
-              'Une erreur est survenue',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.text,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Tirez pour réessayer',
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.muted),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // État vide normal : fixe, centré verticalement
-    return SafeArea(
+    return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icône
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppTheme.rondoSoft,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: const Icon(
-                LucideIcons.users,
-                size: 40,
-                color: AppTheme.rondo,
-              ),
-            ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.8, 0.8)),
-
-            const SizedBox(height: 28),
-
-            // Titre
+            Icon(icon, size: 56, color: AppTheme.muted2),
+            const SizedBox(height: 20),
             Text(
-              'Aucune tontine',
+              title,
               style: GoogleFonts.inter(
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.text,
-                letterSpacing: -0.3,
               ),
-            ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
-
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
-
-            // Sous-titre
             Text(
-              'Créez une tontine ou rejoignez-en une\navec un code d\'invitation',
+              subtitle,
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: AppTheme.muted,
-                height: 1.5,
               ),
               textAlign: TextAlign.center,
-            ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
-
-            const SizedBox(height: 36),
-
-            // Bouton Créer (grand)
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton.icon(
-                onPressed: onCreate,
-                icon: const Icon(LucideIcons.plus, size: 22),
-                label: Text(
-                  'Créer une tontine',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.1),
-
-            const SizedBox(height: 14),
-
-            // Bouton Rejoindre
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: TextButton.icon(
-                onPressed: onJoin,
-                icon: const Icon(LucideIcons.link, size: 20, color: AppTheme.rondo),
-                label: Text(
-                  'J\'ai un code d\'invitation',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.rondo,
-                  ),
-                ),
-              ),
-            ).animate().fadeIn(delay: 250.ms, duration: 400.ms).slideY(begin: 0.1),
+            ),
+            if (actions != null) ...actions!,
           ],
         ),
       ),
