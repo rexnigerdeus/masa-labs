@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/phone_formatter.dart';
 
 /// Service d'auth pour The Everyday Co.
 /// Utilise le pseudo-email : numéro de téléphone transformé en email
@@ -9,8 +10,8 @@ class AuthService {
 
   /// Normalise un numéro de téléphone en pseudo-email
   static String phoneToEmail(String phone) {
-    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    return '$cleanPhone@everyday.co';
+    final cleanPhoneStr = cleanPhone(phone);
+    return '$cleanPhoneStr@everyday.co';
   }
 
   /// Inscription avec numéro de téléphone + mot de passe

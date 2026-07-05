@@ -58,9 +58,9 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
+              ).animate().fadeIn(duration: 400.ms),
             ),
-          ).animate().fadeIn(duration: 400.ms),
+          ),
 
           // Quick stats
           SliverToBoxAdapter(
@@ -84,9 +84,9 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
+              ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.1),
             ),
-          ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.1),
+          ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 28)),
 
@@ -101,7 +101,7 @@ class HomeScreen extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   color: AppTheme.text,
                 ),
-              ),
+              ).animate().fadeIn(duration: 400.ms),
             ),
           ),
           SliverList(
@@ -153,7 +153,7 @@ class HomeScreen extends StatelessWidget {
       _TontineData(
         name: 'Commerçantes Adjamé',
         mise: 25000,
-        frequence: 'Hebdomadaire',
+        frequence: 'Semaine',
         nbMembres: 5,
         cotisationsRecues: 4,
         statut: 'active',

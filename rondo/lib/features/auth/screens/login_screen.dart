@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/router/app_router.dart';
+import '../utils/phone_formatter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -28,9 +29,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (_phoneController.text.trim().isEmpty ||
-        _passwordController.text.isEmpty) {
-      _showError('Veuillez remplir tous les champs');
+    if (_phoneController.text.trim().isEmpty) {
+      _showError('Veuillez saisir votre numéro de téléphone');
+      return;
+    }
+    if (!isValidPhone(_phoneController.text)) {
+      _showError('Numéro de téléphone invalide');
+      return;
+    }
+    if (_passwordController.text.isEmpty) {
+      _showError('Veuillez saisir votre mot de passe');
       return;
     }
 
@@ -128,9 +136,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 8),
               TextField(
                 controller: _phoneController,
-                keyboardType: TextInputType.phone,
+                keyboardType: TextInputType.number,
+                inputFormatters: [PhoneInputFormatter()],
                 decoration: const InputDecoration(
-                  hintText: '+225 07 00 00 00 00',
+                  hintText: '07 00 00 00 00',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
               ).animate().fadeIn(delay: 250.ms, duration: 400.ms),
