@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/router/app_router.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -34,13 +36,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // TODO: Implémenter l'auth Supabase (phone + password)
-    // Pour l'instant, simulation
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signIn(
+        phone: _phoneController.text.trim(),
+        password: _passwordController.text,
+      );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/home');
+      if (mounted) {
+        context.go('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError('Numéro ou mot de passe incorrect');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -154,27 +165,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ).animate().fadeIn(delay: 350.ms, duration: 400.ms),
-
-              const SizedBox(height: 12),
-
-              // Option OTP
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    // TODO: Naviguer vers OTP login
-                    context.go('/verify-otp?phone=');
-                  },
-                  child: Text(
-                    'Connexion par OTP WhatsApp',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.rondo,
-                    ),
-                  ),
-                ),
-              ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
 
               const SizedBox(height: 24),
 

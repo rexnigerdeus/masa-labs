@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/router/app_router.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -48,17 +50,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    // TODO: Implémenter l'inscription Supabase
-    // 1. Créer le compte avec phone + password
-    // 2. Déclencher l'Edge Function send-whatsapp-otp
-    // 3. Naviguer vers l'écran de vérification OTP
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signUp(
+        phone: _phoneController.text.trim(),
+        password: _passwordController.text,
+        fullName: _nameController.text.trim(),
+      );
 
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      final phone = _phoneController.text.trim();
-      context.go('/verify-otp?phone=$phone');
+      if (mounted) {
+        // Inscription réussie → directement connecté (email confirm désactivé)
+        context.go('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError('Erreur lors de l\'inscription : ${e.toString()}');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -211,7 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 24),
 
-              // Info WhatsApp OTP
+              // Info sécurité
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -222,14 +231,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Icon(
-                      Icons.chat_bubble_outline,
+                      Icons.lock_outline,
                       color: AppTheme.rondo,
                       size: 20,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Un code de vérification sera envoyé sur votre WhatsApp pour valider votre numéro.',
+                        'Vos données sont sécurisées. Aucune information n\'est partagée avec des tiers.',
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           color: AppTheme.muted,

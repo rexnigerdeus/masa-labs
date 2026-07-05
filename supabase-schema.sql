@@ -2,12 +2,32 @@
 
 > À saisir directement dans le SQL Editor de Supabase.
 > Projet : **The Everyday Co.** (un seul projet, une seule base, tables préfixées par app).
+>
+> **Auth :** pseudo-email + mot de passe (Supabase Auth natif, gratuit, zéro config externe).
+> Le numéro de téléphone est transformé en pseudo-email `0700000000@everyday.co`
+> pour utiliser l'auth email/password de Supabase sans envoyer d'email.
+> Le téléphone réel est stocké dans `profiles.phone`.
 
 ---
 
 ## ÉTAPE 1 — Tables partagées (auth, profiles, OTP)
 
 ```sql
+-- ============================================================
+-- FONCTION: normalize_phone_to_email
+-- Transforme un numéro de téléphone en pseudo-email unique
+-- pour utiliser l'auth email/password de Supabase sans envoyer
+-- d'email. Le téléphone reste l'identité réelle (stocké dans profiles).
+-- Ex: "07 00 00 00 00" → "0700000000@everyday.co"
+-- ============================================================
+create or replace function public.normalize_phone_to_email(p_phone text)
+returns text
+language sql
+immutable
+as $$
+  select lower(regexp_replace(p_phone, '[^0-9]', '', 'g')) || '@everyday.co';
+$$;
+
 -- ============================================================
 -- TABLE: profiles
 -- Extension de auth.users avec les infos communes
@@ -25,16 +45,23 @@ create table if not exists public.profiles (
 create index if not exists idx_profiles_phone on public.profiles(phone);
 
 -- Auto-création du profil à l'inscription
+-- L'email est un pseudo-email (0700000000@everyday.co)
+-- On extrait le téléphone depuis l'email pour le stocker dans profiles
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer set search_path = public
 as $$
+declare
+  v_phone text;
 begin
+  -- Extraire le téléphone du pseudo-email (tout ce qui est avant @)
+  v_phone := split_part(new.email, '@', 1);
+
   insert into public.profiles (id, phone, full_name)
   values (
     new.id,
-    coalesce(new.phone, ''),
+    v_phone,
     coalesce(new.raw_user_meta_data->>'full_name', '')
   );
   return new;
@@ -56,31 +83,6 @@ create policy "Users can view own profile"
 create policy "Users can update own profile"
   on public.profiles for update
   using (auth.uid() = id);
-
--- ============================================================
--- TABLE: otp_codes
--- Stockage temporaire des codes OTP WhatsApp
--- ============================================================
-create table if not exists public.otp_codes (
-  id uuid primary key default gen_random_uuid(),
-  phone text not null,
-  code text not null,
-  expires_at timestamptz not null,
-  consumed boolean not null default false,
-  created_at timestamptz not null default now()
-);
-
-create index if not exists idx_otp_phone on public.otp_codes(phone);
-create index if not exists idx_otp_expires on public.otp_codes(expires_at);
-
--- RLS : pas de accès direct depuis le client (Edge Function only)
-alter table public.otp_codes enable row level security;
--- Aucune policy = aucun accès depuis le client via l'API
--- L'Edge Function utilise le service_role key qui bypass RLS
-
--- Nettoyage automatique des OTP expirés (via pg_cron si disponible)
--- À activer dans Supabase Dashboard > Database > Extensions > pg_cron
--- (optionnel, les OTP expirés sont ignorés de toute façon)
 ```
 
 ---
@@ -91,7 +93,12 @@ alter table public.otp_codes enable row level security;
 -- ============================================================
 -- RONDO: Gestion de tontines
 -- Préfixe: rondo_
+-- IMPORTANT: Toutes les tables sont créées d'abord, puis les
+-- RLS policies sont ajoutées ensuite (pour éviter les erreurs
+-- de référence croisée entre tables).
 -- ============================================================
+
+-- ---- ÉTAPE 2A: Création de toutes les tables ----
 
 -- Table: rondo_tontines
 create table if not exists public.rondo_tontines (
@@ -111,9 +118,77 @@ create table if not exists public.rondo_tontines (
 create index if not exists idx_rondo_tontines_admin on public.rondo_tontines(admin_id);
 create index if not exists idx_rondo_tontines_code on public.rondo_tontines(invitation_code);
 
-alter table public.rondo_tontines enable row level security;
+-- Table: rondo_membres
+create table if not exists public.rondo_membres (
+  id uuid primary key default gen_random_uuid(),
+  tontine_id uuid not null references public.rondo_tontines(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  ordre_tour integer, -- position dans l'ordre des tours (1 à nb_membres)
+  statut text not null default 'actif' check (statut in ('actif', 'exclu', 'parti')),
+  joined_at timestamptz not null default now(),
+  unique(tontine_id, user_id)
+);
 
--- Un user peut voir les tontines où il est admin OU membre
+create index if not exists idx_rondo_membres_tontine on public.rondo_membres(tontine_id);
+create index if not exists idx_rondo_membres_user on public.rondo_membres(user_id);
+
+-- Table: rondo_tours
+create table if not exists public.rondo_tours (
+  id uuid primary key default gen_random_uuid(),
+  tontine_id uuid not null references public.rondo_tontines(id) on delete cascade,
+  numero integer not null, -- 1 à nb_membres
+  date_debut date not null,
+  date_fin date not null,
+  beneficiaire_id uuid references public.rondo_membres(id) on delete set null,
+  statut text not null default 'a_venir' check (statut in ('a_venir', 'en_cours', 'termine')),
+  created_at timestamptz not null default now(),
+  unique(tontine_id, numero)
+);
+
+create index if not exists idx_rondo_tours_tontine on public.rondo_tours(tontine_id);
+
+-- Table: rondo_paiements
+create table if not exists public.rondo_paiements (
+  id uuid primary key default gen_random_uuid(),
+  tour_id uuid not null references public.rondo_tours(id) on delete cascade,
+  membre_id uuid not null references public.rondo_membres(id) on delete cascade,
+  montant integer not null check (montant >= 0),
+  mode text not null check (mode in ('especes', 'wave', 'orange_money', 'mtn_money')),
+  note text,
+  confirmed_by uuid not null references public.profiles(id), -- l'admin qui a enregistré
+  confirmed_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  unique(tour_id, membre_id) -- un seul paiement par membre par tour
+);
+
+create index if not exists idx_rondo_paiements_tour on public.rondo_paiements(tour_id);
+create index if not exists idx_rondo_paiements_membre on public.rondo_paiements(membre_id);
+
+-- Table: rondo_notifications
+create table if not exists public.rondo_notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  tontine_id uuid references public.rondo_tontines(id) on delete cascade,
+  type text not null check (type in ('rappel_cotisation', 'paiement_confirme', 'nouveau_membre', 'tour_atteint', 'message_admin', 'retard_paiement')),
+  titre text not null,
+  corps text not null,
+  lu boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rondo_notifs_user on public.rondo_notifications(user_id, lu, created_at desc);
+
+-- ---- ÉTAPE 2B: Activation RLS sur toutes les tables ----
+
+alter table public.rondo_tontines enable row level security;
+alter table public.rondo_membres enable row level security;
+alter table public.rondo_tours enable row level security;
+alter table public.rondo_paiements enable row level security;
+alter table public.rondo_notifications enable row level security;
+
+-- ---- ÉTAPE 2C: Policies RLS (toutes les tables existent maintenant) ----
+
+-- rondo_tontines: l'admin peut tout faire, les membres peuvent voir
 create policy "Admin can manage own tontines"
   on public.rondo_tontines for all
   using (auth.uid() = admin_id);
@@ -129,22 +204,7 @@ create policy "Members can view their tontines"
     )
   );
 
--- Table: rondo_membres
-create table if not exists public.rondo_membres (
-  id uuid primary key default gen_random_uuid(),
-  tontine_id uuid not null references public.rondo_tontines(id) on delete cascade,
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  ordre_tour integer, -- position dans l'ordre des tours (1 à nb_membres)
-  statut text not null default 'actif' check (statut in ('actif', 'exclu', 'parti')),
-  joined_at timestamptz not null default now(),
-  unique(tontine_id, user_id)
-);
-
-create index if not exists idx_rondo_membres_tontine on public.rondo_membres(tontine_id);
-create index if not exists idx_rondo_membres_user on public.rondo_membres(user_id);
-
-alter table public.rondo_membres enable row level security;
-
+-- rondo_membres: l'admin gère, les membres voient leurs co-membres
 create policy "Admin can manage members"
   on public.rondo_membres for all
   using (
@@ -168,23 +228,7 @@ create policy "Members can view co-members"
     )
   );
 
--- Table: rondo_tours
-create table if not exists public.rondo_tours (
-  id uuid primary key default gen_random_uuid(),
-  tontine_id uuid not null references public.rondo_tontines(id) on delete cascade,
-  numero integer not null, -- 1 à nb_membres
-  date_debut date not null,
-  date_fin date not null,
-  beneficiaire_id uuid references public.rondo_membres(id) on delete set null,
-  statut text not null default 'a_venir' check (statut in ('a_venir', 'en_cours', 'termine')),
-  created_at timestamptz not null default now(),
-  unique(tontine_id, numero)
-);
-
-create index if not exists idx_rondo_tours_tontine on public.rondo_tours(tontine_id);
-
-alter table public.rondo_tours enable row level security;
-
+-- rondo_tours: l'admin gère, les membres voient
 create policy "Admin can manage tours"
   on public.rondo_tours for all
   using (
@@ -206,25 +250,7 @@ create policy "Members can view tours"
     )
   );
 
--- Table: rondo_paiements
-create table if not exists public.rondo_paiements (
-  id uuid primary key default gen_random_uuid(),
-  tour_id uuid not null references public.rondo_tours(id) on delete cascade,
-  membre_id uuid not null references public.rondo_membres(id) on delete cascade,
-  montant integer not null check (montant >= 0),
-  mode text not null check (mode in ('especes', 'wave', 'orange_money', 'mtn_money')),
-  note text,
-  confirmed_by uuid not null references public.profiles(id), -- l'admin qui a enregistré
-  confirmed_at timestamptz not null default now(),
-  created_at timestamptz not null default now(),
-  unique(tour_id, membre_id) -- un seul paiement par membre par tour
-);
-
-create index if not exists idx_rondo_paiements_tour on public.rondo_paiements(tour_id);
-create index if not exists idx_rondo_paiements_membre on public.rondo_paiements(membre_id);
-
-alter table public.rondo_paiements enable row level security;
-
+-- rondo_paiements: l'admin gère, les membres voient
 create policy "Admin can manage payments"
   on public.rondo_paiements for all
   using (
@@ -248,22 +274,7 @@ create policy "Members can view payments in their tontines"
     )
   );
 
--- Table: rondo_notifications
-create table if not exists public.rondo_notifications (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  tontine_id uuid references public.rondo_tontines(id) on delete cascade,
-  type text not null check (type in ('rappel_cotisation', 'paiement_confirme', 'nouveau_membre', 'tour_atteint', 'message_admin', 'retard_paiement')),
-  titre text not null,
-  corps text not null,
-  lu boolean not null default false,
-  created_at timestamptz not null default now()
-);
-
-create index if not exists idx_rondo_notifs_user on public.rondo_notifications(user_id, lu, created_at desc);
-
-alter table public.rondo_notifications enable row level security;
-
+-- rondo_notifications: chaque user voit et modifie les siennes
 create policy "Users can view own notifications"
   on public.rondo_notifications for select
   using (auth.uid() = user_id);
@@ -576,216 +587,19 @@ create trigger set_updated_at_tontines
 
 ---
 
-## ÉTAPE 5 — Edge Function pour OTP WhatsApp
+## ÉTAPE 5 — Configuration Auth Supabase
 
-À créer dans Supabase Dashboard > Edge Functions > New Function.
+Dans Supabase Dashboard > Authentication > Providers :
 
-**Nom :** `send-whatsapp-otp`
+1. **Email provider** : activé par défaut (garder activé)
+2. **Désactiver "Confirm email"** : Authentication > Settings >
+   "Confirm email" → OFF (puisque l'email est un pseudo-email,
+   on ne veut pas que Supabase envoie un email de confirmation)
+3. **Désactiver les autres providers** (Google, Apple, etc.) pour v1
 
-```typescript
-// supabase/functions/send-whatsapp-otp/index.ts
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const WHATSAPP_TOKEN = Deno.env.get("WHATSAPP_TOKEN")!;
-const PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID")!;
-
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-);
-
-function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-async function sendWhatsAppOTP(phone: string, code: string) {
-  // Normaliser le numéro (format international sans +)
-  const normalizedPhone = phone.replace(/\D/g, "").replace(/^0/, "225");
-
-  const response = await fetch(
-    `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: normalizedPhone,
-        type: "template",
-        template: {
-          name: "otp_message", // À créer dans Meta Business Manager
-          language: { code: "fr" },
-          components: [
-            {
-              type: "body",
-              parameters: [
-                { type: "text", text: code },
-              ],
-            },
-          ],
-        },
-      }),
-    }
-  );
-
-  return response.ok;
-}
-
-Deno.serve(async (req) => {
-  try {
-    const { phone } = await req.json();
-
-    if (!phone) {
-      return new Response(JSON.stringify({ error: "Phone required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    // Générer le code
-    const code = generateCode();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-
-    // Sauvegarder en base
-    const { error: dbError } = await supabase
-      .from("otp_codes")
-      .insert({
-        phone,
-        code,
-        expires_at: expiresAt.toISOString(),
-      });
-
-    if (dbError) {
-      throw dbError;
-    }
-
-    // Envoyer via WhatsApp
-    const sent = await sendWhatsAppOTP(phone, code);
-
-    if (!sent) {
-      return new Response(
-        JSON.stringify({ error: "Failed to send WhatsApp message" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({ success: true, message: "OTP sent via WhatsApp" }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
-});
-```
-
-**Edge Function pour vérifier l'OTP :** `verify-whatsapp-otp`
-
-```typescript
-// supabase/functions/verify-whatsapp-otp/index.ts
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-);
-
-Deno.serve(async (req) => {
-  try {
-    const { phone, code } = await req.json();
-
-    if (!phone || !code) {
-      return new Response(
-        JSON.stringify({ error: "Phone and code required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Chercher le code le plus récent non consommé
-    const { data, error } = await supabase
-      .from("otp_codes")
-      .select("*")
-      .eq("phone", phone)
-      .eq("consumed", false)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error || !data) {
-      return new Response(
-        JSON.stringify({ valid: false, error: "No OTP found" }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Vérifier l'expiration
-    if (new Date(data.expires_at) < new Date()) {
-      return new Response(
-        JSON.stringify({ valid: false, error: "OTP expired" }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Vérifier le code
-    if (data.code !== code) {
-      return new Response(
-        JSON.stringify({ valid: false, error: "Invalid code" }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Marquer comme consommé
-    await supabase
-      .from("otp_codes")
-      .update({ consumed: true })
-      .eq("id", data.id);
-
-    return new Response(
-      JSON.stringify({ valid: true }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
-});
-```
-
----
-
-## ÉTAPE 6 — Variables d'environnement Supabase
-
-À configurer dans Supabase Dashboard > Edge Functions > Secrets :
-
-```
-WHATSAPP_TOKEN=EAAXxxxxxxxxxxxxxxxxxxxx
-WHATSAPP_PHONE_NUMBER_ID=123456789
-```
-
-> Le token et le Phone Number ID se récupèrent sur
-> [Meta for Developers](https://developers.facebook.com/apps/) >
-> WhatsApp Business API > Configuration.
-
----
-
-## ÉTAPE 7 — Template WhatsApp à créer dans Meta Business Manager
-
-Dans Meta Business Manager > WhatsApp Manager > Modèles de messages :
-
-- **Nom :** `otp_message`
-- **Langue :** Français
-- **Catégorie :** Authentification
-- **Corps :** `Votre code de vérification The Everyday Co. est {{1}}. Ne le partagez avec personne.`
-
-> Les modèles d'authentification sont gratuits et illimités dans la plupart des cas.
-> Vérifier les conditions actuelles de Meta pour la Côte d'Ivoire.
+> C'est tout. Pas de configuration externe nécessaire.
+> L'auth se fait via `supabase.auth.signUp(email, password)` côté Flutter,
+> où `email` est le pseudo-email généré depuis le numéro de téléphone.
 
 ---
 
@@ -794,7 +608,6 @@ Dans Meta Business Manager > WhatsApp Manager > Modèles de messages :
 | Table | App | Rôle |
 |---|---|---|
 | `profiles` | Shared | Infos utilisateur (phone, name, avatar) |
-| `otp_codes` | Shared | Codes OTP WhatsApp temporaires |
 | `rondo_tontines` | Rondo | Tontines créées |
 | `rondo_membres` | Rondo | Membres de chaque tontine |
 | `rondo_tours` | Rondo | Tours de cotisation |
@@ -805,6 +618,7 @@ Dans Meta Business Manager > WhatsApp Manager > Modèles de messages :
 
 | Fonction | Rôle |
 |---|---|
+| `normalize_phone_to_email(phone)` | Transforme un téléphone en pseudo-email |
 | `handle_new_user()` | Auto-création du profil à l'inscription |
 | `update_updated_at()` | Mise à jour automatique du updated_at |
 | `rondo_rejoindre_tontine(code)` | Rejoindre une tontine par code |
@@ -816,4 +630,4 @@ Dans Meta Business Manager > WhatsApp Manager > Modèles de messages :
 
 ---
 
-*The Everyday Co. — Schéma SQL v1 | Juillet 2026*
+*The Everyday Co. — Schéma SQL v1.1 | Juillet 2026*

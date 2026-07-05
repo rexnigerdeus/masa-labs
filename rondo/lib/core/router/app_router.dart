@@ -1,26 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
-import '../../features/auth/screens/otp_verify_screen.dart';
+import '../../features/auth/services/auth_service.dart';
 import '../../features/tontines/screens/home_screen.dart';
 import '../../features/tontines/screens/splash_screen.dart';
 
-// Provider pour l'état d'auth
-class AuthState extends Notifier<bool> {
-  @override
-  bool build() => false;
+// Provider pour le AuthService
+final authServiceProvider = Provider((ref) => AuthService());
 
-  void login() => state = true;
-  void logout() => state = false;
-}
+// Provider qui écoute l'état d'auth Supabase
+final authStateProvider = StreamProvider<AuthState>((ref) {
+  return Supabase.instance.client.auth.onAuthStateChange;
+});
 
-final authStateProvider =
-    NotifierProvider<AuthState, bool>(AuthState.new);
+// Provider pour savoir si l'user est connecté
+final isLoggedInProvider = Provider<bool>((ref) {
+  final authState = ref.watch(authStateProvider);
+  return authState.maybeWhen(
+    data: (state) => state.session != null,
+    orElse: () => Supabase.instance.client.auth.currentSession != null,
+  );
+});
 
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final isLoggedIn = ref.watch(authStateProvider);
+  final isLoggedIn = ref.watch(isLoggedInProvider);
 
   return GoRouter(
     initialLocation: '/',
@@ -38,13 +44,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
-        path: '/verify-otp',
-        builder: (context, state) {
-          final phone = state.uri.queryParameters['phone'] ?? '';
-          return OtpVerifyScreen(phone: phone);
-        },
-      ),
-      GoRoute(
         path: '/home',
         builder: (context, state) => const HomeScreen(),
       ),
@@ -53,15 +52,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final loggedIn = isLoggedIn;
       final isAuthRoute = state.matchedLocation == '/' ||
           state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register' ||
-          state.matchedLocation == '/verify-otp';
+          state.matchedLocation == '/register';
 
       // Si pas connecté et pas sur une route auth → rediriger vers login
       if (!loggedIn && !isAuthRoute) {
         return '/login';
       }
 
-      // Si connecté et sur une route auth → rediriger vers home
+      // Si connecté et sur une route auth (sauf splash) → rediriger vers home
       if (loggedIn && isAuthRoute && state.matchedLocation != '/') {
         return '/home';
       }

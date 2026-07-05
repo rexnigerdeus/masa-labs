@@ -9,15 +9,14 @@
 - Frontend : Flutter → iOS + Android + Web depuis une seule base de code
 - Backend : Supabase (PostgreSQL + Auth + Realtime + Storage) → zéro serveur à gérer
 - Paiements : Wave CI API + Orange Money API (intégration progressive)
-- Notifications : Firebase Cloud Messaging (gratuit, illimité) + WhatsApp Business Cloud API (OTP)
+- Notifications : Firebase Cloud Messaging (gratuit, illimité)
 - Déploiement : Flutter build → App Store + Play Store
 
 **Règles de conception communes**
 - Langue : Français uniquement en v1
 - Onboarding : max 3 écrans, inscription par numéro de téléphone + mot de passe
-- Connexion : 2 options — (1) phone + mot de passe, (2) phone + OTP WhatsApp (passwordless)
-- OTP : envoyés via WhatsApp Business Cloud API (gratuit, 1000 conv/mois) — pas de SMS
-- Vérification du numéro : OTP WhatsApp obligatoire à l'inscription
+- Auth : pseudo-email `${cleanPhone}@everyday.co` + mot de passe (Supabase Auth natif, gratuit, zéro config externe). Le téléphone est l'identité réelle, le pseudo-email est juste un identifiant technique pour Supabase. Aucun email n'est envoyé.
+- Connexion : numéro de téléphone + mot de passe (direct, pas d'OTP)
 - Hors-ligne : les données critiques sont accessibles sans connexion
 - Monétisation v1 : Freemium simple — une limite claire, un upgrade évident
 
@@ -53,7 +52,7 @@ Rondo permet à n'importe quel groupe de créer, gérer et suivre une tontine en
 ### Onboarding
 1. **Splash** — Logo Rondo animé, 2 secondes
 2. **Accueil** — "Créer une tontine" / "Rejoindre une tontine"
-3. **Inscription** — Saisie numéro de téléphone + mot de passe → OTP WhatsApp pour vérifier le numéro
+3. **Inscription** — Saisie numéro de téléphone + mot de passe → compte créé (pseudo-email généré automatiquement)
 4. **Profil** — Prénom, nom, photo optionnelle
 
 ### Tableau de bord (Admin)
@@ -82,7 +81,7 @@ Rondo permet à n'importe quel groupe de créer, gérer et suivre une tontine en
 
 **Création d'une tontine (Admin) :**
 ```
-Inscription OTP
+Inscription (téléphone + mot de passe)
   → Créer tontine (nom, mise 10 000 FCFA, mensuelle, 8 membres)
   → Copier lien d'invitation → Partager sur WhatsApp
   → Membres rejoignent avec le code
@@ -105,7 +104,7 @@ Home → Tontine "Famille Koné"
 **Rappel automatique :**
 ```
 3 jours avant la date de cotisation
-  → Notification push + WhatsApp optionnel
+  → Notification push
   → "Rappel : votre cotisation de 10 000 FCFA est due dans 3 jours"
   → Membre tape → Voir le détail de la tontine
 ```
@@ -143,7 +142,7 @@ notifications   id, user_id, type, titre, corps, lu, created_at
 |---|---|---|
 | Gratuit | 1 tontine, max 10 membres | 0 FCFA |
 | Standard | Tontines illimitées, max 30 membres | 1 500 FCFA/mois |
-| Pro | Illimité + WhatsApp de rappel automatique | 3 500 FCFA/mois |
+| Pro | Illimité + rappels automatiques | 3 500 FCFA/mois |
 
 ---
 
@@ -185,7 +184,7 @@ Kassa remplace le cahier de caisse par un tableau de bord mobile simple qui dit 
 ### Onboarding
 1. **Splash** — Logo Kassa
 2. **Bienvenue** — "Gérez votre caisse en 30 secondes" + 3 bullets simples
-3. **Inscription** — Numéro de téléphone + mot de passe → OTP WhatsApp
+3. **Inscription** — Numéro de téléphone + mot de passe → compte créé
 4. **Mon commerce** — Nom du commerce, secteur (liste déroulante), devise (FCFA par défaut)
 
 ### Tableau de bord principal
@@ -308,7 +307,7 @@ Krédi permet à tout commerçant de savoir exactement qui lui doit quoi, d'envo
 ### Onboarding
 1. **Splash** — Logo Krédi
 2. **Bienvenue** — "Sachez exactement ce qu'on vous doit" + illustration simple
-3. **Inscription** — Téléphone + mot de passe → OTP WhatsApp
+3. **Inscription** — Téléphone + mot de passe → compte créé
 4. **Mon profil** — Prénom, nom de commerce
 
 ### Tableau de bord créancier
@@ -408,7 +407,7 @@ rappels         id, creance_id, canal (whatsapp/sms), envoye_at
 ---
 
 ## Ce qui est EXCLU du MVP v1
-- WhatsApp automatiques payants (v2)
+- Rappels automatiques payants (v2)
 - Intégration Wave pour confirmation de paiement (v2)
 - Contrat de vente numérique signé (v2)
 - Mode débiteur web (sans app) (v2)
@@ -444,7 +443,7 @@ Vitae permet à n'importe quel diplômé de créer un CV professionnel en 3 minu
 ### Onboarding
 1. **Splash** — Logo Vitae
 2. **Bienvenue** — "Votre CV professionnel en 3 minutes" + exemples de CV générés
-3. **Inscription** — Téléphone + mot de passe → OTP WhatsApp (ou email optionnel)
+3. **Inscription** — Téléphone + mot de passe → compte créé (ou email optionnel)
 4. **Quel est votre objectif ?** — Trouver un emploi / Trouver un stage / Mettre à jour mon CV (personnalise l'expérience)
 
 ### Création du CV (formulaire guidé étape par étape)
@@ -488,7 +487,7 @@ Vitae permet à n'importe quel diplômé de créer un CV professionnel en 3 minu
 
 **Créer son premier CV :**
 ```
-Inscription OTP
+Inscription (téléphone + mot de passe)
   → Objectif : "Trouver un emploi"
   → Infos personnelles : Koné Aya, Abidjan
   → Titre : "Comptable Junior"
@@ -613,14 +612,13 @@ Frontend
 Backend
   Supabase
     ├── PostgreSQL (base de données — 1 projet, tables préfixées par app)
-    ├── Auth (phone + password + OTP WhatsApp via Edge Function)
+    ├── Auth (pseudo-email + password — natif Supabase, zéro config externe)
     ├── Realtime (Rondo — mises à jour live)
     ├── Storage (photos profil, PDFs)
-    └── Edge Functions (OTP WhatsApp, logique métier)
+    └── Edge Functions (logique métier)
 
 Notifications
   Firebase Cloud Messaging (push — gratuit, illimité)
-  WhatsApp Business Cloud API (OTP + rappels — 1000 conv/mois gratuites)
 
 Paiements (v2)
   Wave CI API

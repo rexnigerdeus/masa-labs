@@ -4,7 +4,6 @@ class SupabaseConfig {
   static const String supabaseUrl = 'https://VOTRE_PROJET.supabase.co';
   static const String supabaseAnonKey = 'VOTRE_ANON_KEY';
 
-  // Edge Functions
-  static const String functionSendOtp = 'send-whatsapp-otp';
-  static const String functionVerifyOtp = 'verify-whatsapp-otp';
+  // Domaine du pseudo-email (le téléphone est transformé en email)
+  static const String pseudoEmailDomain = 'everyday.co';
 }
