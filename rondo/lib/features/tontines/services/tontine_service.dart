@@ -24,15 +24,28 @@ class TontineService {
     required int nbMembres,
     required DateTime dateDebut,
   }) async {
+    final userId = _client.auth.currentUser!.id;
+
+    // 1. Créer la tontine
     final response = await _client.from('rondo_tontines').insert({
       'name': name,
-      'admin_id': _client.auth.currentUser!.id,
+      'admin_id': userId,
       'mise': mise,
       'frequence': frequence,
       'nb_membres': nbMembres,
       'date_debut': dateDebut.toIso8601String().split('T')[0],
       'statut': 'en_attente',
     }).select().single();
+
+    final tontineId = response['id'] as String;
+
+    // 2. Ajouter l'admin comme premier membre (ordre 1)
+    await _client.from('rondo_membres').insert({
+      'tontine_id': tontineId,
+      'user_id': userId,
+      'ordre_tour': 1,
+      'statut': 'actif',
+    });
 
     return response;
   }

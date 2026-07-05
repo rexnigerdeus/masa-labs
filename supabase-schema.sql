@@ -186,7 +186,50 @@ alter table public.rondo_tours enable row level security;
 alter table public.rondo_paiements enable row level security;
 alter table public.rondo_notifications enable row level security;
 
--- ---- ÉTAPE 2C: Policies RLS (toutes les tables existent maintenant) ----
+-- ---- ÉTAPE 2C: Fonctions helper SECURITY DEFINER ----
+-- Ces fonctions bypassent le RLS pour vérifier l'appartenance
+-- sans déclencher de récursion infinie entre policies.
+
+-- Vérifie si l'user est admin d'une tontine
+create or replace function public.rondo_is_admin(p_tontine_id uuid, p_user_id uuid)
+returns boolean
+language sql
+security definer set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.rondo_tontines t
+    where t.id = p_tontine_id and t.admin_id = p_user_id
+  );
+$$;
+
+-- Vérifie si l'user est membre actif d'une tontine
+create or replace function public.rondo_is_membre(p_tontine_id uuid, p_user_id uuid)
+returns boolean
+language sql
+security definer set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.rondo_membres m
+    where m.tontine_id = p_tontine_id
+    and m.user_id = p_user_id
+    and m.statut = 'actif'
+  );
+$$;
+
+-- Vérifie si l'user est admin ou membre actif d'une tontine
+create or replace function public.rondo_is_member_or_admin(p_tontine_id uuid, p_user_id uuid)
+returns boolean
+language sql
+security definer set search_path = public
+stable
+as $$
+  select public.rondo_is_admin(p_tontine_id, p_user_id)
+      or public.rondo_is_membre(p_tontine_id, p_user_id);
+$$;
+
+-- ---- ÉTAPE 2D: Policies RLS (utilisent les fonctions helper) ----
 
 -- rondo_tontines: l'admin peut tout faire, les membres peuvent voir
 create policy "Admin can manage own tontines"
@@ -195,60 +238,28 @@ create policy "Admin can manage own tontines"
 
 create policy "Members can view their tontines"
   on public.rondo_tontines for select
-  using (
-    exists (
-      select 1 from public.rondo_membres m
-      where m.tontine_id = rondo_tontines.id
-      and m.user_id = auth.uid()
-      and m.statut = 'actif'
-    )
-  );
+  using (public.rondo_is_membre(id, auth.uid()));
 
 -- rondo_membres: l'admin gère, les membres voient leurs co-membres
 create policy "Admin can manage members"
   on public.rondo_membres for all
-  using (
-    exists (
-      select 1 from public.rondo_tontines t
-      where t.id = rondo_membres.tontine_id
-      and t.admin_id = auth.uid()
-    )
-  );
+  using (public.rondo_is_admin(tontine_id, auth.uid()));
 
 create policy "Members can view co-members"
   on public.rondo_membres for select
   using (
     auth.uid() = user_id
-    or exists (
-      select 1 from public.rondo_membres m
-      join public.rondo_tontines t on m.tontine_id = t.id
-      where m.tontine_id = rondo_membres.tontine_id
-      and (m.user_id = auth.uid() or t.admin_id = auth.uid())
-      and m.statut = 'actif'
-    )
+    or public.rondo_is_member_or_admin(tontine_id, auth.uid())
   );
 
 -- rondo_tours: l'admin gère, les membres voient
 create policy "Admin can manage tours"
   on public.rondo_tours for all
-  using (
-    exists (
-      select 1 from public.rondo_tontines t
-      where t.id = rondo_tours.tontine_id
-      and t.admin_id = auth.uid()
-    )
-  );
+  using (public.rondo_is_admin(tontine_id, auth.uid()));
 
 create policy "Members can view tours"
   on public.rondo_tours for select
-  using (
-    exists (
-      select 1 from public.rondo_membres m
-      where m.tontine_id = rondo_tours.tontine_id
-      and m.user_id = auth.uid()
-      and m.statut = 'actif'
-    )
-  );
+  using (public.rondo_is_membre(tontine_id, auth.uid()));
 
 -- rondo_paiements: l'admin gère, les membres voient
 create policy "Admin can manage payments"
@@ -256,9 +267,8 @@ create policy "Admin can manage payments"
   using (
     exists (
       select 1 from public.rondo_tours t
-      join public.rondo_tontines ton on t.tontine_id = ton.id
       where t.id = rondo_paiements.tour_id
-      and ton.admin_id = auth.uid()
+      and public.rondo_is_admin(t.tontine_id, auth.uid())
     )
   );
 
@@ -266,11 +276,9 @@ create policy "Members can view payments in their tontines"
   on public.rondo_paiements for select
   using (
     exists (
-      select 1 from public.rondo_membres m
-      join public.rondo_tours t on m.tontine_id = t.tontine_id
+      select 1 from public.rondo_tours t
       where t.id = rondo_paiements.tour_id
-      and m.user_id = auth.uid()
-      and m.statut = 'actif'
+      and public.rondo_is_membre(t.tontine_id, auth.uid())
     )
   );
 
