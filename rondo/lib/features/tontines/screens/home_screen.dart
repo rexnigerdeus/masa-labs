@@ -12,9 +12,13 @@ import '../../../core/providers.dart';
 final myTontinesProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final service = ref.read(tontineServiceProvider);
+  // ignore: avoid_print
+  print('🔵 myTontinesProvider: fetching...');
   try {
     final adminData = await service.getHomeAdmin();
     final membreData = await service.getHomeMembre();
+    // ignore: avoid_print
+    print('🔵 myTontinesProvider: adminData=$adminData, membreData=$membreData');
 
     final tontineIds = <String>{};
     final allTontines = <Map<String, dynamic>>[];
@@ -54,8 +58,14 @@ final myTontinesProvider =
       }
     }
 
+    // ignore: avoid_print
+    print('🔵 myTontinesProvider: allTontines.length=${allTontines.length}');
     return allTontines;
-  } catch (e) {
+  } catch (e, st) {
+    // ignore: avoid_print
+    print('🔴 myTontinesProvider error: $e');
+    // ignore: avoid_print
+    print('🔴 Stack: $st');
     return [];
   }
 });
