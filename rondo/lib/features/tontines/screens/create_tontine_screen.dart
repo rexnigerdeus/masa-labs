@@ -6,9 +6,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../services/tontine_service.dart';
-
-final tontineServiceProvider = Provider((ref) => TontineService());
+import '../../../core/providers.dart';
+import 'home_screen.dart';
 
 class CreateTontineScreen extends ConsumerStatefulWidget {
   const CreateTontineScreen({super.key});
@@ -62,6 +61,9 @@ class _CreateTontineScreenState extends ConsumerState<CreateTontineScreen> {
       );
 
       if (mounted) {
+        // Invalider le provider pour forcer le re-fetch des tontines
+        ref.invalidate(myTontinesProvider);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Tontine créée ! Partagez le code d\'invitation.'),

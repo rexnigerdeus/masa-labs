@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers.dart';
+import 'home_screen.dart';
 
 class JoinTontineScreen extends ConsumerStatefulWidget {
   const JoinTontineScreen({super.key});
@@ -43,6 +44,8 @@ class _JoinTontineScreenState extends ConsumerState<JoinTontineScreen> {
       await service.rejoindreTontine(code);
 
       if (mounted) {
+        ref.invalidate(myTontinesProvider);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Vous avez rejoint la tontine !'),
