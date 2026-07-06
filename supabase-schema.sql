@@ -485,19 +485,19 @@ as $$
 begin
   return query
   select
-    t.id,
-    t.name,
+    t.id as tontine_id,
+    t.name as tontine_name,
     t.mise,
-    (select count(*) from public.rondo_membres where tontine_id = t.id and statut = 'actif')::integer,
-    t.nb_membres,
+    (select count(*)::integer from public.rondo_membres m where m.tontine_id = t.id and m.statut = 'actif') as nb_membres_actifs,
+    t.nb_membres as nb_membres_total,
     t.statut,
-    (select numero from public.rondo_tours where tontine_id = t.id and statut = 'en_cours' limit 1)::integer,
+    (select tr.numero from public.rondo_tours tr where tr.tontine_id = t.id and tr.statut = 'en_cours' limit 1) as tour_actuel_numero,
     (
       select coalesce(sum(p.montant), 0)::integer
       from public.rondo_paiements p
-      join public.rondo_tours tr on p.tour_id = tr.id
-      where tr.tontine_id = t.id and tr.statut = 'en_cours'
-    )
+      join public.rondo_tours tr2 on p.tour_id = tr2.id
+      where tr2.tontine_id = t.id and tr2.statut = 'en_cours'
+    ) as cagnotte_actuelle
   from public.rondo_tontines t
   where t.admin_id = auth.uid()
   order by t.created_at desc;

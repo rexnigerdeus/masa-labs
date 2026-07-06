@@ -6,30 +6,14 @@ class TontineService {
 
   /// Récupère le dashboard admin (mes tontines gérées)
   Future<List<Map<String, dynamic>>> getHomeAdmin() async {
-    try {
-      final response = await _client.rpc('rondo_home_admin');
-      // ignore: avoid_print
-      print('🟢 rondo_home_admin returned: $response');
-      return (response as List).cast<Map<String, dynamic>>();
-    } catch (e) {
-      // ignore: avoid_print
-      print('🔴 rondo_home_admin error: $e');
-      rethrow;
-    }
+    final response = await _client.rpc('rondo_home_admin');
+    return (response as List).cast<Map<String, dynamic>>();
   }
 
   /// Récupère le dashboard membre (mes tontines rejointes)
   Future<List<Map<String, dynamic>>> getHomeMembre() async {
-    try {
-      final response = await _client.rpc('rondo_home_membre');
-      // ignore: avoid_print
-      print('🟢 rondo_home_membre returned: $response');
-      return (response as List).cast<Map<String, dynamic>>();
-    } catch (e) {
-      // ignore: avoid_print
-      print('🔴 rondo_home_membre error: $e');
-      rethrow;
-    }
+    final response = await _client.rpc('rondo_home_membre');
+    return (response as List).cast<Map<String, dynamic>>();
   }
 
   /// Crée une nouvelle tontine
