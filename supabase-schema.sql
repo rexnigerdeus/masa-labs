@@ -233,14 +233,18 @@ $$;
 
 -- ---- ÉTAPE 2D: Policies RLS (utilisent les fonctions helper) ----
 
--- rondo_tontines: l'admin peut tout faire, les membres peuvent voir
+-- rondo_tontines: l'admin peut tout faire (insert/update/delete), le select est séparé
 create policy "Admin can manage own tontines"
   on public.rondo_tontines for all
-  using (auth.uid() = admin_id);
+  using (auth.uid() = admin_id)
+  with check (auth.uid() = admin_id);
 
 create policy "Members can view their tontines"
   on public.rondo_tontines for select
-  using (public.rondo_is_membre(id, auth.uid()));
+  using (
+    auth.uid() = admin_id
+    or public.rondo_is_membre(id, auth.uid())
+  );
 
 -- rondo_membres: l'admin gère, les membres voient leurs co-membres
 create policy "Admin can manage members"
@@ -425,7 +429,7 @@ security definer set search_path = public
 as $$
 begin
   return query
-  select
+  select distinct
     t.id,
     t.name,
     t.mise,
@@ -439,30 +443,34 @@ begin
       join public.rondo_membres m2 on tr2.beneficiaire_id = m2.id
       where tr2.tontine_id = t.id
       and m2.user_id = auth.uid()
+      and m2.statut = 'actif'
       and tr2.statut != 'termine'
       and not exists (
         select 1 from public.rondo_paiements p
         where p.tour_id = tr2.id and p.membre_id = m2.id
       )
     ) as prochain_paiement_date,
-    (
-      select exists (
-        select 1 from public.rondo_tours tr3
-        join public.rondo_membres m3 on tr3.beneficiaire_id = m3.id
-        where tr3.tontine_id = t.id
-        and m3.user_id = auth.uid()
-        and tr3.statut = 'en_cours'
-        and not exists (
-          select 1 from public.rondo_paiements p
-          where p.tour_id = tr3.id and p.membre_id = m3.id
-        )
+    exists (
+      select 1
+      from public.rondo_tours tr3
+      join public.rondo_membres m3 on tr3.beneficiaire_id = m3.id
+      where tr3.tontine_id = t.id
+      and m3.user_id = auth.uid()
+      and m3.statut = 'actif'
+      and tr3.statut = 'en_cours'
+      and not exists (
+        select 1 from public.rondo_paiements p
+        where p.tour_id = tr3.id and p.membre_id = m3.id
       )
     ) as cotisation_due
   from public.rondo_tontines t
-  join public.rondo_membres m on t.id = m.tontine_id
-  left join public.rondo_tours tr on tr.beneficiaire_id = m.id and tr.statut = 'en_cours'
-  where m.user_id = auth.uid()
-  and m.statut = 'actif'
+  where t.id in (
+    select m.tontine_id
+    from public.rondo_membres m
+    where m.user_id = auth.uid()
+    and m.statut = 'actif'
+  )
+  and t.statut in ('en_attente', 'active')
   order by t.created_at desc;
 end;
 $$;
