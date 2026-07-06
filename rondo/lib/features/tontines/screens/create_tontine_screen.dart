@@ -74,7 +74,14 @@ class _CreateTontineScreenState extends ConsumerState<CreateTontineScreen> {
         context.go('/home');
       }
     } catch (e) {
-      if (mounted) _showError('Erreur : ${e.toString()}');
+      if (mounted) {
+        final errorMsg = e.toString();
+        if (errorMsg.contains('duplicate key') || errorMsg.contains('unique')) {
+          _showError('Vous avez déjà une tontine avec ce nom');
+        } else {
+          _showError('Erreur : ${errorMsg.length > 100 ? '${errorMsg.substring(0, 100)}...' : errorMsg}');
+        }
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

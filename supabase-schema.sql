@@ -112,7 +112,9 @@ create table if not exists public.rondo_tontines (
   statut text not null default 'en_attente' check (statut in ('en_attente', 'active', 'terminee', 'annulee')),
   invitation_code text unique default upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6)),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  -- Chaque admin ne peut pas avoir 2 tontines avec le même nom
+  unique(admin_id, name)
 );
 
 create index if not exists idx_rondo_tontines_admin on public.rondo_tontines(admin_id);
