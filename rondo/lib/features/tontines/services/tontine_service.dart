@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Service pour les opérations sur les tontines (Rondo)
@@ -6,14 +7,28 @@ class TontineService {
 
   /// Récupère le dashboard admin (mes tontines gérées)
   Future<List<Map<String, dynamic>>> getHomeAdmin() async {
-    final response = await _client.rpc('rondo_home_admin');
-    return (response as List).cast<Map<String, dynamic>>();
+    try {
+      final userId = _client.auth.currentUser?.id ?? 'null';
+      debugPrint('[Rondo] getHomeAdmin userId=$userId');
+      final response = await _client.rpc('rondo_home_admin');
+      debugPrint('[Rondo] getHomeAdmin OK: ${response.length} tontines');
+      return response.cast<Map<String, dynamic>>();
+    } catch (e) {
+      debugPrint('[Rondo] getHomeAdmin ERREUR: $e');
+      rethrow;
+    }
   }
 
   /// Récupère le dashboard membre (mes tontines rejointes)
   Future<List<Map<String, dynamic>>> getHomeMembre() async {
-    final response = await _client.rpc('rondo_home_membre');
-    return (response as List).cast<Map<String, dynamic>>();
+    try {
+      final response = await _client.rpc('rondo_home_membre');
+      debugPrint('[Rondo] getHomeMembre OK: ${response.length} tontines');
+      return response.cast<Map<String, dynamic>>();
+    } catch (e) {
+      debugPrint('[Rondo] getHomeMembre ERREUR: $e');
+      rethrow;
+    }
   }
 
   /// Crée une nouvelle tontine
@@ -59,22 +74,72 @@ class TontineService {
         .single();
   }
 
-  /// Récupère les membres d'une tontine
+  /// Met à jour une tontine (admin uniquement)
+  Future<Map<String, dynamic>> updateTontine({
+    required String tontineId,
+    String? name,
+    int? mise,
+    String? frequence,
+    int? nbMembres,
+    DateTime? dateDebut,
+  }) async {
+    final updates = <String, dynamic>{};
+    if (name != null) updates['name'] = name;
+    if (mise != null) updates['mise'] = mise;
+    if (frequence != null) updates['frequence'] = frequence;
+    if (nbMembres != null) updates['nb_membres'] = nbMembres;
+    if (dateDebut != null) {
+      updates['date_debut'] = dateDebut.toIso8601String().split('T')[0];
+    }
+
+    return await _client
+        .from('rondo_tontines')
+        .update(updates)
+        .eq('id', tontineId)
+        .select()
+        .single();
+  }
+
+  /// Supprime une tontine (admin uniquement, et seulement si aucun tour n'a commencé)
+  Future<void> deleteTontine(String tontineId) async {
+    await _client.from('rondo_tontines').delete().eq('id', tontineId);
+  }
+
+  /// Récupère les membres d'une tontine (avec leurs profils)
   Future<List<Map<String, dynamic>>> getMembres(String tontineId) async {
-    final response = await _client
+    // 1. Récupérer les membres
+    final membres = await _client
         .from('rondo_membres')
-        .select('''
-          id,
-          ordre_tour,
-          statut,
-          joined_at,
-          user_id,
-          profiles!rondo_membres_user_id_fkey(full_name, phone, avatar_url)
-        ''')
+        .select()
         .eq('tontine_id', tontineId)
         .order('ordre_tour', ascending: true);
 
-    return (response as List).cast<Map<String, dynamic>>();
+    final membresList = (membres as List).cast<Map<String, dynamic>>();
+
+    if (membresList.isEmpty) return [];
+
+    // 2. Récupérer les profils correspondants
+    final userIds = membresList.map((m) => m['user_id'] as String).toList();
+    final profiles = await _client
+        .from('profiles')
+        .select('id, full_name, phone, avatar_url')
+        .inFilter('id', userIds);
+
+    final profilesList = (profiles as List).cast<Map<String, dynamic>>();
+    final profilesById = {
+      for (final p in profilesList) p['id'] as String: p,
+    };
+
+    // 3. Joindre les deux
+    return membresList.map((m) {
+      final profile = profilesById[m['user_id']];
+      return {
+        ...m,
+        'full_name': profile?['full_name'] as String?,
+        'phone': profile?['phone'] as String?,
+        'avatar_url': profile?['avatar_url'] as String?,
+      };
+    }).toList();
   }
 
   /// Met à jour l'ordre des tours des membres
@@ -100,15 +165,70 @@ class TontineService {
     });
   }
 
-  /// Récupère les tours d'une tontine
+  /// Récupère les tours d'une tontine (avec bénéficiaire)
   Future<List<Map<String, dynamic>>> getTours(String tontineId) async {
-    final response = await _client
+    // 1. Récupérer les tours
+    final tours = await _client
         .from('rondo_tours')
         .select()
         .eq('tontine_id', tontineId)
         .order('numero', ascending: true);
 
-    return (response as List).cast<Map<String, dynamic>>();
+    final toursList = (tours as List).cast<Map<String, dynamic>>();
+
+    if (toursList.isEmpty) return [];
+
+    // 2. Récupérer les bénéficiaires (membres + profils)
+    final beneficiaireIds = toursList
+        .map((t) => t['beneficiaire_id'] as String?)
+        .whereType<String>()
+        .toSet()
+        .toList();
+
+    Map<String, Map<String, dynamic>> beneficiairesById = {};
+    if (beneficiaireIds.isNotEmpty) {
+      final membres = await _client
+          .from('rondo_membres')
+          .select('id, user_id, ordre_tour')
+          .inFilter('id', beneficiaireIds);
+
+      final membresList = (membres as List).cast<Map<String, dynamic>>();
+      final userIds = membresList.map((m) => m['user_id'] as String).toList();
+
+      if (userIds.isNotEmpty) {
+        final profiles = await _client
+            .from('profiles')
+            .select('id, full_name, phone, avatar_url')
+            .inFilter('id', userIds);
+
+        final profilesList = (profiles as List).cast<Map<String, dynamic>>();
+        final profilesById = {
+          for (final p in profilesList) p['id'] as String: p,
+        };
+
+        for (final m in membresList) {
+          final profile = profilesById[m['user_id']];
+          beneficiairesById[m['id'] as String] = {
+            ...m,
+            'full_name': profile?['full_name'] as String?,
+            'phone': profile?['phone'] as String?,
+            'avatar_url': profile?['avatar_url'] as String?,
+          };
+        }
+      }
+    }
+
+    // 3. Joindre
+    return toursList.map((t) {
+      final beneficiaireId = t['beneficiaire_id'] as String?;
+      final beneficiaire = beneficiaireId != null
+          ? beneficiairesById[beneficiaireId]
+          : null;
+      return {
+        ...t,
+        'beneficiaire': beneficiaire,
+      };
+    }).toList();
   }
 
   /// Statut des cotisations d'un tour

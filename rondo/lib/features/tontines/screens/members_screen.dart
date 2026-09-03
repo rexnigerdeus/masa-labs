@@ -122,9 +122,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                     itemCount: _membres!.length,
                     itemBuilder: (context, index) {
                       final m = _membres![index];
-                      final profile = m['profiles'] as Map<String, dynamic>?;
-                      final name = profile?['full_name'] ?? 'Membre';
-                      final phone = profile?['phone'] ?? '';
+                      final name = m['full_name'] as String? ?? 'Membre';
+                      final phone = m['phone'] as String? ?? '';
                       final ordre = m['ordre_tour'] as int?;
                       final statut = m['statut'] as String;
 

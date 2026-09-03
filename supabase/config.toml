@@ -1,0 +1,4 @@
+project_id = "fhaulxauhaoofimkyrqb"
+
+[functions.scrape-job-offers]
+verify_jwt = false

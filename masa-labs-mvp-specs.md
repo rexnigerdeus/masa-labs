@@ -423,7 +423,26 @@ rappels         id, creance_id, canal (whatsapp/sms), envoye_at
 ---
 
 ## Concept en une phrase
-Vitae permet à n'importe quel diplômé de créer un CV professionnel en 3 minutes, adapté aux codes du marché local, sans compétence en design.
+Vitae permet à n'importe quel diplômé de créer un CV professionnel en 3 minutes, adapté aux codes du marché local, sans compétence en design — et **garantit un CV compatible ATS** (score ≥ 80/100) pour ne pas être invisible aux recruteurs qui utilisent un logiciel de tri automatique.
+
+---
+
+## 🎯 Compatibilité ATS (Applicant Tracking System)
+
+**Le problème :** 90 %+ des entreprises, cabinets de recrutement et plateformes d'emploi (Workday, Taleo, Greenhouse, Lever, SmartRecruiters) filtrent les CV via un logiciel ATS **avant** qu'un humain ne les lise. Un CV joli mais non-ATS est invisible, mal classé, voire automatiquement rejeté.
+
+**La promesse Vitae :** tout CV généré est **compatible ATS par construction**. Le PDF produit est du vrai texte sélectionnable (pas une image), avec polices embedded (Roboto), structure 1 colonne par défaut, métadonnées propres, ordre logique du flux PDF. Vitae calcule et affiche un **score ATS /100** avant export et **bloque l'export si le score est < 80**, en affichant les recommandations actionnables pour l'atteindre.
+
+**Score ATS Vitae — détail du calcul (règles locales, sans ML) :**
+- Parsabilité du PDF (texte réel, 1 colonne, polices embedded) → **+25** (garanti par construction)
+- Présence de toutes les sections clés (perso, expérience, formation, compétences, langues) → **+25**
+- ≥ 3 compétences techniques + ≥ 1 langue avec niveau → **+15**
+- Titre professionnel renseigné → **+10**
+- Dates lisibles (format MM/AAAA ou AAAA sur expériences et formations) → **+10**
+- ≤ 2 pages (1 page pour template Stage) → **+10**
+- Pas de photo (recommandé pour candidatures multinationales/ONG) → **+5** (optionnel, l'utilisateur peut garder 0)
+
+→ **Total /100.** Un CV complet avec template Classique et toutes les sections remplies atteint **95-100/100**. Le seuil d'export est fixé à **80**.
 
 ---
 
@@ -455,12 +474,12 @@ Vitae permet à n'importe quel diplômé de créer un CV professionnel en 3 minu
 10. **Compétences** — Tags à cocher + champ libre : compétences techniques, logiciels, langues
 11. **Langues** — Ajouter langues + niveau (Notions / Intermédiaire / Courant / Bilingue / Natif)
 12. **Centres d'intérêt** — Tags optionnels
-13. **Choisir un template** — 6 templates disponibles en v1 (voir détail ci-dessous)
+13. **Choisir un template** — 6 templates disponibles en v1 (voir détail ci-dessous), marqués « ATS ✓ » ou « ATS partiel » dans la grille. Les templates non-ATS (2 colonnes, en-tête photo) affichent une note contextuelle.
 
 ### Prévisualisation et export
-14. **Aperçu du CV** — Rendu temps réel du CV, scroll pour voir toutes les pages
+14. **Aperçu du CV** — Rendu temps réel du CV, scroll pour voir toutes les pages. **Badge « Score ATS : XX/100 »** affiché en haut, mis à jour en temps réel à mesure que l'utilisateur édite. En dessous : liste des recommandations actionnables si score < 80 (« Ajoutez au moins 3 compétences », « Renseignez une langue avec son niveau », etc.).
 15. **Ajuster les couleurs** — Sélecteur de couleur principale (6 choix par template)
-16. **Exporter PDF** — Télécharger le PDF / Partager sur WhatsApp / Envoyer par email
+16. **Exporter PDF** — Télécharger le PDF / Partager sur WhatsApp / Envoyer par email. **Le bouton Export est désactivé tant que score ATS < 80** ; un encadré rouge affiche le score actuel et la liste des actions manquantes. À ≥ 80, un encadré vert confirme « CV compatible ATS — vous pouvez postuler en ligne sereinement ».
 
 ### Gestion
 17. **Mes CVs** — Liste de tous les CVs créés (plusieurs CVs pour plusieurs candidatures)
@@ -472,14 +491,16 @@ Vitae permet à n'importe quel diplômé de créer un CV professionnel en 3 minu
 
 ## Les 6 templates v1
 
-| # | Nom | Style | Idéal pour |
-|---|---|---|---|
-| 1 | **Classique** | 1 colonne, sobre, noir/blanc | Banque, Droit, Administration publique |
-| 2 | **Moderne** | 2 colonnes, accent couleur | Marketing, Communication, Commercial |
-| 3 | **Élégant** | En-tête photo, mise en page premium | Direction, Management, Finance |
-| 4 | **Minimal** | Très épuré, beaucoup d'espace | Design, Tech, Créatif |
-| 5 | **Académique** | Détaillé, section publications | Enseignement, Recherche |
-| 6 | **Stage** | Court (1 page forcée), sections adaptées | Étudiants, Stagiaires |
+| # | Nom | Style | ATS | Idéal pour |
+|---|---|---|---|---|
+| 1 | **Classique** | 1 colonne, sobre, noir/blanc | ✅ Optimisé | Banque, Droit, Administration publique |
+| 2 | **Moderne** | 2 colonnes, accent couleur | ⚠️ Partiel | Marketing, Communication, Commercial |
+| 3 | **Élégant** | En-tête photo, mise en page premium | ⚠️ Partiel | Direction, Management, Finance |
+| 4 | **Minimal** | Très épuré, beaucoup d'espace | ✅ Compatible | Design, Tech, Créatif |
+| 5 | **Académique** | Détaillé, section publications | ✅ Compatible | Enseignement, Recherche |
+| 6 | **Stage** | Court (1 page forcée), sections adaptées | ✅ Optimisé | Étudiants, Stagiaires |
+
+**Note ATS :** les templates 2 colonnes (Moderne, Élégant) sont lisibles par les ATS modernes (Greenhouse, Lever) mais moins bien par les ATS legacy (Taleo, Workday ancienne version). Un tooltip explique ce trade-off au moment du choix. Le template Classique est recommandé par défaut pour les candidatures en ligne en multinationales/ONG/banques.
 
 ---
 
@@ -534,6 +555,9 @@ exports         id, cv_id, type (pdf/partage), created_at
 - Le PDF est généré en A4 210×297mm, optimisé impression et envoi email
 - Langue du CV : uniquement français en v1 (anglais en v2)
 - Aucune donnée de CV n'est partagée avec des tiers
+- **Compatibilité ATS garantie par construction :** le PDF est du texte sélectionnable (pas une image), polices embedded (Roboto), structure 1 colonne par défaut sur les templates marqués ✅, métadonnées PDF propres (titre = « Prénom Nom — Titre professionnel »), ordre logique du flux PDF
+- **Score ATS ≥ 80/100 obligatoire pour exporter :** l'écran d'export bloque le bouton tant que le score est < 80 et liste les actions manquantes (sections vides, compétences insuffisantes, dates illisibles, > 2 pages). Le calcul se fait localement sur l'appareil, sans appel serveur.
+- **Score ATS affiché en temps réel sur l'aperçu** (écran 14), recalculé à chaque champ édité — l'utilisateur voit l'impact de chaque action avant de finaliser
 
 ---
 
@@ -541,15 +565,17 @@ exports         id, cv_id, type (pdf/partage), created_at
 
 | Plan | Limite | Prix |
 |---|---|---|
-| Gratuit | 1 CV actif, 2 templates (Classique + Stage), export avec watermark discret | 0 FCFA |
-| Premium | CVs illimités, 6 templates, sans watermark, export illimité | 500 FCFA/CV ou 2 000 FCFA/mois |
+| Gratuit | 1 CV actif, 2 templates (Classique + Stage), export avec watermark discret, **score ATS inclus** | 0 FCFA |
+| Premium | CVs illimités, 6 templates, sans watermark, export illimité, **score ATS inclus** | 500 FCFA/CV ou 2 000 FCFA/mois |
 | Étudiant | Premium avec justificatif étudiant | 1 000 FCFA/6 mois |
+
+> ⚠️ **MVP v1.0 — tout est gratuit** (PlanService retourne Premium en dur, voir `/memories/repo/masa-labs-overview.md`). La limite 1 CV + watermark et le paywall seront réactivés en v1.1 avec l'IAP Apple StoreKit. Le score ATS reste gratuit dans tous les plans — c'est la promesse cœur du produit.
 
 ---
 
 ## Ce qui est EXCLU du MVP v1
 - Suggestions IA pour améliorer le résumé (v2)
-- Analyse du CV vs une offre d'emploi (v2)
+- Analyse du CV vs une offre d'emploi (v2) — c'est le « score ATS contextuel » : coller une offre → matching de mots-clés + suggestions d'ajouts. Le score ATS générique (sans offre) est inclus en v1.
 - Portfolio en ligne (URL publique) (v2)
 - Lettre de motivation (v2)
 - CV en anglais (v2)

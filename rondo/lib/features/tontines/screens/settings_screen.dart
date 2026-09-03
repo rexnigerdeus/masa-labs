@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers.dart';
+import '../../auth/utils/phone_formatter.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -55,6 +57,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// Format un numéro de téléphone pour l'affichage.
+  /// Ex: "0700000000" → "07 00 00 00 00"
+  String _formatPhoneForDisplay(String phone) {
+    final digits = cleanPhone(phone);
+    if (digits.length == 10) {
+      // Côte d'Ivoire : 10 chiffres, groupés par 2
+      final buffer = StringBuffer();
+      for (var i = 0; i < digits.length; i += 2) {
+        if (i > 0) buffer.write(' ');
+        buffer.write(digits.substring(i, i + 2));
+      }
+      return buffer.toString();
+    }
+    // Sinon on renvoie le numéro tel quel
+    return phone;
+  }
+
+  /// Récupère le numéro de téléphone à afficher.
+  /// Priorité : profiles.phone > user_metadata.phone > pseudo-email.
+  String get _displayPhone {
+    final profilePhone = _profile?['phone'] as String?;
+    if (profilePhone != null && profilePhone.isNotEmpty) {
+      return _formatPhoneForDisplay(profilePhone);
+    }
+    final metaPhone = Supabase.instance.client.auth.currentUser?.userMetadata?['phone'] as String?;
+    if (metaPhone != null && metaPhone.isNotEmpty) {
+      return _formatPhoneForDisplay(metaPhone);
+    }
+    // Dernier recours : extraire du pseudo-email (0700000000@everyday.co)
+    final email = Supabase.instance.client.auth.currentUser?.email;
+    if (email != null && email.contains('@')) {
+      final raw = email.split('@').first;
+      if (raw.isNotEmpty) return _formatPhoneForDisplay(raw);
+    }
+    return '';
   }
 
   Future<void> _saveName() async {
@@ -206,7 +245,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      _profile?['phone'] as String? ?? '',
+                                      _displayPhone,
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         color: AppTheme.muted,
@@ -238,7 +277,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         fontWeight: FontWeight.w700,
                         color: AppTheme.text,
                       ),
-                    ).animate().fadeIn(delay: 120.ms, duration: 400.ms),
+                    ).animate().fadeIn(delay: 180.ms, duration: 400.ms),
                     const SizedBox(height: 16),
 
                     _SettingsTile(
@@ -246,7 +285,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: 'Notifications',
                       subtitle: 'Rappels de cotisation et messages',
                       onTap: () => context.push('/notifications'),
-                    ).animate().fadeIn(delay: 160.ms, duration: 400.ms),
+                    ).animate().fadeIn(delay: 220.ms, duration: 400.ms),
 
                     const SizedBox(height: 32),
 
@@ -284,12 +323,95 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ).animate().fadeIn(delay: 280.ms, duration: 400.ms),
 
+                    const SizedBox(height: 8),
+
+                    // Supprimer mon compte (lien discret)
+                    Center(
+                      child: TextButton(
+                        onPressed: _confirmDeleteAccount,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.error,
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Supprimer mon compte',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppTheme.error.withValues(alpha: 0.7),
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 320.ms, duration: 400.ms),
+
                     const SizedBox(height: 24),
                   ],
                 ),
               ),
             ),
     );
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Supprimer mon compte',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Cette action est irréversible. Toutes vos données (profil, tontines, paiements) seront supprimées.\n\nConfirmez la suppression définitive.',
+          style: GoogleFonts.inter(color: AppTheme.muted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Supprimer définitivement'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      // Appeler la RPC de suppression
+      await Supabase.instance.client.rpc('delete_user');
+
+      // Se déconnecter
+      await Supabase.instance.client.auth.signOut();
+
+      if (mounted) {
+        context.go('/login');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Compte supprimé'),
+            backgroundColor: AppTheme.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur : ${e.toString()}'),
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 }
 

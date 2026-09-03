@@ -51,8 +51,9 @@ class _CreateTontineScreenState extends ConsumerState<CreateTontineScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final service = ref.read(tontineServiceProvider);
-      await service.createTontine(
+      final tontineService = ref.read(tontineServiceProvider);
+
+      await tontineService.createTontine(
         name: _nameController.text.trim(),
         mise: mise,
         frequence: _frequence,

@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "flutter": true,
+        "/^python3 -c \"\nimport re, json\nhtml = open\\('/tmp/novojob_ci\\.html'\\)\\.read\\(\\)\n# 1\\. JSON-LD ItemList — URLs canoniques\nm = re\\.search\\(r'<script type=\\\\\"application/ld\\\\\\+json\\\\\"\\[\\^>\\]\\*>\\(\\.\\*\\?\\)</script>', html, re\\.S\\)\nif m:\n    try:\n        data = json\\.loads\\(m\\.group\\(1\\)\\)\n        urls = \\[i\\['url'\\] for i in data\\.get\\('itemListElement', \\[\\]\\) if 'url' in i\\]\n        print\\('JSON-LD ItemList URLs:', len\\(urls\\)\\)\n        for u in urls\\[:3\\]: print\\(' ', u\\)\n    except Exception as e:\n        print\\('JSON-LD parse err', e\\)\n        print\\(m\\.group\\(1\\)\\[:500\\]\\)\n# 2\\. Job cards in HTML\nblocks = re\\.split\\(r'row-fluid result-content spaced-top', html\\)\nprint\\('blocks:', len\\(blocks\\)\\)\n# inspect one block containing 136787\nfor b in blocks:\n    if '136787' in b:\n        print\\(repr\\(b\\[:2500\\]\\)\\)\n        break\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

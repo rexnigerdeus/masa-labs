@@ -12,13 +12,13 @@ import '../../../core/providers.dart';
 final myTontinesProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final service = ref.read(tontineServiceProvider);
+  final tontineIds = <String>{};
+  final allTontines = <Map<String, dynamic>>[];
+
+  // 1. Tontines où l'user est admin (ne peut pas échouer silencieusement)
   try {
     final adminData = await service.getHomeAdmin();
-    final membreData = await service.getHomeMembre();
-
-    final tontineIds = <String>{};
-    final allTontines = <Map<String, dynamic>>[];
-
+    debugPrint('[Home] adminData count=${adminData.length}');
     for (final t in adminData) {
       final id = t['tontine_id'] as String;
       if (!tontineIds.contains(id)) {
@@ -36,7 +36,14 @@ final myTontinesProvider =
         });
       }
     }
+  } catch (e) {
+    debugPrint('[Home] getHomeAdmin ERREUR: $e');
+  }
 
+  // 2. Tontines où l'user est membre (uniquement)
+  try {
+    final membreData = await service.getHomeMembre();
+    debugPrint('[Home] membreData count=${membreData.length}');
     for (final t in membreData) {
       final id = t['tontine_id'] as String;
       if (!tontineIds.contains(id)) {
@@ -46,6 +53,10 @@ final myTontinesProvider =
           'name': t['tontine_name'],
           'mise': t['mise'],
           'statut': t['statut'],
+          'nb_membres_actifs': t['nb_membres_actifs'],
+          'nb_membres_total': t['nb_membres_total'],
+          'cagnotte_actuelle': t['cagnotte_actuelle'],
+          'tour_actuel_numero': t['tour_actuel_numero'],
           'is_admin': false,
           'mon_tour_numero': t['mon_tour_numero'],
           'prochain_paiement_date': t['prochain_paiement_date'],
@@ -53,18 +64,35 @@ final myTontinesProvider =
         });
       }
     }
-
-    return allTontines;
   } catch (e) {
-    return [];
+    debugPrint('[Home] getHomeMembre ERREUR: $e');
   }
+
+  debugPrint('[Home] final tontines count=${allTontines.length}');
+  return allTontines;
 });
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  String? _lastUserId;
+
+  @override
+  Widget build(BuildContext context) {
+    // Invalider le cache si l'user change (connexion/déconnexion)
+    final userId = ref.watch(authStateProvider).value?.session?.user.id;
+    if (userId != _lastUserId) {
+      _lastUserId = userId;
+      Future.microtask(() {
+        ref.invalidate(myTontinesProvider);
+      });
+    }
+
     final tontinesAsync = ref.watch(myTontinesProvider);
 
     return Scaffold(
@@ -104,6 +132,12 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     Row(
                       children: [
+                        // Bouton rejoindre
+                        IconButton(
+                          icon: const Icon(LucideIcons.userPlus, color: AppTheme.rondo, size: 22),
+                          tooltip: 'Rejoindre une tontine',
+                          onPressed: () => context.push('/join-tontine'),
+                        ),
                         IconButton(
                           icon: const Icon(LucideIcons.bell, color: AppTheme.muted, size: 22),
                           onPressed: () => context.push('/notifications'),
@@ -333,7 +367,7 @@ class _TontineCard extends StatelessWidget {
                         value: '$mise FCFA',
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _InfoChip(
                         icon: LucideIcons.users,
@@ -341,7 +375,7 @@ class _TontineCard extends StatelessWidget {
                         value: '$nbMembresActifs/$nbMembresTotal',
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     if (tourActuel != null)
                       Expanded(
                         child: _InfoChip(
@@ -352,24 +386,45 @@ class _TontineCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                if (isAdmin && statut == 'active') ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Cagnotte',
-                        style: GoogleFonts.inter(fontSize: 13, color: AppTheme.muted),
-                      ),
-                      Text(
-                        '$cagnotte FCFA',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.rondo,
+                if (statut == 'active') ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.rondoSoft,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              LucideIcons.wallet,
+                              color: AppTheme.rondo,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Cagnotte du tour',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.rondo,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                        Text(
+                          '$cagnotte FCFA',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.rondo,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
                 if (!isAdmin && tontine['cotisation_due'] == true) ...[

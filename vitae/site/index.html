@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vitae — Votre CV professionnel en 3 minutes · The Everyday Co.</title>
+<meta name="description" content="Vitae permet à n'importe quel diplômé de créer un CV professionnel en 3 minutes, adapté aux codes du marché ivoirien et ouest-africain. 6 templates, export PDF, partage WhatsApp.">
+<meta name="theme-color" content="#3F6E91">
+<meta property="og:title" content="Vitae — Votre CV professionnel en 3 minutes">
+<meta property="og:description" content="Créez un CV professionnel adapté au marché ivoirien. 6 templates, export PDF, partage WhatsApp.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dailyco.influencemood.com/vitae">
+<meta property="og:image" content="https://dailyco.influencemood.com/vitae/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://dailyco.influencemood.com/vitae">
+<link rel="icon" type="image/png" href="/vitae/icon.png">
+<link rel="apple-touch-icon" href="/vitae/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAFAF7;
+  --bg2:#F4F2EC;
+  --bg3:#FFFFFF;
+  --dark:#171411;
+  --dark2:#26211C;
+  --card:#FFFFFF;
+  --card2:#F7F5EF;
+  --border:rgba(23,20,17,0.08);
+  --border2:rgba(23,20,17,0.16);
+  --text:#171411;
+  --muted:#5C5650;
+  --muted2:#8A8378;
+  --muted-dark:rgba(250,250,247,0.62);
+  --steel:#3F6E91;
+  --steel-dark:#2C526E;
+  --steel-light:#5B8AAE;
+  --steel-soft:rgba(63,110,145,0.10);
+  --steel-bg:linear-gradient(135deg,#2C526E 0%,#3F6E91 50%,#5B8AAE 100%);
+  --steel-bg-solid:#2C526E;
+  --yellow:#FDF150;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== SCROLL REVEAL ===== */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity 0.9s cubic-bezier(0.22,1,0.36,1),transform 0.9s cubic-bezier(0.22,1,0.36,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+.reveal-d1{transition-delay:0.08s}
+.reveal-d2{transition-delay:0.16s}
+.reveal-d3{transition-delay:0.24s}
+.reveal-d4{transition-delay:0.32s}
+.reveal-d5{transition-delay:0.40s}
+.reveal-left{opacity:0;transform:translateX(-32px);transition:opacity 0.9s cubic-bezier(0.22,1,0.36,1),transform 0.9s cubic-bezier(0.22,1,0.36,1)}
+.reveal-left.in{opacity:1;transform:translateX(0)}
+.reveal-right{opacity:0;transform:translateX(32px);transition:opacity 0.9s cubic-bezier(0.22,1,0.36,1),transform 0.9s cubic-bezier(0.22,1,0.36,1)}
+.reveal-right.in{opacity:1;transform:translateX(0)}
+.reveal-scale{opacity:0;transform:scale(0.94);transition:opacity 0.9s cubic-bezier(0.22,1,0.36,1),transform 0.9s cubic-bezier(0.22,1,0.36,1)}
+.reveal-scale.in{opacity:1;transform:scale(1)}
+
+/* ===== NAV ===== */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 2.5rem;
+  background:rgba(250,250,247,0.80);
+  backdrop-filter:blur(16px) saturate(1.2);
+  border-bottom:1px solid transparent;
+  transition:padding 0.35s ease,background 0.35s ease,border-color 0.35s ease;
+}
+nav.scrolled{padding:0.75rem 2.5rem;background:rgba(250,250,247,0.92);border-bottom-color:var(--border)}
+.nav-logo{
+  font-weight:700;font-size:1rem;
+  letter-spacing:-0.02em;color:var(--text);
+  text-decoration:none;
+  display:flex;align-items:center;gap:0.5rem;
+}
+.nav-logo .app-name{color:var(--steel);font-weight:700}
+.nav-logo .sep{color:var(--muted2);margin:0 0.1rem}
+.nav-logo .company{color:var(--muted)}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--steel);transition:transform 0.3s cubic-bezier(0.22,1,0.36,1)}
+.nav-logo:hover .dot{transform:scale(1.4)}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{font-size:0.86rem;color:var(--muted);text-decoration:none;position:relative;transition:color 0.2s}
+.nav-links a::after{content:'';position:absolute;left:0;bottom:-4px;width:100%;height:1.5px;background:var(--text);transform:scaleX(0);transform-origin:right;transition:transform 0.35s cubic-bezier(0.22,1,0.36,1)}
+.nav-links a:hover{color:var(--text)}
+.nav-links a:hover::after{transform:scaleX(1);transform-origin:left}
+.nav-cta{
+  background:var(--steel);color:#fff;
+  font-size:0.82rem;font-weight:600;
+  padding:0.6rem 1.4rem;border-radius:50px;
+  text-decoration:none;
+  transition:transform 0.25s cubic-bezier(0.22,1,0.36,1),box-shadow 0.25s;
+  box-shadow:0 0 0 0 rgba(63,110,145,0.5);
+}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(63,110,145,0.6)}
+
+/* ===== HERO ===== */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:8rem 2.5rem 4rem;
+  max-width:1100px;margin:0 auto;
+  position:relative;
+}
+.hero-label{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-size:0.76rem;font-weight:500;
+  color:var(--steel);letter-spacing:0.14em;text-transform:uppercase;
+  border:1px solid rgba(63,110,145,0.3);
+  padding:0.45rem 1rem;border-radius:50px;
+  margin-bottom:2.5rem;width:fit-content;
+  background:var(--steel-soft);
+}
+.hero-label span{width:6px;height:6px;border-radius:50%;background:var(--steel);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.7)}}
+.hero-wrap{
+  display:grid;grid-template-columns:1.15fr 0.85fr;
+  gap:4rem;align-items:center;
+}
+.hero h1{
+  font-size:clamp(2.4rem,5.8vw,5.2rem);
+  font-weight:700;line-height:1.02;
+  letter-spacing:-0.038em;
+  margin-bottom:1.6rem;
+}
+.hero h1 em{
+  font-style:normal;
+  color:transparent;
+  -webkit-text-stroke:1.5px var(--steel);
+}
+.hero h1 .highlight-word{position:relative;display:inline-block}
+.hero h1 .highlight-word::after{
+  content:'';position:absolute;
+  left:-0.12em;right:-0.12em;bottom:0.1em;
+  height:0.34em;background:var(--yellow);
+  z-index:-1;border-radius:3px;
+  transform:scaleX(0);transform-origin:left;
+  animation:highlight 1.3s cubic-bezier(0.22,1,0.36,1) 0.7s forwards;
+}
+@keyframes highlight{to{transform:scaleX(1)}}
+.hero-sub{
+  font-size:clamp(1.05rem,1.8vw,1.2rem);
+  color:var(--muted);max-width:520px;
+  line-height:1.65;margin-bottom:2.5rem;
+}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+.btn-primary{
+  background:var(--steel);color:#fff;
+  font-size:0.92rem;font-weight:600;
+  padding:0.9rem 2rem;border-radius:50px;
+  text-decoration:none;
+  transition:transform 0.25s cubic-bezier(0.22,1,0.36,1),box-shadow 0.25s;
+  box-shadow:0 0 0 0 rgba(63,110,145,0.5);
+  display:inline-flex;align-items:center;gap:0.5rem;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px -8px rgba(63,110,145,0.55)}
+.btn-secondary{
+  color:var(--muted);font-size:0.9rem;
+  text-decoration:none;display:flex;
+  align-items:center;gap:0.4rem;
+  transition:color 0.2s;
+}
+.btn-secondary:hover{color:var(--text)}
+.btn-secondary svg{width:16px;height:16px;transition:transform 0.25s cubic-bezier(0.22,1,0.36,1)}
+.btn-secondary:hover svg{transform:translateX(4px)}
+
+/* ===== HERO PHONE PREVIEW ===== */
+.hero-phone{
+  position:relative;
+  display:flex;justify-content:center;align-items:center;
+}
+.phone-mockup{
+  width:100%;max-width:300px;
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-radius:36px;
+  padding:14px;
+  position:relative;
+  box-shadow:0 30px 60px -20px rgba(63,110,145,0.30),0 12px 28px -12px rgba(23,20,17,0.12);
+  transition:transform 0.55s cubic-bezier(0.22,1,0.36,1);
+}
+.phone-mockup:hover{transform:translateY(-6px) rotate(-1deg)}
+.phone-mockup::before{content:'';display:block;width:60px;height:5px;background:var(--border2);border-radius:50px;margin:0 auto 12px}
+.phone-screen{border-radius:24px;overflow:hidden;background:#fff;min-height:480px;position:relative}
+.phone-status{display:flex;justify-content:space-between;align-items:center;padding:8px 18px;font-size:8px;color:var(--muted);font-weight:600}
+.phone-logo{display:flex;align-items:center;gap:6px;padding:4px 18px 12px}
+.phone-logo-mark{width:22px;height:22px;border-radius:6px;background:var(--steel);display:flex;align-items:center;justify-content:center}
+.phone-logo-mark svg{width:14px;height:14px;color:#fff}
+.phone-logo-text{color:var(--text);font-size:9px;font-weight:700;letter-spacing:0.1em}
+
+/* CV preview card */
+.phone-cv{padding:0 16px 16px}
+.phone-cv-header{background:var(--steel);color:#fff;border-radius:12px;padding:12px;margin-bottom:10px}
+.phone-cv-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.phone-cv-role{font-size:8px;opacity:0.85;font-weight:500}
+.phone-cv-contact{font-size:6px;opacity:0.7;margin-top:6px;letter-spacing:0.04em}
+.phone-cv-section{margin-bottom:10px}
+.phone-cv-section-h{font-size:7px;font-weight:700;color:var(--steel);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;padding-bottom:2px;border-bottom:1px solid rgba(63,110,145,0.2)}
+.phone-cv-line{height:3px;background:rgba(23,20,17,0.08);border-radius:2px;margin-bottom:3px}
+.phone-cv-line.short{width:60%}
+.phone-cv-line.medium{width:80%}
+.phone-cv-exp{margin-bottom:6px}
+.phone-cv-exp-h{font-size:7px;font-weight:600;color:var(--text)}
+.phone-cv-exp-d{font-size:6px;color:var(--muted);margin-top:1px}
+.phone-cv-tag{display:inline-block;background:var(--steel-soft);color:var(--steel);font-size:6px;font-weight:600;padding:2px 6px;border-radius:50px;margin:2px 3px 2px 0}
+.phone-cv-cta{background:var(--yellow);color:var(--dark);font-size:7.5px;font-weight:700;padding:8px 12px;border-radius:50px;text-align:center;margin-top:8px;letter-spacing:0.04em}
+
+/* ===== SECTION BASE ===== */
+section{padding:6.5rem 2.5rem;max-width:1100px;margin:0 auto}
+.section-label{font-size:0.74rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--steel);margin-bottom:1rem;display:inline-flex;align-items:center}
+.section-label::before{content:'';display:inline-block;width:24px;height:1.5px;background:var(--steel);vertical-align:middle;margin-right:0.7rem}
+.section-dark .section-label{color:var(--muted-dark)}
+.section-h{font-size:clamp(1.6rem,3.2vw,2.6rem);font-weight:700;line-height:1.15;letter-spacing:-0.028em;margin-bottom:0.9rem}
+.section-sub{color:var(--muted);max-width:580px;font-size:0.98rem;line-height:1.7}
+.section-dark .section-sub{color:var(--muted-dark)}
+
+/* ===== PROBLEM (cream band) ===== */
+.problem{padding:6.5rem 2.5rem;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.problem-inner{max-width:1100px;margin:0 auto}
+.problem-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin-top:3rem}
+.problem-card{background:var(--bg3);border:1px solid var(--border);border-radius:18px;padding:1.8rem;transition:transform 0.35s cubic-bezier(0.22,1,0.36,1),border-color 0.35s}
+.problem-card:hover{transform:translateY(-4px);border-color:rgba(63,110,145,0.3)}
+.problem-emoji{font-size:1.6rem;margin-bottom:0.8rem;display:block}
+.problem-h{font-size:0.95rem;font-weight:600;margin-bottom:0.5rem}
+.problem-p{font-size:0.85rem;color:var(--muted);line-height:1.6}
+
+/* ===== FEATURES ===== */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;margin-top:3rem}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;transition:border-color 0.35s,transform 0.45s cubic-bezier(0.22,1,0.36,1),box-shadow 0.35s;position:relative;overflow:hidden}
+.feature-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px -16px rgba(23,20,17,0.12);border-color:rgba(63,110,145,0.28)}
+.feature-icon{width:44px;height:44px;border-radius:12px;background:var(--steel-soft);display:flex;align-items:center;justify-content:center;margin-bottom:1.2rem;color:var(--steel)}
+.feature-icon svg{width:22px;height:22px}
+.feature-name{font-size:1.05rem;font-weight:600;margin-bottom:0.5rem}
+.feature-desc{font-size:0.88rem;color:var(--muted);line-height:1.65}
+
+/* ===== HOW IT WORKS ===== */
+.how{padding:6.5rem 2.5rem;background:var(--steel-bg-solid);color:#fff;position:relative;overflow:hidden}
+.how::before{content:'';position:absolute;top:-100px;right:-100px;width:300px;height:300px;background:var(--yellow);border-radius:50%;opacity:0.18;filter:blur(50px)}
+.how-inner{max-width:1100px;margin:0 auto;position:relative}
+.how .section-label{color:rgba(255,255,255,0.7)}
+.how .section-label::before{background:var(--yellow)}
+.how .section-h{color:#fff}
+.how .section-sub{color:rgba(255,255,255,0.7)}
+.how-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.2rem;margin-top:3rem}
+.how-step{background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:18px;padding:1.8rem;transition:background 0.35s,transform 0.45s cubic-bezier(0.22,1,0.36,1)}
+.how-step:hover{background:rgba(255,255,255,0.14);transform:translateY(-4px)}
+.how-num{width:36px;height:36px;border-radius:50%;background:var(--yellow);color:var(--dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.95rem;margin-bottom:1rem}
+.how-name{font-size:1rem;font-weight:600;margin-bottom:0.5rem}
+.how-desc{font-size:0.85rem;color:rgba(255,255,255,0.75);line-height:1.6}
+
+/* ===== TEMPLATES ===== */
+.templates{padding:6.5rem 2.5rem;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.templates-inner{max-width:1100px;margin:0 auto}
+.templates-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.2rem;margin-top:3rem}
+.template-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.4rem;transition:transform 0.45s cubic-bezier(0.22,1,0.36,1),box-shadow 0.35s,border-color 0.35s;position:relative;overflow:hidden}
+.template-card:hover{transform:translateY(-5px);box-shadow:0 16px 40px -16px rgba(63,110,145,0.20);border-color:rgba(63,110,145,0.3)}
+.template-thumb{background:var(--bg2);border-radius:8px;height:140px;margin-bottom:1rem;position:relative;overflow:hidden;padding:10px;display:flex;flex-direction:column;gap:3px}
+.template-thumb-bar{height:3px;background:rgba(23,20,17,0.10);border-radius:2px}
+.template-thumb-bar.short{width:55%}
+.template-thumb-bar.medium{width:75%}
+.template-thumb-bar.accent{background:var(--steel);width:30%;height:4px;margin-bottom:4px}
+.template-thumb-bar.photo{width:24px;height:24px;border-radius:50%;background:rgba(63,110,145,0.25);align-self:flex-start;margin-bottom:4px}
+.template-thumb-bar.col2{display:grid;grid-template-columns:1fr 1fr;gap:4px;height:auto}
+.template-name{font-size:1rem;font-weight:600;margin-bottom:0.3rem}
+.template-style{font-size:0.82rem;color:var(--muted);margin-bottom:0.6rem;line-height:1.5}
+.template-badge{display:inline-block;font-size:0.68rem;font-weight:600;letter-spacing:0.06em;padding:0.2rem 0.6rem;border-radius:50px;text-transform:uppercase}
+.template-badge.free{background:var(--steel-soft);color:var(--steel)}
+.template-badge.premium{background:rgba(184,112,58,0.10);color:#B8703A}
+.template-ideal{font-size:0.78rem;color:var(--muted2);margin-top:0.5rem;line-height:1.5}
+
+/* ===== PRICING ===== */
+.pricing{padding:6.5rem 2.5rem;background:var(--bg)}
+.pricing-inner{max-width:1100px;margin:0 auto}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;margin-top:3rem}
+.price-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.2rem 2rem;transition:transform 0.45s cubic-bezier(0.22,1,0.36,1),box-shadow 0.35s,border-color 0.35s;position:relative}
+.price-card:hover{transform:translateY(-5px);box-shadow:0 16px 48px -16px rgba(23,20,17,0.16)}
+.price-card.featured{border-color:var(--steel);background:linear-gradient(180deg,var(--steel-soft) 0%,var(--card) 40%)}
+.price-card.featured::before{content:'Le plus populaire';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--steel);color:#fff;font-size:0.7rem;font-weight:600;letter-spacing:0.08em;padding:0.3rem 0.9rem;border-radius:50px;text-transform:uppercase}
+.price-tier{font-size:0.78rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--steel);margin-bottom:0.8rem}
+.price-amount{font-size:2.4rem;font-weight:700;letter-spacing:-0.025em;margin-bottom:0.3rem}
+.price-amount small{font-size:0.85rem;color:var(--muted);font-weight:500;margin-left:0.2rem}
+.price-desc{font-size:0.85rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.55}
+.price-list{list-style:none;display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.5rem}
+.price-list li{font-size:0.84rem;color:var(--text);display:flex;align-items:center;gap:0.55rem}
+.price-list li svg{width:14px;height:14px;color:var(--steel);flex-shrink:0}
+.price-btn{display:block;width:100%;text-align:center;background:var(--steel);color:#fff;font-size:0.88rem;font-weight:600;padding:0.85rem 1.5rem;border-radius:50px;text-decoration:none;transition:transform 0.25s,box-shadow 0.25s,background 0.25s}
+.price-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(63,110,145,0.5)}
+.price-btn.outline{background:transparent;color:var(--steel);border:1.5px solid var(--steel)}
+.price-btn.outline:hover{background:var(--steel);color:#fff}
+
+/* ===== FAQ ===== */
+.faq{padding:6.5rem 2.5rem;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.faq-inner{max-width:780px;margin:0 auto}
+.faq-item{background:var(--bg3);border:1px solid var(--border);border-radius:14px;margin-bottom:0.8rem;overflow:hidden;transition:border-color 0.3s}
+.faq-item:hover{border-color:rgba(63,110,145,0.25)}
+.faq-q{padding:1.2rem 1.5rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;font-weight:600;user-select:none;list-style:none}
+.faq-q::-webkit-details-marker{display:none}
+.faq-q::after{content:'+';font-size:1.3rem;font-weight:300;color:var(--steel);transition:transform 0.3s}
+.faq-item[open] .faq-q::after{content:'−'}
+.faq-a{padding:0 1.5rem 1.3rem;color:var(--muted);font-size:0.9rem;line-height:1.7}
+
+/* ===== CTA ===== */
+.cta{padding:7rem 2.5rem;text-align:center}
+.cta-inner{max-width:600px;margin:0 auto;background:var(--card);border:1px solid var(--border);border-radius:28px;padding:4rem 3rem;position:relative;overflow:hidden;box-shadow:0 20px 60px -24px rgba(63,110,145,0.18)}
+.cta-inner::before{content:'';position:absolute;top:-50px;right:-50px;width:140px;height:140px;background:var(--steel);border-radius:50%;opacity:0.16;filter:blur(28px)}
+.cta-inner h2{font-size:clamp(1.8rem,3vw,2.4rem);font-weight:700;letter-spacing:-0.028em;margin-bottom:0.8rem;position:relative}
+.cta-inner p{font-size:0.95rem;color:var(--muted);margin-bottom:2rem;line-height:1.7;position:relative}
+.email-form{display:flex;gap:0.6rem;max-width:420px;margin:0 auto;flex-wrap:wrap;justify-content:center;position:relative}
+.email-input{flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border2);border-radius:50px;padding:0.85rem 1.3rem;color:var(--text);font-size:0.88rem;outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s,box-shadow 0.2s}
+.email-input:focus{border-color:var(--steel);box-shadow:0 0 0 3px rgba(63,110,145,0.18)}
+.email-input::placeholder{color:var(--muted2)}
+.email-btn{background:var(--steel);color:#fff;border:none;border-radius:50px;padding:0.85rem 1.6rem;font-size:0.88rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;transition:transform 0.25s,box-shadow 0.25s}
+.email-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(63,110,145,0.6)}
+.cta-note{font-size:0.75rem;color:var(--muted2);margin-top:1rem;position:relative}
+
+/* ===== FOOTER ===== */
+footer{padding:3rem 2.5rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;max-width:1100px;margin:0 auto}
+.footer-logo{font-size:0.95rem;font-weight:700;letter-spacing:-0.02em;color:var(--muted);display:flex;align-items:center;gap:0.5rem}
+.footer-logo .app-name{color:var(--steel)}
+.footer-logo .dot{width:7px;height:7px;border-radius:50%;background:var(--steel)}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{font-size:0.82rem;color:var(--muted2);text-decoration:none;transition:color 0.2s}
+.footer-links a:hover{color:var(--muted)}
+.footer-copy{font-size:0.78rem;color:var(--muted2);width:100%;text-align:center;padding-top:1.5rem;border-top:1px solid var(--border)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+  .hero-wrap{grid-template-columns:1fr;gap:2.5rem}
+  .hero-phone{order:2}
+  .phone-mockup{max-width:240px}
+}
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem}
+  nav.scrolled{padding:0.75rem 1.5rem}
+  .nav-links{display:none}
+  section,.how,.problem,.faq,.cta,.pricing,.templates{padding:4rem 1.5rem}
+  .hero{padding:7rem 1.5rem 3rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="https://dailyco.influencemood.com/" class="nav-logo">
+    <span class="app-name">Vitae</span>
+    <span class="sep">·</span>
+    <span class="company">The Everyday Co.</span>
+    <span class="dot"></span>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Fonctionnalités</a>
+    <a href="#templates">Templates</a>
+    <a href="#pricing">Tarifs</a>
+    <a href="#faq">FAQ</a>
+    <a href="support.html">Support</a>
+  </div>
+  <a href="#waitlist" class="nav-cta">Être notifié →</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-wrap">
+    <div>
+      <div class="hero-label reveal">
+        <span></span>
+        App · iOS · Afrique de l'Ouest
+      </div>
+      <h1 class="reveal reveal-d1">
+        Votre CV,<br>
+        <em>enfin</em> bien<br>
+        <span class="highlight-word">rédigé.</span>
+      </h1>
+      <p class="hero-sub reveal reveal-d2">
+        Vitae permet à n'importe quel diplômé de créer un CV professionnel en 3 minutes, adapté aux codes du marché ivoirien et ouest-africain. 6 templates, export PDF, partage WhatsApp. Sans compétence en design.
+      </p>
+      <div class="hero-actions reveal reveal-d3">
+        <a href="#waitlist" class="btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+          Télécharger sur l'App Store
+        </a>
+        <a href="#how" class="btn-secondary">
+          Comment ça marche
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- PHONE PREVIEW -->
+    <div class="hero-phone reveal-right reveal-d2">
+      <div class="phone-mockup">
+        <div class="phone-screen">
+          <div class="phone-status">
+            <span>9:41</span>
+            <span>Vitae · Aperçu CV</span>
+          </div>
+          <div class="phone-logo">
+            <div class="phone-logo-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="5" y="3" width="14" height="18" rx="2"/>
+                <line x1="9" y1="8" x2="15" y2="8" stroke-linecap="round"/>
+                <line x1="9" y1="12" x2="15" y2="12" stroke-linecap="round"/>
+                <line x1="9" y1="16" x2="13" y2="16" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="phone-logo-text">VITAE</div>
+          </div>
+          <div class="phone-cv">
+            <div class="phone-cv-header">
+              <div class="phone-cv-name">Koné Aya</div>
+              <div class="phone-cv-role">Comptable Junior</div>
+              <div class="phone-cv-contact">Abidjan · +225 07 XX XX XX · aya@exemple.com</div>
+            </div>
+            <div class="phone-cv-section">
+              <div class="phone-cv-section-h">Profil</div>
+              <div class="phone-cv-line medium"></div>
+              <div class="phone-cv-line short"></div>
+            </div>
+            <div class="phone-cv-section">
+              <div class="phone-cv-section-h">Expérience</div>
+              <div class="phone-cv-exp">
+                <div class="phone-cv-exp-h">Assistante comptable — Cabinet Diallo</div>
+                <div class="phone-cv-exp-d">2023 — 2024 · Abidjan</div>
+              </div>
+              <div class="phone-cv-exp">
+                <div class="phone-cv-exp-h">Stage comptabilité — SGCI</div>
+                <div class="phone-cv-exp-d">2022 · Abidjan</div>
+              </div>
+            </div>
+            <div class="phone-cv-section">
+              <div class="phone-cv-section-h">Compétences</div>
+              <span class="phone-cv-tag">Excel</span>
+              <span class="phone-cv-tag">Sage</span>
+              <span class="phone-cv-tag">Analyse financière</span>
+              <span class="phone-cv-tag">Français</span>
+              <span class="phone-cv-tag">Anglais</span>
+            </div>
+            <div class="phone-cv-cta">Exporter en PDF →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<div class="problem">
+  <div class="problem-inner">
+    <div class="section-label reveal">Le problème</div>
+    <h2 class="section-h reveal reveal-d1">Faire son CV, c'est toujours une galère.</h2>
+    <p class="section-sub reveal reveal-d2">
+      Sur le marché ivoirien et ouest-africain, on vous demande un CV pour presque tout : un stage, un premier emploi, une reconversion. Mais entre l'idée et le PDF final, il y a toujours un obstacle.
+    </p>
+    <div class="problem-grid">
+      <div class="problem-card reveal-scale">
+        <span class="problem-emoji">📄</span>
+        <div class="problem-h">Word qui s'enlaidit</div>
+        <div class="problem-p">On ouvre Word, on commence à aligner des sections, le rendu ne ressemble jamais à l'idée qu'on avait en tête. Et la mise en page se casse à chaque modification.</div>
+      </div>
+      <div class="problem-card reveal-scale reveal-d1">
+        <span class="problem-emoji">🎨</span>
+        <div class="problem-h">Pas de sens du design</div>
+        <div class="problem-p">On ne sait pas où mettre la photo, quelles couleurs choisir, comment hiérarchiser l'information. Résultat : un CV fade qui ne se démarque pas.</div>
+      </div>
+      <div class="problem-card reveal-scale reveal-d2">
+        <span class="problem-emoji">🖥️</span>
+        <div class="problem-h">Cyber café payant</div>
+        <div class="problem-p">Pas d'ordinateur à la maison ? Direction le cyber café, à 500 FCFA l'heure, pour un résultat qui prend 2h parce qu'on ne maîtrise pas le logiciel.</div>
+      </div>
+      <div class="problem-card reveal-scale reveal-d3">
+        <span class="problem-emoji">🧐</span>
+        <div class="problem-h">Pas adapté au marché local</div>
+        <div class="problem-p">Les modèles trouvés en ligne sont pensés pour le marché européen. Ils ne savent pas qu'ici, un recruteur peut demander une photo, un état civil, une adresse à Abidjan.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label reveal">Ce que Vitae fait</div>
+  <h2 class="section-h reveal reveal-d1">Tout ce qu'il vous faut. Rien de superflu.</h2>
+  <p class="section-sub reveal reveal-d2">
+    Chaque fonctionnalité a été pensée pour le candidat ouest-africain. Pas de gadgets, pas de complexité : juste un CV propre, rapide, adapté.
+  </p>
+  <div class="features-grid">
+
+    <div class="feature-card reveal-scale">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v16m8-8H4"/></svg>
+      </div>
+      <div class="feature-name">Création en 3 minutes</div>
+      <div class="feature-desc">Formulaire guidé étape par étape : infos perso, titre, résumé, expériences, formation, compétences, langues. Tout est sauvegardé automatiquement à chaque champ.</div>
+    </div>
+
+    <div class="feature-card reveal-scale reveal-d1">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+      </div>
+      <div class="feature-name">6 templates pro</div>
+      <div class="feature-desc">Classique, Moderne, Élégant, Minimal, Académique, Stage. Chacun pensé pour un secteur et un profil. 2 sont offerts, 4 sont en Premium.</div>
+    </div>
+
+    <div class="feature-card reveal-scale reveal-d2">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+      </div>
+      <div class="feature-name">6 couleurs par template</div>
+      <div class="feature-desc">Steel blue, terracotta, vert sauge, violet sobre, bordeaux, noir. Adaptez l'accent à votre secteur : sobre pour la banque, coloré pour le marketing.</div>
+    </div>
+
+    <div class="feature-card reveal-scale reveal-d3">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div class="feature-name">Export PDF A4</div>
+      <div class="feature-desc">PDF optimisé pour l'impression et l'envoi par email, au format A4 (210 × 297 mm). Rendu net, professionnel, sans coupures bizarres.</div>
+    </div>
+
+    <div class="feature-card reveal-scale">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      </div>
+      <div class="feature-name">Partage WhatsApp</div>
+      <div class="feature-desc">Exportez votre PDF et partagez-le directement sur WhatsApp, par email ou via n'importe quelle app. Un CV à envoyer en 2 taps, sans cyber café.</div>
+    </div>
+
+    <div class="feature-card reveal-scale reveal-d1">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div class="feature-name">Aperçu temps réel</div>
+      <div class="feature-desc">À chaque champ rempli, le CV se met à jour instantanément. Vous voyez exactement ce que le recruteur verra, avant même d'exporter.</div>
+    </div>
+
+    <div class="feature-card reveal-scale reveal-d2">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7L9 18l-5-5"/></svg>
+      </div>
+      <div class="feature-name">Suggestions par secteur</div>
+      <div class="feature-desc">Pour le titre, le résumé, les tâches : des exemples préchargés par secteur (comptabilité, marketing, technique…). Plus jamais la page blanche.</div>
+    </div>
+
+    <div class="feature-card reveal-scale reveal-d3">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      </div>
+      <div class="feature-name">Plusieurs CVs</div>
+      <div class="feature-desc">Un CV pour un emploi, un autre pour un stage, un troisième pour une reconversion. Dupliquez, adaptez, exportez. Sans tout refaire à chaque fois.</div>
+    </div>
+
+    <div class="feature-card reveal-scale">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="feature-name">Conseils intégrés</div>
+      <div class="feature-desc">Une section éditoriale : « Comment rédiger un bon résumé », « Les erreurs à éviter sur le marché ivoirien », etc. Pour ne plus jamais tâtonner.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TEMPLATES -->
+<div class="templates" id="templates">
+  <div class="templates-inner">
+    <div class="section-label reveal">Les 6 templates</div>
+    <h2 class="section-h reveal reveal-d1">Un template pour chaque profil.</h2>
+    <p class="section-sub reveal reveal-d2">
+      Chaque template a été pensé pour un secteur et un objectif précis. Pas de doute : on choisit, on remplit, on exporte.
+    </p>
+    <div class="templates-grid">
+
+      <div class="template-card reveal-scale">
+        <div class="template-thumb">
+          <div class="template-thumb-bar accent"></div>
+          <div class="template-thumb-bar"></div>
+          <div class="template-thumb-bar medium"></div>
+          <div class="template-thumb-bar short"></div>
+          <div class="template-thumb-bar"></div>
+          <div class="template-thumb-bar medium"></div>
+          <div class="template-thumb-bar short"></div>
+        </div>
+        <div class="template-name">Classique</div>
+        <div class="template-style">1 colonne, sobre, noir et blanc.</div>
+        <span class="template-badge free">Gratuit</span>
+        <div class="template-ideal">Idéal : Banque, Droit, Administration publique</div>
+      </div>
+
+      <div class="template-card reveal-scale reveal-d1">
+        <div class="template-thumb">
+          <div class="template-thumb-bar accent" style="width:40%"></div>
+          <div class="template-thumb-bar col2">
+            <div>
+              <div class="template-thumb-bar short"></div>
+              <div class="template-thumb-bar"></div>
+              <div class="template-thumb-bar medium"></div>
+            </div>
+            <div>
+              <div class="template-thumb-bar short"></div>
+              <div class="template-thumb-bar"></div>
+              <div class="template-thumb-bar medium"></div>
+            </div>
+          </div>
+        </div>
+        <div class="template-name">Moderne</div>
+        <div class="template-style">2 colonnes, accent couleur.</div>
+        <span class="template-badge premium">Premium</span>
+        <div class="template-ideal">Idéal : Marketing, Communication, Commercial</div>
+      </div>
+
+      <div class="template-card reveal-scale reveal-d2">
+        <div class="template-thumb" style="align-items:center;justify-content:center">
+          <div class="template-thumb-bar photo" style="width:32px;height:32px;margin-bottom:6px"></div>
+          <div class="template-thumb-bar medium" style="height:5px;background:var(--steel)"></div>
+          <div class="template-thumb-bar short"></div>
+          <div class="template-thumb-bar"></div>
+          <div class="template-thumb-bar medium"></div>
+          <div class="template-thumb-bar short"></div>
+        </div>
+        <div class="template-name">Élégant</div>
+        <div class="template-style">En-tête photo, mise en page premium.</div>
+        <span class="template-badge premium">Premium</span>
+        <div class="template-ideal">Idéal : Direction, Management, Finance</div>
+      </div>
+
+      <div class="template-card reveal-scale reveal-d3">
+        <div class="template-thumb" style="padding:14px 18px">
+          <div class="template-thumb-bar short" style="margin-bottom:8px"></div>
+          <div class="template-thumb-bar medium"></div>
+          <div class="template-thumb-bar" style="width:70%"></div>
+          <div class="template-thumb-bar short"></div>
+        </div>
+        <div class="template-name">Minimal</div>
+        <div class="template-style">Très épuré, beaucoup d'espace.</div>
+        <span class="template-badge premium">Premium</span>
+        <div class="template-ideal">Idéal : Design, Tech, Créatif</div>
+      </div>
+
+      <div class="template-card reveal-scale">
+        <div class="template-thumb">
+          <div class="template-thumb-bar accent" style="width:50%"></div>
+          <div class="template-thumb-bar short"></div>
+          <div class="template-thumb-bar medium"></div>
+          <div class="template-thumb-bar"></div>
+          <div class="template-thumb-bar short"></div>
+          <div class="template-thumb-bar medium"></div>
+          <div class="template-thumb-bar"></div>
+          <div class="template-thumb-bar short"></div>
+        </div>
+        <div class="template-name">Académique</div>
+        <div class="template-style">Détaillé, section publications.</div>
+        <span class="template-badge premium">Premium</span>
+        <div class="template-ideal">Idéal : Enseignement, Recherche</div>
+      </div>
+
+      <div class="template-card reveal-scale reveal-d1">
+        <div class="template-thumb" style="padding:16px">
+          <div class="template-thumb-bar medium" style="height:5px;background:var(--steel);margin-bottom:6px"></div>
+          <div class="template-thumb-bar short"></div>
+          <div class="template-thumb-bar medium"></div>
+          <div class="template-thumb-bar"></div>
+        </div>
+        <div class="template-name">Stage</div>
+        <div class="template-style">1 page forcée, sections adaptées.</div>
+        <span class="template-badge free">Gratuit</span>
+        <div class="template-ideal">Idéal : Étudiants, Stagiaires</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how" id="how">
+  <div class="how-inner">
+    <div class="section-label reveal">Comment ça marche</div>
+    <h2 class="section-h reveal reveal-d1">De zéro à votre premier CV en 3 minutes.</h2>
+    <p class="section-sub reveal reveal-d2">
+      Pas de logiciel à apprendre, pas de tutoriel à regarder. Vitae vous guide à chaque étape.
+    </p>
+    <div class="how-steps">
+      <div class="how-step reveal-scale">
+        <div class="how-num">1</div>
+        <div class="how-name">Inscrivez-vous</div>
+        <div class="how-desc">Numéro de téléphone, mot de passe, c'est tout. Choisissez votre objectif (emploi, stage, mise à jour) pour personnaliser l'expérience.</div>
+      </div>
+      <div class="how-step reveal-scale reveal-d1">
+        <div class="how-num">2</div>
+        <div class="how-name">Remplissez le formulaire</div>
+        <div class="how-desc">Étapes guidées : infos perso, titre, résumé, expériences, formation, compétences, langues. Avec des exemples préchargés à chaque étape.</div>
+      </div>
+      <div class="how-step reveal-scale reveal-d2">
+        <div class="how-num">3</div>
+        <div class="how-name">Choisissez template & couleur</div>
+        <div class="how-desc">6 templates, 6 couleurs d'accent. Aperçu temps réel : vous voyez le résultat à chaque modification, avant d'exporter.</div>
+      </div>
+      <div class="how-step reveal-scale reveal-d3">
+        <div class="how-num">4</div>
+        <div class="how-name">Exportez & partagez</div>
+        <div class="how-desc">PDF A4 prêt à imprimer et à envoyer. Partage direct sur WhatsApp, par email, ou téléchargement. Votre CV est prêt à postuler.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="pricing-inner">
+    <div class="section-label reveal">Tarifs</div>
+    <h2 class="section-h reveal reveal-d1">Gratuit pour commencer. Premium pour postuler sans limite.</h2>
+    <p class="section-sub reveal reveal-d2">
+      Pas de piège, pas d'engagement. Créez votre premier CV gratuitement, passez Premium quand vous en avez besoin.
+    </p>
+    <div class="pricing-grid">
+
+      <div class="price-card reveal-scale">
+        <div class="price-tier">Gratuit</div>
+        <div class="price-amount">0 <small>FCFA / mois</small></div>
+        <div class="price-desc">Pour créer votre premier CV et commencer à postuler.</div>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>1 CV actif</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>2 templates (Classique + Stage)</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Export PDF avec watermark discret</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Partage WhatsApp</li>
+        </ul>
+        <a href="#waitlist" class="price-btn outline">Commencer gratuitement</a>
+      </div>
+
+      <div class="price-card featured reveal-scale reveal-d1">
+        <div class="price-tier">Premium</div>
+        <div class="price-amount">2 000 <small>FCFA / mois</small></div>
+        <div class="price-desc">Pour postuler partout, à plusieurs offres, sans watermark. <br>Ou 500 FCFA / CV à l'acte.</div>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>CVs illimités</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>6 templates disponibles</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Export sans watermark</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Duplication de CV</li>
+        </ul>
+        <a href="#waitlist" class="price-btn">Choisir Premium</a>
+      </div>
+
+      <div class="price-card reveal-scale reveal-d2">
+        <div class="price-tier">Étudiant</div>
+        <div class="price-amount">1 000 <small>FCFA / 6 mois</small></div>
+        <div class="price-desc">Toutes les fonctionnalités Premium, à prix réduit sur justificatif étudiant.</div>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Tout du Premium</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Sur justificatif étudiant</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Template Stage optimisé</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>Conseils recherche stage</li>
+        </ul>
+        <a href="#waitlist" class="price-btn outline">Choisir Étudiant</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<div class="faq" id="faq">
+  <div class="faq-inner">
+    <div class="section-label reveal">Questions fréquentes</div>
+    <h2 class="section-h reveal reveal-d1" style="text-align:center">On répond à vos questions.</h2>
+    <p class="section-sub reveal reveal-d2" style="text-align:center;margin:0 auto 2.5rem">
+      Et si vous ne trouvez pas votre réponse, contactez-nous sur <a href="support.html" style="color:var(--steel)">la page support</a>.
+    </p>
+
+    <details class="faq-item reveal">
+      <summary class="faq-q">Faut-il savoir faire du design pour utiliser Vitae ?</summary>
+      <div class="faq-a">Non, c'est tout l'intérêt de Vitae. Vous remplissez un formulaire guidé (texte, pas de mise en page), et Vitae s'occupe du design. Les 6 templates sont faits par des designers, vous n'avez qu'à choisir celui qui correspond à votre secteur et à votre objectif. Aucune compétence technique requise.</div>
+    </details>
+
+    <details class="faq-item reveal reveal-d1">
+      <summary class="faq-q">Comment se passe l'inscription ? Je n'ai pas d'email.</summary>
+      <div class="faq-a">Vitae ne demande qu'un numéro de téléphone et un mot de passe. Aucun email à vérifier, aucun code SMS à recevoir. L'inscription prend 30 secondes et le compte est immédiatement actif. Un email est optionnel si vous souhaitez recevoir une copie de vos CV, mais ce n'est jamais obligatoire.</div>
+    </details>
+
+    <details class="faq-item reveal reveal-d2">
+      <summary class="faq-q">Combien coûte vraiment Vitae ?</summary>
+      <div class="faq-a">Le plan gratuit vous permet de créer 1 CV avec 2 templates (Classique + Stage) et un export PDF avec un watermark discret « Créé avec Vitae ». Pour aller plus loin, Premium (2 000 FCFA / mois ou 500 FCFA / CV à l'acte) débloque les 6 templates, les CVs illimités et l'export sans watermark. Le plan Étudiant (1 000 FCFA / 6 mois) offre toutes les fonctionnalités Premium sur justificatif étudiant.</div>
+    </details>
+
+    <details class="faq-item reveal reveal-d3">
+      <summary class="faq-q">Le CV est-il adapté au marché ivoirien ?</summary>
+      <div class="faq-a">Oui, c'est notre spécificité. Vitae intègre les codes du marché local : la photo est optionnelle (certains recruteurs la demandent, d'autres non — c'est votre choix), l'adresse peut indiquer un quartier d'Abidjan, les exemples préchargés sont en français et pensés pour les secteurs qui recrutent en Côte d'Ivoire. Les suggestions de titres, de résumés et de tâches sont issues de notre analyse du marché ouest-africain.</div>
+    </details>
+
+    <details class="faq-item reveal">
+      <summary class="faq-q">Puis-je créer plusieurs CV pour des candidatures différentes ?</summary>
+      <div class="faq-a">Oui. Avec le plan Premium, vous pouvez créer et dupliquer autant de CV que vous le souhaitez. Le scénario typique : un CV « Comptable » pour un emploi en cabinet, un CV « Auditrice » pour un poste en banque, un CV « Stage » pour une recherche de stage d'été. Vous dupliquez le CV de base, adaptez le titre et le résumé, changez éventuellement de template, et vous exportez. Sans jamais tout refaire.</div>
+    </details>
+
+    <details class="faq-item reveal reveal-d1">
+      <summary class="faq-q">Le PDF est-il compatible avec tous les recruteurs ?</summary>
+      <div class="faq-a">Le PDF généré est au format A4 (210 × 297 mm), le standard universel pour les CV. Il s'ouvre sur n'importe quel appareil (ordinateur, téléphone, tablette), s'imprime sans déformation et passe sans problème les systèmes de tri de candidatures (ATS). Il est optimisé en poids pour un envoi rapide par email ou WhatsApp, même sur une connexion lente.</div>
+    </details>
+
+    <details class="faq-item reveal reveal-d2">
+      <summary class="faq-q">Mes données sont-elles en sécurité ?</summary>
+      <div class="faq-a">Toutes vos données sont chiffrées en transit (HTTPS) et au repos (chiffrement côté serveur). Vitae ne collecte aucune donnée bancaire, aucune donnée de navigation en dehors de l'app. Vos CV ne sont jamais partagés avec des tiers. Vous restez propriétaire de vos données et pouvez les exporter ou supprimer à tout moment depuis les paramètres.</div>
+    </details>
+
+    <details class="faq-item reveal reveal-d3">
+      <summary class="faq-q">Le CV peut-il faire plus d'une page ?</summary>
+      <div class="faq-a">Par défaut, votre CV fait une page (le standard pour la plupart des recruteurs, qui ne lisent pas au-delà). Le maximum est de 2 pages pour les profils avec beaucoup d'expérience. Le template « Stage » force lui une page unique, quelle que soit la quantité de données — idéal pour les étudiants et jeunes diplômés.</div>
+    </details>
+
+    <details class="faq-item reveal">
+      <summary class="faq-q">Que se passe-t-il si je veux annuler mon abonnement ?</summary>
+      <div class="faq-a">Vous pouvez annuler à tout moment depuis votre compte App Store. L'abonnement reste actif jusqu'à la fin de la période payée, puis votre compte repasse automatiquement au plan gratuit. Vous gardez tous vos CVs, seule la watermark réapparaît sur les nouveaux exports. Aucune perte de données, aucun engagement.</div>
+    </details>
+
+    <details class="faq-item reveal reveal-d1">
+      <summary class="faq-q">Android, c'est pour quand ?</summary>
+      <div class="faq-a">Android arrive juste après le lancement iOS, dans les semaines qui suivent. La première version iOS est notre priorité pour valider le marché, mais l'app est développée en Flutter — la version Android sera techniquement identique et disponible très vite après l'iOS.</div>
+    </details>
+
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta" id="waitlist">
+  <div class="cta-inner reveal-scale">
+    <div style="font-size:2rem;margin-bottom:1rem;position:relative">📄</div>
+    <h2>Soyez parmi les premiers.</h2>
+    <p>
+      Vitae arrive bientôt sur l'App Store. Laissez votre email pour être notifié en avant-première et tester gratuitement.
+    </p>
+    <div class="email-form">
+      <input type="email" class="email-input" placeholder="votre@email.com" aria-label="Votre email">
+      <button class="email-btn" type="button">Je veux tester →</button>
+    </div>
+    <p class="cta-note">Zéro spam. Juste l'essentiel.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="border-top:1px solid var(--border)">
+  <footer>
+    <a href="https://dailyco.influencemood.com/" class="footer-logo" style="text-decoration:none">
+      <span class="app-name">Vitae</span>
+      <span style="color:var(--muted2)">·</span>
+      <span style="color:var(--muted);font-weight:500">The Everyday Co.</span>
+      <span class="dot"></span>
+    </a>
+    <div class="footer-links">
+      <a href="#features">Fonctionnalités</a>
+      <a href="#templates">Templates</a>
+      <a href="#pricing">Tarifs</a>
+      <a href="support.html">Support</a>
+      <a href="https://dailyco.influencemood.com/privacy.html">Confidentialité</a>
+    </div>
+    <div class="footer-links">
+      <a href="https://dailyco.influencemood.com/">The Everyday Co.</a>
+      <a href="https://twitter.com/everydayco" rel="noopener">Twitter</a>
+      <a href="https://linkedin.com/company/everydayco" rel="noopener">LinkedIn</a>
+    </div>
+    <div class="footer-copy">
+      © 2026 The Everyday Co. · Abidjan, Côte d'Ivoire ·
+      <a href="mailto:hello@everyday.co" style="color:inherit">hello@everyday.co</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+// Scroll reveal
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -48px 0px' });
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale').forEach(el => io.observe(el));
+
+// Nav shrink on scroll
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 40) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+}, { passive: true });
+
+// Email form
+document.querySelector('.email-btn').addEventListener('click', function(){
+  const inp = document.querySelector('.email-input');
+  const val = inp.value.trim();
+  if (val && val.includes('@')) {
+    this.textContent = 'Merci !';
+    this.style.background = '#4E8462';
+    this.disabled = true;
+    inp.disabled = true;
+  } else {
+    inp.style.borderColor = 'rgba(184,86,56,0.6)';
+    setTimeout(() => inp.style.borderColor = '', 2000);
+  }
+});
+</script>
+</body>
+</html>

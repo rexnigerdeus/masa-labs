@@ -7,8 +7,10 @@ import '../../features/tontines/screens/create_tontine_screen.dart';
 import '../../features/tontines/screens/home_screen.dart';
 import '../../features/tontines/screens/join_tontine_screen.dart';
 import '../../features/tontines/screens/members_screen.dart';
+import '../../features/tontines/screens/history_screen.dart';
 import '../../features/tontines/screens/notifications_screen.dart';
 import '../../features/tontines/screens/record_payment_screen.dart';
+import '../../features/tontines/screens/reorder_beneficiaires_screen.dart';
 import '../../features/tontines/screens/settings_screen.dart';
 import '../../features/tontines/screens/splash_screen.dart';
 import '../../features/tontines/screens/tontine_detail_screen.dart';
@@ -60,6 +62,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           tontineId: state.pathParameters['id']!,
           tourId: state.pathParameters['tourId']!,
         ),
+      ),
+      GoRoute(
+        path: '/tontine/:id/reorder',
+        builder: (context, state) =>
+            ReorderBeneficiairesScreen(tontineId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/history',
+        builder: (context, state) {
+          final tontineId = state.uri.queryParameters['tontineId'];
+          final tontineName = state.uri.queryParameters['tontineName'];
+          return HistoryScreen(tontineId: tontineId, tontineName: tontineName);
+        },
       ),
       GoRoute(
         path: '/notifications',

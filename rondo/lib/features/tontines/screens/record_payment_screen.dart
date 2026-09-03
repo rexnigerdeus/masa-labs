@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers.dart';
+import 'home_screen.dart' show myTontinesProvider;
 
 class RecordPaymentScreen extends ConsumerStatefulWidget {
   final String tourId;
@@ -83,6 +84,9 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         mode: _mode,
         note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
       );
+
+      // Invalider le cache pour rafraîchir la home et le détail
+      ref.invalidate(myTontinesProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

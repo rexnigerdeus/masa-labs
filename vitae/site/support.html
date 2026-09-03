@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support · Vitae — Votre CV professionnel en 3 minutes</title>
+<meta name="description" content="Besoin d'aide avec Vitae ? Trouvez les réponses à vos questions ou contactez notre équipe support.">
+<meta name="theme-color" content="#3F6E91">
+<meta property="og:title" content="Support · Vitae">
+<meta property="og:description" content="Besoin d'aide avec Vitae ? Toutes les réponses sont ici.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dailyco.influencemood.com/vitae/support.html">
+<link rel="canonical" href="https://dailyco.influencemood.com/vitae/support.html">
+<link rel="icon" type="image/png" href="/vitae/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAFAF7;
+  --bg2:#F4F2EC;
+  --bg3:#FFFFFF;
+  --dark:#171411;
+  --dark2:#26211C;
+  --card:#FFFFFF;
+  --border:rgba(23,20,17,0.08);
+  --border2:rgba(23,20,17,0.16);
+  --text:#171411;
+  --muted:#5C5650;
+  --muted2:#8A8378;
+  --steel:#3F6E91;
+  --steel-dark:#2C526E;
+  --steel-soft:rgba(63,110,145,0.10);
+  --steel-bg-solid:#2C526E;
+  --yellow:#FDF150;
+  --green:#4E8462;
+  --red:#B85638;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.reveal{opacity:0;transform:translateY(32px);transition:opacity 0.9s cubic-bezier(0.22,1,0.36,1),transform 0.9s cubic-bezier(0.22,1,0.36,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+.reveal-d1{transition-delay:0.08s}
+.reveal-d2{transition-delay:0.16s}
+.reveal-d3{transition-delay:0.24s}
+.reveal-scale{opacity:0;transform:scale(0.94);transition:opacity 0.9s cubic-bezier(0.22,1,0.36,1),transform 0.9s cubic-bezier(0.22,1,0.36,1)}
+.reveal-scale.in{opacity:1;transform:scale(1)}
+
+/* ===== NAV ===== */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2.5rem;background:rgba(250,250,247,0.80);backdrop-filter:blur(16px) saturate(1.2);border-bottom:1px solid transparent;transition:padding 0.35s,background 0.35s,border-color 0.35s}
+nav.scrolled{padding:0.75rem 2.5rem;background:rgba(250,250,247,0.92);border-bottom-color:var(--border)}
+.nav-logo{font-weight:700;font-size:1rem;letter-spacing:-0.02em;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.nav-logo .app-name{color:var(--steel);font-weight:700}
+.nav-logo .sep{color:var(--muted2);margin:0 0.1rem}
+.nav-logo .company{color:var(--muted)}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--steel);transition:transform 0.3s}
+.nav-logo:hover .dot{transform:scale(1.4)}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{font-size:0.86rem;color:var(--muted);text-decoration:none;position:relative;transition:color 0.2s}
+.nav-links a::after{content:'';position:absolute;left:0;bottom:-4px;width:100%;height:1.5px;background:var(--text);transform:scaleX(0);transform-origin:right;transition:transform 0.35s}
+.nav-links a:hover{color:var(--text)}
+.nav-links a:hover::after{transform:scaleX(1);transform-origin:left}
+.nav-cta{background:var(--steel);color:#fff;font-size:0.82rem;font-weight:600;padding:0.6rem 1.4rem;border-radius:50px;text-decoration:none;transition:transform 0.25s,box-shadow 0.25s}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(63,110,145,0.6)}
+
+/* ===== HERO ===== */
+.support-hero{padding:8rem 2.5rem 3rem;max-width:900px;margin:0 auto;text-align:center}
+.support-hero h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:700;line-height:1.1;letter-spacing:-0.032em;margin-bottom:1.2rem}
+.support-hero h1 em{font-style:normal;color:transparent;-webkit-text-stroke:1.5px var(--steel)}
+.support-hero p{font-size:clamp(1rem,1.6vw,1.15rem);color:var(--muted);max-width:600px;margin:0 auto 2rem;line-height:1.65}
+
+/* ===== SEARCH ===== */
+.search-wrap{max-width:540px;margin:0 auto 3rem;position:relative}
+.search-input{width:100%;background:var(--card);border:1.5px solid var(--border2);border-radius:50px;padding:1rem 1.4rem 1rem 3rem;font-size:0.95rem;color:var(--text);outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s,box-shadow 0.2s}
+.search-input:focus{border-color:var(--steel);box-shadow:0 0 0 4px rgba(63,110,145,0.10)}
+.search-input::placeholder{color:var(--muted2)}
+.search-icon{position:absolute;left:1.2rem;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted2);pointer-events:none}
+
+/* ===== CATEGORIES ===== */
+.cats{padding:0 2.5rem 5rem;max-width:1100px;margin:0 auto}
+.cats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:2rem}
+.cat-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.5rem;text-decoration:none;color:var(--text);transition:transform 0.35s,box-shadow 0.35s,border-color 0.35s;display:block}
+.cat-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px -16px rgba(23,20,17,0.16);border-color:rgba(63,110,145,0.3)}
+.cat-icon{width:42px;height:42px;border-radius:12px;background:var(--steel-soft);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;color:var(--steel)}
+.cat-icon svg{width:20px;height:20px}
+.cat-name{font-size:0.98rem;font-weight:600;margin-bottom:0.3rem}
+.cat-desc{font-size:0.82rem;color:var(--muted);line-height:1.55}
+
+/* ===== FAQ SECTIONS ===== */
+.faq-section{padding:5rem 2.5rem;max-width:900px;margin:0 auto}
+.faq-section + .faq-section{padding-top:0}
+.faq-cat-title{font-size:0.78rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--steel);margin-bottom:1.5rem;display:flex;align-items:center;gap:0.7rem}
+.faq-cat-title::before{content:'';display:inline-block;width:24px;height:1.5px;background:var(--steel)}
+.faq-item{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:0.7rem;overflow:hidden;transition:border-color 0.3s}
+.faq-item:hover{border-color:rgba(63,110,145,0.25)}
+.faq-q{padding:1.15rem 1.4rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;font-weight:600;user-select:none;list-style:none}
+.faq-q::-webkit-details-marker{display:none}
+.faq-q::after{content:'+';font-size:1.3rem;font-weight:300;color:var(--steel);transition:transform 0.3s}
+.faq-item[open] .faq-q::after{content:'−'}
+.faq-a{padding:0 1.4rem 1.2rem;color:var(--muted);font-size:0.9rem;line-height:1.7}
+.faq-a strong{color:var(--text);font-weight:600}
+.faq-a ol,.faq-a ul{padding-left:1.4rem;margin-top:0.5rem}
+.faq-a li{margin-bottom:0.3rem}
+.faq-a code{background:var(--bg2);padding:0.1rem 0.4rem;border-radius:4px;font-size:0.85em;font-family:'SF Mono',Menlo,monospace;color:var(--steel)}
+
+/* ===== CONTACT FORM ===== */
+.contact{padding:5rem 2.5rem 6rem;background:var(--bg2);border-top:1px solid var(--border)}
+.contact-inner{max-width:680px;margin:0 auto}
+.contact-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:3rem;box-shadow:0 16px 48px -24px rgba(23,20,17,0.10)}
+.contact-card h2{font-size:clamp(1.4rem,2.5vw,1.9rem);font-weight:700;letter-spacing:-0.025em;margin-bottom:0.5rem}
+.contact-card p{color:var(--muted);font-size:0.92rem;margin-bottom:1.8rem;line-height:1.6}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:0.82rem;font-weight:600;color:var(--text);margin-bottom:0.4rem}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1.5px solid var(--border2);border-radius:12px;padding:0.7rem 0.9rem;font-size:0.9rem;color:var(--text);outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s,box-shadow 0.2s}
+.field textarea{min-height:120px;resize:vertical;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--steel);box-shadow:0 0 0 3px rgba(63,110,145,0.12)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.submit-btn{width:100%;background:var(--steel);color:#fff;border:none;border-radius:50px;padding:0.95rem 1.5rem;font-size:0.92rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:transform 0.25s,box-shadow 0.25s;margin-top:0.5rem}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(63,110,145,0.5)}
+.contact-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border)}
+.contact-info-item{display:flex;gap:0.7rem;align-items:flex-start}
+.contact-info-icon{width:32px;height:32px;border-radius:8px;background:var(--steel-soft);display:flex;align-items:center;justify-content:center;color:var(--steel);flex-shrink:0}
+.contact-info-icon svg{width:16px;height:16px}
+.contact-info-text{font-size:0.82rem;color:var(--muted);line-height:1.55}
+.contact-info-text strong{display:block;color:var(--text);font-weight:600;margin-bottom:0.1rem;font-size:0.85rem}
+.contact-info-text a{color:var(--steel);text-decoration:none}
+.contact-info-text a:hover{text-decoration:underline}
+
+/* ===== FOOTER ===== */
+footer{padding:3rem 2.5rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;max-width:1100px;margin:0 auto}
+.footer-logo{font-size:0.95rem;font-weight:700;letter-spacing:-0.02em;color:var(--muted);display:flex;align-items:center;gap:0.5rem;text-decoration:none}
+.footer-logo .app-name{color:var(--steel)}
+.footer-logo .dot{width:7px;height:7px;border-radius:50%;background:var(--steel)}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{font-size:0.82rem;color:var(--muted2);text-decoration:none;transition:color 0.2s}
+.footer-links a:hover{color:var(--muted)}
+.footer-copy{font-size:0.78rem;color:var(--muted2);width:100%;text-align:center;padding-top:1.5rem;border-top:1px solid var(--border)}
+
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem}
+  nav.scrolled{padding:0.75rem 1.5rem}
+  .nav-links{display:none}
+  .support-hero{padding:7rem 1.5rem 2.5rem}
+  .cats{padding:0 1.5rem 3rem}
+  .faq-section,.contact{padding:3rem 1.5rem}
+  .contact-card{padding:2rem 1.5rem}
+  .row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="https://dailyco.influencemood.com/vitae/" class="nav-logo">
+    <span class="app-name">Vitae</span>
+    <span class="sep">·</span>
+    <span class="company">The Everyday Co.</span>
+    <span class="dot"></span>
+  </a>
+  <div class="nav-links">
+    <a href="https://dailyco.influencemood.com/vitae/#features">Fonctionnalités</a>
+    <a href="https://dailyco.influencemood.com/vitae/#templates">Templates</a>
+    <a href="https://dailyco.influencemood.com/vitae/#pricing">Tarifs</a>
+    <a href="support.html" style="color:var(--text)">Support</a>
+    <a href="mailto:support@everyday.co">Contact</a>
+  </div>
+  <a href="https://dailyco.influencemood.com/vitae/#waitlist" class="nav-cta">Être notifié →</a>
+</nav>
+
+<!-- HERO -->
+<div class="support-hero">
+  <h1 class="reveal">Comment pouvons-nous<br>vous <em>aider</em> ?</h1>
+  <p class="reveal reveal-d1">Trouvez rapidement une réponse, ou contactez notre équipe — on répond sous 24h ouvrées.</p>
+  <div class="search-wrap reveal reveal-d2">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="search" class="search-input" placeholder="Rechercher dans l'aide (ex : template, PDF, watermark, abonnement…)" aria-label="Rechercher dans l'aide" id="search">
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<div class="cats">
+  <div class="cats-grid">
+    <a href="#faq-demarrage" class="cat-card reveal-scale">
+      <div class="cat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v16m8-8H4"/></svg>
+      </div>
+      <div class="cat-name">Premiers pas</div>
+      <div class="cat-desc">Inscription, création de CV, objectif</div>
+    </a>
+    <a href="#faq-cv" class="cat-card reveal-scale reveal-d1">
+      <div class="cat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+      </div>
+      <div class="cat-name">CV & templates</div>
+      <div class="cat-desc">Édition, sections, 6 templates, couleurs</div>
+    </a>
+    <a href="#faq-export" class="cat-card reveal-scale reveal-d2">
+      <div class="cat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <div class="cat-name">Export & partage</div>
+      <div class="cat-desc">PDF A4, WhatsApp, watermark, email</div>
+    </a>
+    <a href="#faq-compte" class="cat-card reveal-scale reveal-d3">
+      <div class="cat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="cat-name">Compte & abonnement</div>
+      <div class="cat-desc">Mot de passe, plans, annulation, App Store</div>
+    </a>
+    <a href="#faq-confidentialite" class="cat-card reveal-scale">
+      <div class="cat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="cat-name">Confidentialité & sécurité</div>
+      <div class="cat-desc">Données CV, chiffrement, suppression</div>
+    </a>
+  </div>
+</div>
+
+<!-- FAQ: DÉMARRAGE -->
+<div class="faq-section" id="faq-demarrage">
+  <div class="faq-cat-title reveal">Premiers pas</div>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">Comment créer un compte Vitae ?</summary>
+    <div class="faq-a">
+      <ol>
+        <li>Téléchargez l'app Vitae sur l'App Store.</li>
+        <li>Sur l'écran d'accueil, appuyez sur <strong>« S'inscrire »</strong>.</li>
+        <li>Saisissez votre numéro de téléphone (ex : <strong>+225 07 XX XX XX XX</strong>).</li>
+        <li>Choisissez un mot de passe (6 caractères minimum).</li>
+        <li>Indiquez votre <strong>objectif</strong> : trouver un emploi, trouver un stage, ou mettre à jour votre CV. Cela personnalise l'expérience.</li>
+        <li>Appuyez sur <strong>« Créer mon compte »</strong>. Vous êtes connecté·e immédiatement.</li>
+      </ol>
+      <p>Aucun email à vérifier, aucun code SMS à saisir. L'inscription prend moins de 30 secondes.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d1">
+    <summary class="faq-q">Pourquoi choisir un objectif (emploi / stage / mise à jour) ?</summary>
+    <div class="faq-a">
+      <p>Votre objectif personnalise l'expérience :</p>
+      <ul>
+        <li><strong>Trouver un emploi</strong> : suggestions de titres et de résumés pour un poste en CDI, accès prioritaire aux templates Classique et Moderne.</li>
+        <li><strong>Trouver un stage</strong> : focus sur le template Stage (1 page forcée), exemples adaptés aux étudiants et jeunes diplômés.</li>
+        <li><strong>Mettre à jour mon CV</strong> : on part de votre CV existant (si vous en avez un sur Vitae) et on propose des améliorations section par section.</li>
+      </ul>
+      <p>Vous pouvez changer d'objectif à tout moment depuis les paramètres, ce n'est qu'un point de départ.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d2">
+    <summary class="faq-q">Comment créer mon premier CV ?</summary>
+    <div class="faq-a">
+      <ol>
+        <li>Sur le tableau de bord, appuyez sur <strong>« + Nouveau CV »</strong>.</li>
+        <li>Donnez-lui un titre (ex : « CV Comptable Junior »).</li>
+        <li>Choisissez un <strong>template</strong> (Classique et Stage sont gratuits ; les 4 autres sont en Premium).</li>
+        <li>Remplissez les sections dans l'ordre : infos perso, titre professionnel, résumé, expériences, formation, compétences, langues, centres d'intérêt.</li>
+        <li>Choisissez la <strong>couleur d'accent</strong> (6 disponibles par template).</li>
+        <li>Vérifiez l'<strong>aperçu temps réel</strong> à chaque étape.</li>
+        <li>Appuyez sur <strong>« Finaliser »</strong> puis <strong>« Exporter PDF »</strong>.</li>
+      </ol>
+      <p>Le tout prend 3 à 5 minutes pour un premier CV. Les suivants sont encore plus rapides grâce à la duplication.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">Puis-je créer plusieurs CV ?</summary>
+    <div class="faq-a">
+      <p>Oui, c'est même recommandé. Un CV unique ne convient pas à toutes les candidatures :</p>
+      <ul>
+        <li>Un CV « Comptable » pour un poste en cabinet comptable.</li>
+        <li>Un CV « Auditrice » pour un poste en banque (en dupliquant le premier et en adaptant le titre et le résumé).</li>
+        <li>Un CV « Stage » pour une recherche de stage d'été (template Stage, 1 page).</li>
+      </ul>
+      <p>Avec le plan gratuit, vous avez droit à <strong>1 CV actif</strong>. Avec Premium, les CVs sont <strong>illimités</strong> et vous pouvez les dupliquer en un tap.</p>
+    </div>
+  </details>
+</div>
+
+<!-- FAQ: CV & TEMPLATES -->
+<div class="faq-section" id="faq-cv">
+  <div class="faq-cat-title reveal">CV & templates</div>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">Quels sont les 6 templates disponibles ?</summary>
+    <div class="faq-a">
+      <ul>
+        <li><strong>Classique</strong> (gratuit) — 1 colonne, sobre, noir et blanc. Idéal : Banque, Droit, Administration.</li>
+        <li><strong>Moderne</strong> (premium) — 2 colonnes, accent couleur. Idéal : Marketing, Communication, Commercial.</li>
+        <li><strong>Élégant</strong> (premium) — En-tête photo, mise en page premium. Idéal : Direction, Management, Finance.</li>
+        <li><strong>Minimal</strong> (premium) — Très épuré, beaucoup d'espace. Idéal : Design, Tech, Créatif.</li>
+        <li><strong>Académique</strong> (premium) — Détaillé, section publications. Idéal : Enseignement, Recherche.</li>
+        <li><strong>Stage</strong> (gratuit) — 1 page forcée, sections adaptées. Idéal : Étudiants, Stagiaires.</li>
+      </ul>
+      <p>Vous pouvez changer de template à tout moment sans perdre le contenu : Vitae adapte automatiquement la mise en page.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d1">
+    <summary class="faq-q">Comment choisir la bonne couleur d'accent ?</summary>
+    <div class="faq-a">
+      <p>Chaque template propose 6 couleurs d'accent :</p>
+      <ul>
+        <li><strong>Steel blue</strong> (défaut) — sobre, professionnel, passe partout.</li>
+        <li><strong>Terracotta</strong> — chaleureux, créatif.</li>
+        <li><strong>Vert sauge</strong> — apaisant, éco / social.</li>
+        <li><strong>Violet sobre</strong> — créatif, tech.</li>
+        <li><strong>Bordeaux</strong> — institutionnel, banque, droit.</li>
+        <li><strong>Noir sobre</strong> — ultra classique, ne se trompe jamais.</li>
+      </ul>
+      <p>En cas de doute, restez sur le steel blue ou le noir sobre : ce sont les valeurs sûres du marché ivoirien.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d2">
+    <summary class="faq-q">Dois-je mettre une photo sur mon CV ?</summary>
+    <div class="faq-a">
+      <p><strong>C'est votre choix.</strong> Vitae ne force jamais la photo. Sur le marché ivoirien, certains recruteurs la demandent (notamment en contact client, direction, accueil), d'autres la déconseillent (banques internationales, ONG). Notre recommandation :</p>
+      <ul>
+        <li>Mettez une photo si vous postulez en contact client, commerce, accueil, ou si l'offre la demande explicitement.</li>
+        <li>Ne mettez pas de photo pour les postes en back-office, tech, ou les grandes structures internationales.</li>
+      </ul>
+      <p>Le template <strong>Élégant</strong> met en valeur la photo ; les autres fonctionnent très bien sans.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">Puis-je modifier un CV après l'avoir finalisé ?</summary>
+    <div class="faq-a">
+      <p>Oui, à tout moment. Depuis l'écran <strong>« Mes CVs »</strong>, ouvrez n'importe quel CV et appuyez sur <strong>« Éditer »</strong>. Vous pouvez modifier chaque section, changer de template, changer de couleur, ajouter ou supprimer des expériences. Tout est sauvegardé automatiquement à chaque modification.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d1">
+    <summary class="faq-q">Comment dupliquer un CV ?</summary>
+    <div class="faq-a">
+      <p>Depuis l'écran <strong>« Mes CVs »</strong>, appuyez sur le bouton menu d'un CV puis sur <strong>« Dupliquer »</strong>. Vitae crée une copie complète que vous pouvez renommer et adapter. C'est idéal pour créer un CV par type de candidature sans tout refaire.</p>
+      <p>La duplication est disponible avec le plan <strong>Premium</strong> et <strong>Étudiant</strong>.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d2">
+    <summary class="faq-q">Mon CV peut-il dépasser une page ?</summary>
+    <div class="faq-a">
+      <p>Par défaut, votre CV fait <strong>une page</strong> — le standard pour la majorité des recruteurs, qui ne lisent pas au-delà. Vitae gère automatiquement la mise en page pour tout faire tenir sur une page (ou deux maximum si vous avez beaucoup d'expérience).</p>
+      <p>Le template <strong>Stage</strong> force lui <strong>une page unique</strong>, quelle que soit la quantité de données. C'est important : un CV de stage qui fait 2 pages est souvent rejeté d'emblée par les recruteurs.</p>
+    </div>
+  </details>
+</div>
+
+<!-- FAQ: EXPORT & PARTAGE -->
+<div class="faq-section" id="faq-export">
+  <div class="faq-cat-title reveal">Export & partage</div>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">Comment exporter mon CV en PDF ?</summary>
+    <div class="faq-a">
+      <ol>
+        <li>Ouvrez le CV finalisé (ou en cours).</li>
+        <li>Appuyez sur <strong>« Exporter »</strong> en haut à droite.</li>
+        <li>Choisissez <strong>« PDF »</strong>.</li>
+        <li>Vitae génère le PDF A4 (210 × 297 mm) en 2 à 5 secondes.</li>
+        <li>Vous pouvez alors le <strong>télécharger</strong>, le <strong>partager sur WhatsApp</strong>, l'<strong>envoyer par email</strong>, ou l'imprimer directement.</li>
+      </ol>
+      <p>Le PDF est optimisé pour l'impression et l'envoi par email, avec un poids réduit (généralement sous 200 Ko) pour passer facilement même sur une connexion lente.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d1">
+    <summary class="faq-q">C'est quoi le watermark « Créé avec Vitae » ?</summary>
+    <div class="faq-a">
+      <p>Avec le plan <strong>gratuit</strong>, un discret watermark « Créé avec Vitae » apparaît en bas du PDF. Il est sobre et n'altère pas la lisibilité du CV, mais il est visible par le recruteur.</p>
+      <p>Pour le retirer, passez au plan <strong>Premium</strong> (2 000 FCFA / mois ou 500 FCFA / CV à l'acte) ou <strong>Étudiant</strong> (1 000 FCFA / 6 mois). Tous vos exports seront alors totalement sans watermark.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d2">
+    <summary class="faq-q">Comment partager mon CV sur WhatsApp ?</summary>
+    <div class="faq-a">
+      <p>Depuis l'écran d'export, appuyez sur <strong>« Partager sur WhatsApp »</strong>. WhatsApp s'ouvre avec le PDF déjà attaché, vous n'avez plus qu'à choisir le destinataire (recruteur, contact, groupe) et à envoyer. Le PDF est aussi enregistré dans votre app Fichiers pour un usage ultérieur.</p>
+      <p>Vous pouvez aussi envoyer le PDF par email depuis le même menu : Vitae ouvre votre app email avec le PDF déjà en pièce jointe.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">Le PDF est-il compatible avec les ATS (systèmes de tri de candidatures) ?</summary>
+    <div class="faq-a">
+      <p>Oui. Le PDF généré par Vitae est au format <strong>A4 standard</strong>, avec un texte sélectionnable (pas une image) : les ATS peuvent donc lire et indexer votre CV. Les sections sont clairement délimitées (titre, expérience, formation, compétences), ce qui est le format attendu par la plupart des ATS.</p>
+      <p>Pour maximiser la compatibilité, nous recommandons le template <strong>Classique</strong> ou <strong>Moderne</strong> si vous postulez à une grande structure qui utilise un ATS.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d1">
+    <summary class="faq-q">Puis-je imprimer mon CV directement depuis Vitae ?</summary>
+    <div class="faq-a">
+      <p>Oui. Depuis l'écran d'export, choisissez <strong>« Imprimer »</strong>. Vitae détecte les imprimantes AirPrint disponibles sur le même réseau Wi-Fi. Vous pouvez aussi enregistrer le PDF dans votre app Fichiers et l'imprimer depuis un cyber café ou un centre d'impression.</p>
+    </div>
+  </details>
+</div>
+
+<!-- FAQ: COMPTE & ABONNEMENT -->
+<div class="faq-section" id="faq-compte">
+  <div class="faq-cat-title reveal">Compte & abonnement</div>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">Comment changer de plan (Gratuit → Premium → Étudiant) ?</summary>
+    <div class="faq-a">
+      <ol>
+        <li>Allez dans <strong>Paramètres</strong> → <strong>Abonnement</strong>.</li>
+        <li>Choisissez le plan souhaité (Premium mensuel, Premium à l'acte, ou Étudiant).</li>
+        <li>Confirmez l'achat via l'App Store (Touch ID / Face ID).</li>
+      </ol>
+      <p>Le changement est instantané. Pour le plan <strong>Étudiant</strong>, vous devrez fournir un justificatif étudiant (carte étudiante ou certificat de scolarité) dans les 7 jours, sinon le plan repasse en Premium standard.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d1">
+    <summary class="faq-q">C'est quoi la différence entre Premium mensuel et Premium à l'acte ?</summary>
+    <div class="faq-a">
+      <p>Deux façons de payer Premium :</p>
+      <ul>
+        <li><strong>Premium mensuel</strong> — 2 000 FCFA / mois, abonnement renouvelable. Idéal si vous postulez régulièrement (plusieurs CVs par mois).</li>
+        <li><strong>Premium à l'acte</strong> — 500 FCFA par CV exporté sans watermark. Idéal si vous ne postulez qu'occasionnellement (1 CV tous les quelques mois).</li>
+      </ul>
+      <p>Si vous exportez plus de 4 CVs par mois, le mensuel est plus rentable. Sinon, le paiement à l'acte suffira.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d2">
+    <summary class="faq-q">Comment annuler mon abonnement ?</summary>
+    <div class="faq-a">
+      <p>L'annulation se gère depuis votre compte App Store (et non depuis Vitae directement) :</p>
+      <ol>
+        <li>Sur iPhone, ouvrez l'app <strong>Réglages</strong> (Settings).</li>
+        <li>Appuyez sur votre nom en haut → <strong>Abonnements</strong>.</li>
+        <li>Sélectionnez <strong>Vitae</strong>.</li>
+        <li>Appuyez sur <strong>« Annuler l'abonnement »</strong>.</li>
+      </ol>
+      <p>Votre abonnement reste actif jusqu'à la fin de la période payée, puis votre compte repasse automatiquement au plan gratuit. <strong>Aucune perte de données</strong> : vos CVs restent accessibles, seul le watermark réapparaît sur les nouveaux exports.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">J'ai oublié mon mot de passe. Comment le réinitialiser ?</summary>
+    <div class="faq-a">
+      <ol>
+        <li>Sur l'écran de connexion, appuyez sur <strong>« Mot de passe oublié ? »</strong>.</li>
+        <li>Saisissez votre numéro de téléphone.</li>
+        <li>Appuyez sur <strong>« Envoyer le code »</strong> — vous recevez un <strong>code à 6 chiffres par SMS</strong> (frais opérateur appliqués par votre forfait).</li>
+        <li>Saisissez le code reçu et définissez un nouveau mot de passe.</li>
+      </ol>
+      <p>Si vous ne recevez pas le SMS, attendez 60 secondes et réessayez, ou contactez-nous à <a href="mailto:support@everyday.co">support@everyday.co</a>.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d1">
+    <summary class="faq-q">Comment supprimer définitivement mon compte ?</summary>
+    <div class="faq-a">
+      <p>Allez dans <strong>Paramètres</strong> → <strong>Compte</strong> → <strong>« Supprimer mon compte »</strong>. Cette action est <strong>irréversible</strong> :</p>
+      <ul>
+        <li>Tous vos CVs sont supprimés.</li>
+        <li>Vos données personnelles sont effacées de nos serveurs sous 30 jours.</li>
+        <li>Votre abonnement actif est annulé (pas de remboursement au prorata).</li>
+      </ul>
+      <p>Avant la suppression, nous vous proposons d'<strong>exporter tous vos CVs en PDF</strong> pour ne rien perdre. Cette opération est gratuite, même en plan gratuit.</p>
+    </div>
+  </details>
+</div>
+
+<!-- FAQ: CONFIDENTIALITÉ -->
+<div class="faq-section" id="faq-confidentialite">
+  <div class="faq-cat-title reveal">Confidentialité & sécurité</div>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">Mes données CV sont-elles en sécurité ?</summary>
+    <div class="faq-a">
+      <p>Oui. Toutes vos données sont :</p>
+      <ul>
+        <li><strong>Chiffrées en transit</strong> (HTTPS / TLS 1.3)</li>
+        <li><strong>Chiffrées au repos</strong> sur nos serveurs (chiffrement AES-256 côté base de données)</li>
+        <li><strong>Hébergées en Europe</strong> (Supabase, conforme RGPD)</li>
+        <li><strong>Sauvegardées quotidiennement</strong> avec rotation sur 30 jours</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d1">
+    <summary class="faq-q">Vitae partage-t-il mon CV avec des recruteurs ou des tiers ?</summary>
+    <div class="faq-a">
+      <p><strong>Non, jamais.</strong> Vitae ne partage aucune donnée de CV avec qui que ce soit. Aucun recruteur partenaire, aucune plateforme d'emploi, aucune régie publicitaire. Votre CV est <strong>votre propriété</strong>, vous décidez à qui l'envoyer.</p>
+      <p>Vitae n'est qu'un outil de création et d'export. Une fois le PDF généré, <strong>vous seul</strong> contrôlez sa diffusion.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d2">
+    <summary class="faq-q">Pourquoi un pseudo-email avec mon numéro de téléphone ?</summary>
+    <div class="faq-a">
+      <p>C'est un détail technique lié à notre choix d'<strong>infrastructure Supabase</strong>. Pour des raisons de compatibilité technique, votre identifiant interne est techniquement un email de la forme <code>{numéro}@everyday.co</code>.</p>
+      <p>Cela ne change rien pour vous : <strong>aucun email n'est jamais envoyé</strong> (sauf si vous nous fournissez un vrai email optionnel pour recevoir une copie de vos CV), aucun email n'est jamais demandé. Votre identité reste votre numéro de téléphone. C'est purement un identifiant technique.</p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal">
+    <summary class="faq-q">Vitae collecte-t-il des données sur moi ?</summary>
+    <div class="faq-a">
+      <p>Vitae collecte <strong>uniquement</strong> ce qui est nécessaire au fonctionnement de l'app :</p>
+      <ul>
+        <li>Votre <strong>numéro de téléphone</strong> (identité unique, jamais partagé)</li>
+        <li>Les <strong>données que vous saisissez</strong> dans vos CV (infos perso, expériences, formation, etc.)</li>
+        <li>Votre <strong>objectif</strong> (emploi / stage / mise à jour) pour personnaliser l'expérience</li>
+      </ul>
+      <p><strong>Vitae ne collecte PAS</strong> : vos contacts, votre localisation, votre appareil photo (sauf quand vous ajoutez une photo de profil), votre micro, vos données bancaires, votre historique de navigation. <strong>Jamais.</strong></p>
+    </div>
+  </details>
+
+  <details class="faq-item reveal reveal-d1">
+    <summary class="faq-q">Mes CV sont-ils visibles par d'autres utilisateurs ?</summary>
+    <div class="faq-a">
+      <p><strong>Non, jamais.</strong> Vos CV sont strictement privés. Seul vous pouvez les consulter, les éditer et les exporter. Même notre équipe support n'a pas accès au contenu de vos CV, sauf demande explicite de votre part pour un dépannage.</p>
+    </div>
+  </details>
+</div>
+
+<!-- CONTACT FORM -->
+<div class="contact">
+  <div class="contact-inner">
+    <div class="contact-card reveal">
+      <h2>Vous n'avez pas trouvé la réponse ?</h2>
+      <p>Décrivez-nous votre situation, on revient vers vous sous 24h ouvrées (du lundi au vendredi, 9h–18h GMT).</p>
+
+      <form action="https://formspree.io/f/xwpevqzd" method="POST" id="contact-form">
+        <div class="row">
+          <div class="field">
+            <label for="name">Votre nom</label>
+            <input type="text" id="name" name="name" required placeholder="Koné Aya">
+          </div>
+          <div class="field">
+            <label for="email">Votre email</label>
+            <input type="email" id="email" name="email" required placeholder="aya@exemple.com">
+          </div>
+        </div>
+        <div class="field">
+          <label for="phone">Numéro de téléphone Vitae (optionnel)</label>
+          <input type="tel" id="phone" name="phone" placeholder="+225 07 XX XX XX XX">
+        </div>
+        <div class="field">
+          <label for="topic">Sujet</label>
+          <select id="topic" name="topic" required>
+            <option value="">Choisir un sujet…</option>
+            <option value="bug">🐛 Bug / Problème technique</option>
+            <option value="account">👤 Compte / Connexion</option>
+            <option value="billing">💳 Abonnement / Facturation</option>
+            <option value="cv">📄 CV / Template / Édition</option>
+            <option value="export">📤 Export / PDF / Partage</option>
+            <option value="feature">💡 Suggestion d'amélioration</option>
+            <option value="press">📰 Presse / Partenariat</option>
+            <option value="other">❓ Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="message">Votre message</label>
+          <textarea id="message" name="message" required placeholder="Décrivez votre situation le plus précisément possible. Si vous signalez un bug, merci d'indiquer : modèle d'iPhone, version iOS, et les étapes pour reproduire le problème."></textarea>
+        </div>
+        <button type="submit" class="submit-btn">Envoyer le message</button>
+      </form>
+
+      <div class="contact-info">
+        <div class="contact-info-item">
+          <div class="contact-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="contact-info-text">
+            <strong>Email</strong>
+            <a href="mailto:support@everyday.co">support@everyday.co</a>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="contact-info-text">
+            <strong>Délai de réponse</strong>
+            Sous 24h ouvrées<br>(Lun-Ven, 9h-18h GMT)
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div class="contact-info-text">
+            <strong>Localisation</strong>
+            Abidjan, Côte d'Ivoire
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="contact-info-text">
+            <strong>Statut des services</strong>
+            <a href="status.html">Tous les services opérationnels ✓</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="border-top:1px solid var(--border)">
+  <footer>
+    <a href="https://dailyco.influencemood.com/vitae/" class="footer-logo" style="text-decoration:none">
+      <span class="app-name">Vitae</span>
+      <span style="color:var(--muted2)">·</span>
+      <span style="color:var(--muted);font-weight:500">The Everyday Co.</span>
+      <span class="dot"></span>
+    </a>
+    <div class="footer-links">
+      <a href="https://dailyco.influencemood.com/vitae/">Accueil</a>
+      <a href="https://dailyco.influencemood.com/vitae/#templates">Templates</a>
+      <a href="https://dailyco.influencemood.com/vitae/#pricing">Tarifs</a>
+      <a href="https://dailyco.influencemood.com/privacy.html">Confidentialité</a>
+    </div>
+    <div class="footer-links">
+      <a href="mailto:hello@everyday.co">Contact</a>
+      <a href="https://twitter.com/everydayco" rel="noopener">Twitter</a>
+      <a href="https://linkedin.com/company/everydayco" rel="noopener">LinkedIn</a>
+    </div>
+    <div class="footer-copy">
+      © 2026 The Everyday Co. · Abidjan, Côte d'Ivoire ·
+      <a href="mailto:support@everyday.co" style="color:inherit">support@everyday.co</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+// Scroll reveal
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -48px 0px' });
+document.querySelectorAll('.reveal,.reveal-scale').forEach(el => io.observe(el));
+
+// Nav shrink on scroll
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 40) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+}, { passive: true });
+
+// Search filter
+const search = document.getElementById('search');
+const faqItems = document.querySelectorAll('.faq-item');
+search.addEventListener('input', () => {
+  const q = search.value.toLowerCase().trim();
+  faqItems.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = (q === '' || text.includes(q)) ? '' : 'none';
+  });
+});
+
+// Smooth anchor
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Open matching details
+      target.querySelectorAll('details').forEach(d => d.open = true);
+    }
+  });
+});
+</script>
+</body>
+</html>
