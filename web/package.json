@@ -1,0 +1,18 @@
+{
+  "name": "everyday-co-web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The Everyday Co — Vitae (PWA) et site vitrine",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "ats:check": "npm run ats:check --workspace packages/cv-pdf"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

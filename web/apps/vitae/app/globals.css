@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+
+/**
+ * Design system Vitae — brief §7.
+ *
+ * Les couleurs sont déclarées en variables de thème Tailwind v4 : elles
+ * deviennent utilisables comme `bg-accent`, `text-ink`, etc. Un seul endroit
+ * fait autorité sur la palette.
+ */
+@theme {
+  --color-accent: #6fae2e;
+  --color-accent-dark: #5c9226;
+  --color-accent-soft: #dff3d0;
+  --color-warn-soft: #ffdbb7;
+  --color-header: #17210c;
+  --color-canvas: #f1f1ef;
+  --color-card: #ffffff;
+  --color-ink: #111111;
+  --color-muted: #5b5b57;
+  --color-line: #e2e2dd;
+
+  --radius-card: 14px;
+
+  /* Pile système : zéro requête de police au chargement. La seule police
+     téléchargée du produit est celle embarquée dans le PDF. C'est la contrainte
+     « réseau lent » qui décide ici, pas le goût. */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+}
+
+html {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* Cible mobile d'entrée de gamme : on ne paie pas d'animations coûteuses. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible partout : l'éditeur se parcourt beaucoup au clavier. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@utility card {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
