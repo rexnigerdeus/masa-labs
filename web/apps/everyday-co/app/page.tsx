@@ -1,4 +1,4 @@
-import { VITAE_URL } from '../lib/config';
+import { CONTACT_EMAIL, VITAE_URL } from '../lib/config';
 import { FOUNDER, initials } from '../lib/founder';
 
 /**
@@ -315,9 +315,11 @@ export default function HomePage() {
                 LinkedIn
               </a>
             </li>
-            <li>
-              <a href="mailto:contact@theeveryday.co" className="hover:text-text">Contact</a>
-            </li>
+            {CONTACT_EMAIL === null ? null : (
+              <li>
+                <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-text">Contact</a>
+              </li>
+            )}
           </ul>
         </div>
         <p className="mx-auto max-w-5xl px-5 pb-10 text-xs text-muted2">

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import { SITE_URL } from '../lib/config';
 import './globals.css';
 
 /**
@@ -14,6 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'The Everyday Co. — Des apps pour l’Afrique qui avance',
   description:
     'The Everyday Co. construit des applications simples et abordables pour les '
