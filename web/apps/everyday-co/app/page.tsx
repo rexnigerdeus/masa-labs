@@ -134,7 +134,10 @@ function FounderSection() {
               alt={FOUNDER.name}
               width={960}
               height={1280}
-              sizes="176px"
+              // 704 px et non 176 : l'image est rendue à 400 % du cadre.
+              // Annoncer la taille du cadre ferait choisir au navigateur une
+              // source trop petite, étirée puis floue.
+              sizes="704px"
               className="absolute left-[-137%] top-[-181%] w-[400%] max-w-none"
             />
           </div>
