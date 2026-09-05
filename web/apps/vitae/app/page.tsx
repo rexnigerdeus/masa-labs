@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { SAMPLE_RESUME, TEMPLATE_LIST, scoreResume } from '@everyday/cv-core';
 import { ResumePreview } from '../components/ResumePreview';
+import {
+  AtsFilterIllustration, DotGrid, IconApply, IconCreate, IconLearn,
+} from '../components/graphics';
 
 /**
  * Accueil.
@@ -14,7 +17,13 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col gap-12">
-      <section className="grid items-center gap-8 lg:grid-cols-2">
+      {/* `isolate` est indispensable : sans contexte d'empilement propre, le
+          `-z-10` du fond ponctué le renvoie derrière l'arrière-plan de la page
+          et le rend invisible. */}
+      <section className="relative isolate grid items-center gap-8 lg:grid-cols-2">
+        <div className="pointer-events-none absolute -inset-x-4 -inset-y-8 -z-10 overflow-hidden text-ink opacity-[0.08]">
+          <DotGrid className="h-full w-full" />
+        </div>
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
             Un CV que les recruteurs — et leurs logiciels — savent lire.
@@ -54,6 +63,28 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Le tri automatique montré plutôt qu'expliqué : c'est la notion que
+          la cible ne connaît pas, et une image la fait comprendre plus vite
+          qu'un paragraphe. */}
+      <section className="card grid items-center gap-6 p-6 sm:grid-cols-[1fr_auto]">
+        <div>
+          <h2 className="text-xl font-bold">Pourquoi votre CV n’a pas de réponse</h2>
+          <p className="mt-2 max-w-lg text-sm text-muted">
+            Avant d’arriver sur le bureau d’un recruteur, la plupart des
+            candidatures passent par un logiciel qui lit le fichier et écarte
+            ce qu’il ne comprend pas : colonnes, tableaux, icônes, texte en
+            image. Un beau CV illisible par la machine ne sera jamais lu par
+            personne.
+          </p>
+          <p className="mt-2 max-w-lg text-sm text-muted">
+            Les modèles de Vitae sont conçus pour franchir cette étape — et
+            vérifiés automatiquement, en réextrayant le texte de chaque PDF
+            produit.
+          </p>
+        </div>
+        <AtsFilterIllustration className="h-auto w-full max-w-sm sm:w-80" />
+      </section>
+
       <section>
         <h2 className="mb-1 text-xl font-bold">Les quatre modèles</h2>
         <p className="mb-4 max-w-2xl text-sm text-muted">
@@ -82,13 +113,15 @@ export default function HomePage() {
 
       <section className="grid gap-4 sm:grid-cols-3">
         <div className="card p-4">
-          <h2 className="font-semibold">Créer</h2>
+          <span className="text-accent-dark"><IconCreate /></span>
+          <h2 className="mt-2 font-semibold">Créer</h2>
           <p className="mt-1 text-sm text-muted">
             Un formulaire guidé, un score en direct, un PDF propre en quelques minutes.
           </p>
         </div>
         <div className="card p-4">
-          <h2 className="font-semibold">Postuler</h2>
+          <span className="text-accent-dark"><IconApply /></span>
+          <h2 className="mt-2 font-semibold">Postuler</h2>
           <p className="mt-1 text-sm text-muted">
             Des offres de stage et d’emploi réelles, avec le lien de candidature direct.
           </p>
@@ -97,7 +130,8 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="card p-4">
-          <h2 className="font-semibold">Progresser</h2>
+          <span className="text-accent-dark"><IconLearn /></span>
+          <h2 className="mt-2 font-semibold">Progresser</h2>
           <p className="mt-1 text-sm text-muted">
             Entretien, relance, droit du travail : les codes du recrutement expliqués.
           </p>

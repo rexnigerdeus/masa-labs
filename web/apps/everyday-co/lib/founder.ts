@@ -8,8 +8,8 @@
  * été supposé : inventer la biographie d'une personne réelle sur son propre
  * site serait pire qu'une page incomplète.
  *
- * `bio` et `photo` sont vides tant que Daniel ne les a pas fournis ; la section
- * s'adapte à ce qui est renseigné.
+ * `bio` reste vide tant qu'elle n'a pas été écrite par l'intéressée ; la
+ * section s'adapte à ce qui est renseigné.
  */
 export interface Founder {
   name: string;
@@ -29,7 +29,9 @@ export const FOUNDER: Founder = {
   linkedinUrl:
     'https://www.linkedin.com/in/bimata-débora-aurélie-bambara-7998a2430',
   bio: '',
-  photo: '',
+  // Plan large fourni par Daniel : le cadrage sur le visage est fait en CSS
+  // (`object-position`), le fichier reste intact et réutilisable.
+  photo: '/fondatrice.jpg',
 };
 
 /** Initiales, utilisées tant qu'aucune photo n'est fournie. */
