@@ -28,9 +28,31 @@ const LEVEL_LABELS: Record<string, string> = {
   debutant: 'notions',
 };
 
-/** Points du descripteur → pixels de l'aperçu, à l'échelle d'une page A4. */
-const PX_PER_PT = 1.333;
-const pt = (value: number): string => `${(value * PX_PER_PT).toFixed(2)}px`;
+/** Largeur d'une page A4 à 96 dpi : 210 mm = 595,28 pt = 794 px. */
+const A4_WIDTH_PX = 794;
+
+/** Un point vaut 1/72 de pouce, un pixel CSS 1/96 : le rapport est 96/72. */
+const PX_PER_PT = 96 / 72;
+
+/**
+ * Convertit une mesure du descripteur en longueur d'aperçu.
+ *
+ * Tout est exprimé en multiples de `--u`, l'unité de page, définie plus bas
+ * comme un 794e de la largeur du conteneur. L'aperçu est donc une réduction
+ * fidèle de la page A4 quelle que soit la place disponible — sur une colonne
+ * de 320 px comme en plein écran.
+ *
+ * La version précédente posait des pixels absolus calibrés pour une pleine
+ * page : dans une colonne étroite, les seules marges occupaient un tiers de la
+ * largeur et le contenu débordait, coupé par `overflow: hidden`. On ne voyait
+ * pas un CV réduit, on voyait un fragment de CV.
+ *
+ * Une propriété personnalisée plutôt que `transform: scale()` : les valeurs de
+ * `var()` ne se composent pas d'un niveau à l'autre, là où des `em` imbriqués
+ * se multiplieraient entre eux.
+ */
+const pt = (value: number): string =>
+  `calc(var(--u) * ${(value * PX_PER_PT).toFixed(3)})`;
 
 function clean(values: (string | undefined | null)[]): string[] {
   return values.filter((v): v is string => v != null && v.trim() !== '').map((v) => v.trim());
@@ -201,22 +223,34 @@ export function ResumePreview({ resume }: { resume: Resume }) {
   const { typography: t, spacing: s } = spec;
 
   return (
-    <article
-      // Ratio A4 : la largeur suit le conteneur, la hauteur suit le contenu.
-      // L'aperçu ne prétend pas paginer — c'est `ats:check` qui contrôle le
-      // nombre de pages réel, sur le PDF lui-même.
-      className="bg-white text-ink shadow-sm"
+    // Deux éléments et non un seul : `cqw` employé sur l'élément qui déclare
+    // lui-même le conteneur se résout contre un ancêtre — et à défaut contre
+    // la fenêtre. Le conteneur ne porte donc aucune mesure, et la page, qui
+    // est sa descendante, les porte toutes.
+    <div
       style={{
+        containerType: 'inline-size',
         aspectRatio: '210 / 297',
-        padding: pt(s.page),
-        fontSize: pt(t.body),
-        lineHeight: t.lineHeight,
+        // L'aperçu montre la première page. Le nombre de pages réel est
+        // contrôlé sur le PDF lui-même par `npm run ats:check`.
         overflow: 'hidden',
       }}
+      className="bg-white shadow-sm"
     >
-      {spec.sectionOrder.map((section) => (
-        <Section key={section} spec={spec} resume={resume} section={section} />
-      ))}
-    </article>
+      <article
+        aria-label="Aperçu du CV"
+        className="h-full text-ink"
+        style={{
+          ['--u' as string]: `calc(100cqw / ${A4_WIDTH_PX})`,
+          padding: pt(s.page),
+          fontSize: pt(t.body),
+          lineHeight: t.lineHeight,
+        }}
+      >
+        {spec.sectionOrder.map((section) => (
+          <Section key={section} spec={spec} resume={resume} section={section} />
+        ))}
+      </article>
+    </div>
   );
 }

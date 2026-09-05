@@ -159,7 +159,7 @@ export function ResumeEditor({ signedIn, stored }: {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start">
       <div className="flex flex-col gap-4">
         {/* Navigation par section : la barre de progression du remplissage. */}
         <nav className="flex flex-wrap gap-2" aria-label="Sections du CV">
@@ -184,6 +184,21 @@ export function ResumeEditor({ signedIn, stored }: {
             );
           })}
         </nav>
+
+        {/* En dessous de `lg`, la colonne de droite passe sous le formulaire :
+            l'aperçu serait hors de vue pendant la saisie. On le replie donc, et
+            on le montre ici, juste sous la navigation, quand l'utilisateur le
+            demande. Au-delà de `lg`, il est visible en permanence à droite. */}
+        <div className="lg:hidden">
+          <Button onClick={() => setShowPreview(!showPreview)}>
+            {showPreview ? 'Masquer l’aperçu' : 'Voir l’aperçu du CV'}
+          </Button>
+          {showPreview ? (
+            <div className="mt-3">
+              <ResumePreview resume={resume} />
+            </div>
+          ) : null}
+        </div>
 
         <section className="card flex flex-col gap-4 p-4">
           <h2 className="text-base font-semibold">{SECTION_LABELS[step]}</h2>
@@ -506,9 +521,6 @@ export function ResumeEditor({ signedIn, stored }: {
           <Button variant="solid" onClick={() => void download()}>
             {exporting ? 'Génération…' : 'Télécharger mon CV en PDF'}
           </Button>
-          <Button onClick={() => setShowPreview(!showPreview)}>
-            {showPreview ? 'Masquer l’aperçu' : 'Voir l’aperçu'}
-          </Button>
           {signedIn ? null : (
             <span className="text-xs text-muted">
               Un compte gratuit est demandé au téléchargement.
@@ -516,23 +528,22 @@ export function ResumeEditor({ signedIn, stored }: {
           )}
         </div>
 
-        {/* Sur mobile l'aperçu est masqué par défaut : il prendrait tout l'écran
-            au détriment du formulaire. Sur grand écran il est toujours visible. */}
-        <div className={showPreview ? 'block lg:hidden' : 'hidden'}>
-          <ResumePreview resume={resume} />
-        </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      {/* Colonne collante : l'aperçu doit rester sous les yeux pendant qu'on
+          tape. Sans `sticky`, il défilait hors de l'écran dès la deuxième
+          expérience saisie — un aperçu en direct qu'il faut aller chercher
+          n'est pas un aperçu en direct. */}
+      <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:pr-1">
+        <div className="hidden lg:block">
+          <ResumePreview resume={resume} />
+        </div>
         <ScorePanel
           score={score}
           // « headline » n'a pas d'étape propre : le titre professionnel se
           // saisit avec l'identité, une recommandation qui le vise doit y mener.
           onFocusSection={(section) => setStep(section === 'headline' ? 'personal' : section)}
         />
-        <div className="hidden lg:block">
-          <ResumePreview resume={resume} />
-        </div>
       </div>
     </div>
   );

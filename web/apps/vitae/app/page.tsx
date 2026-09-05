@@ -55,13 +55,26 @@ export default function HomePage() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-bold">Les modèles</h2>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <h2 className="mb-1 text-xl font-bold">Les quatre modèles</h2>
+        <p className="mb-4 max-w-2xl text-sm text-muted">
+          Tous gratuits, tous vérifiés lisibles par les logiciels de tri. Une
+          seule colonne, pas d’icône ni de tableau : c’est ce qui les rend
+          relisibles. Ce que vous voyez ici est le rendu réel, pas une image.
+        </p>
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TEMPLATE_LIST.map((t) => (
-            <li key={t.id} className="card p-4">
-              <h3 className="font-semibold">{t.name}</h3>
-              <p className="mt-1 text-sm text-muted">{t.description}</p>
-              <p className="mt-2 text-xs text-muted">Idéal pour : {t.bestFor}</p>
+            <li key={t.id} className="flex flex-col gap-3">
+              {/* Miniature rendue par le même composant que l'aperçu de
+                  l'éditeur, avec le même CV d'exemple : la vignette ne peut
+                  pas mentir sur ce que produit le modèle. */}
+              <div className="overflow-hidden rounded-lg border border-line">
+                <ResumePreview resume={{ ...SAMPLE_RESUME, templateId: t.id }} />
+              </div>
+              <div>
+                <h3 className="font-semibold">{t.name}</h3>
+                <p className="mt-1 text-sm text-muted">{t.description}</p>
+                <p className="mt-1 text-xs text-muted">Idéal pour : {t.bestFor}</p>
+              </div>
             </li>
           ))}
         </ul>

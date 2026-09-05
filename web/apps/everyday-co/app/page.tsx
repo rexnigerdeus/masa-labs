@@ -1,51 +1,57 @@
 import { VITAE_URL } from '../lib/config';
+import { FOUNDER, initials } from '../lib/founder';
 
 /**
  * Page d'accueil de The Everyday Co.
  *
- * Reprise de l'ancien site (dailyco.influencemood.com, sauvegardé dans
- * `the-everyday-co-landing.html`) : même vision, même ton, mêmes chiffres de
- * marché, même philosophie.
+ * Structure et ton repris de themobilefirstcompany.com, désigné comme modèle
+ * au brief §8 : une accroche qui part d'un constat de génération, des bénéfices
+ * en une ligne, la mission, puis le produit — et rien qui ne soit vrai.
  *
- * Une seule différence, exigée par le brief §8 : **seul Vitae est présenté**.
- * Rondo, Kassa et Krédi ne sont pas encore annoncés publiquement, donc ni les
- * fiches produit, ni le bandeau défilant, ni les liens de pied de page ne les
- * mentionnent. La section « Quatre apps. Quatre problèmes réels. » de
- * l'ancienne version disparaît avec eux — on ne promet pas un portefeuille
- * qu'on ne montre pas.
+ * Deux emprunts assumés à ce modèle : le rythme (accroche courte, promesse,
+ * appel à l'action immédiat) et l'adresse directe au lecteur. Deux refus tout
+ * aussi assumés : le site de référence affiche « Trusted by 5,000+ businesses »
+ * et une levée de fonds. Nous n'avons ni l'un ni l'autre, et on ne fabrique pas
+ * une preuve sociale — la seule chose qu'on peut montrer, c'est le produit.
  *
- * Autre correction de fond : Vitae était marqué « Bientôt disponible ». Il est
- * en ligne, la page le dit et y renvoie.
+ * Une seule application est présentée : Vitae. Rondo, Kassa et Krédi ne sont
+ * pas encore annoncés (brief §8), ils n'apparaissent nulle part.
  */
 
 const NAV = [
-  { href: '#produit', label: 'Vitae' },
-  { href: '#mission', label: 'Notre mission' },
-  { href: '#marche', label: 'Le marché' },
+  { href: '#vitae', label: 'Vitae' },
+  { href: '#mission', label: 'Mission' },
+  { href: '#fondatrice', label: 'Fondatrice' },
+];
+
+const PROMISES = [
+  'Conçu pour le téléphone, pas adapté après coup',
+  'Fonctionne avec une connexion lente',
+  'Gratuit, sans compte pour commencer',
 ];
 
 const VITAE_FEATURES = [
   'Modèles vérifiés lisibles par les logiciels de tri (ATS)',
   'Score et conseils de correction en direct, section par section',
   'Offres de stage et d’emploi en Côte d’Ivoire, mises à jour chaque jour',
-  'Entièrement gratuit — création et téléchargement PDF',
+  'Téléchargement PDF gratuit, sans filigrane',
 ];
 
 const PRINCIPLES = [
   {
     number: '01',
     title: 'Mobile d’abord',
-    body: 'Toutes nos apps sont pensées pour le smartphone. Pas adaptées — conçues.',
+    body: 'Ici le smartphone est déjà la banque, le commerce et le bureau. Nos outils partent de là, ils ne s’y adaptent pas.',
   },
   {
     number: '02',
     title: 'Un problème. Une app.',
-    body: 'Chaque produit résout un seul problème, parfaitement. Pas de complexité inutile.',
+    body: 'Chaque produit règle une seule chose, complètement. Pas de tableau de bord dont personne n’a besoin.',
   },
   {
     number: '03',
     title: 'Accessible à tous',
-    body: 'Des outils qui marchent avec une connexion lente, sur un téléphone d’entrée de gamme.',
+    body: 'Un téléphone d’entrée de gamme et une connexion capricieuse restent la norme. C’est notre cahier des charges.',
   },
 ];
 
@@ -55,6 +61,63 @@ const MARKET = [
   { figure: '40K', label: 'Diplômés par an en Côte d’Ivoire cherchant leur voie' },
   { figure: '10M', label: 'Emplois numériques attendus en Afrique d’ici 2030 (Banque mondiale)' },
 ];
+
+function FounderSection() {
+  const hasPhoto = FOUNDER.photo !== '';
+
+  return (
+    <section id="fondatrice" className="flex flex-col gap-6">
+      <div>
+        <p className="text-xs uppercase tracking-widest text-muted2">Qui construit</p>
+        <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+          Une fondatrice, à Abidjan.
+        </h2>
+      </div>
+
+      <div className="flex flex-col gap-5 rounded-2xl border border-line bg-card p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-8">
+        {hasPhoto ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={FOUNDER.photo}
+            alt={FOUNDER.name}
+            width={128}
+            height={128}
+            className="h-32 w-32 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span
+            aria-hidden
+            className="flex h-32 w-32 shrink-0 items-center justify-center rounded-full bg-dark text-3xl font-bold text-[var(--color-vitae)]"
+          >
+            {initials(FOUNDER.name)}
+          </span>
+        )}
+
+        <div className="flex flex-col gap-3">
+          <div>
+            <h3 className="text-xl font-bold">{FOUNDER.name}</h3>
+            <p className="text-muted">
+              {FOUNDER.role} · {FOUNDER.location}
+            </p>
+          </div>
+
+          {FOUNDER.bio !== '' ? (
+            <p className="max-w-xl text-muted">{FOUNDER.bio}</p>
+          ) : null}
+
+          <a
+            href={FOUNDER.linkedinUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-fit rounded-full border border-line2 px-5 py-2 text-sm font-medium hover:bg-card2"
+          >
+            Profil LinkedIn
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -79,48 +142,52 @@ export default function HomePage() {
       </header>
 
       <main id="top" className="mx-auto flex max-w-5xl flex-col gap-24 px-5 py-16">
+        {/* Accroche : le constat de génération d'abord, la promesse ensuite,
+            l'action tout de suite — le rythme du site de référence. */}
         <section className="flex flex-col gap-6">
           <p className="text-sm text-muted2">Abidjan, Côte d’Ivoire</p>
           <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
-            Des apps pour{' '}
-            <span className="bg-yellow-soft px-1.5">l’Afrique</span> qui avance.
+            La génération de nos parents n’a jamais eu les{' '}
+            <span className="bg-yellow-soft px-1.5">bons outils</span>.
           </h1>
           <p className="max-w-2xl text-lg text-muted">
-            On construit des applications mobiles simples, abordables et bâties
-            pour les réalités du terrain. Un problème. Une app. Réglé.
+            Tontines dans des cahiers, créances sur WhatsApp, CV bricolés sur un
+            téléphone emprunté. Nous construisons des logiciels plus jeunes que
+            les problèmes qu’ils résolvent. Un problème. Une app. Réglé.
           </p>
-          <div className="flex flex-wrap gap-3">
+
+          <ul className="flex flex-col gap-1.5 text-sm text-muted">
+            {PROMISES.map((promise) => (
+              <li key={promise} className="flex gap-2">
+                <span aria-hidden className="text-[var(--color-vitae)]">—</span>
+                {promise}
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex flex-wrap gap-3 pt-1">
             <a
               href={VITAE_URL}
-              className="rounded-full bg-dark px-6 py-3 text-sm font-medium text-bg hover:bg-dark2"
+              className="rounded-full bg-[var(--color-vitae)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
             >
-              Découvrir Vitae
+              Essayer Vitae — c’est gratuit
             </a>
             <a
               href="#mission"
               className="rounded-full border border-line2 px-6 py-3 text-sm font-medium hover:bg-card2"
             >
-              Notre mission
+              Pourquoi nous faisons ça
             </a>
           </div>
         </section>
 
-        <section className="border-y border-line py-12">
-          <p className="text-xs uppercase tracking-widest text-muted2">Le constat</p>
-          <h2 className="mt-4 max-w-3xl text-2xl font-bold leading-snug sm:text-3xl">
-            Une génération entière gère ses tontines dans des cahiers, ses
-            créances sur WhatsApp et son avenir sans les bons outils.
-          </h2>
-          <p className="mt-4 max-w-2xl text-muted">
-            Il est temps que ça change. Nous construisons les outils que cette
-            génération attendait — un par un, en commençant par celui qui ouvre
-            toutes les portes : le CV.
-          </p>
-        </section>
-
-        <section id="produit" className="flex flex-col gap-6">
+        {/* Le produit, juste après l'accroche : c'est la seule chose à montrer,
+            elle ne doit pas attendre le bas de page. */}
+        <section id="vitae" className="flex flex-col gap-6">
           <div>
-            <p className="text-xs uppercase tracking-widest text-muted2">Notre application</p>
+            <p className="text-xs uppercase tracking-widest text-muted2">
+              Notre première application
+            </p>
             <h2 className="mt-3 text-3xl font-bold tracking-tight">
               Vitae — le CV qui passe les filtres.
             </h2>
@@ -136,7 +203,7 @@ export default function HomePage() {
               </span>
               <div>
                 <h3 className="text-xl font-bold">Vitae</h3>
-                <p className="text-sm text-muted">Emploi · Disponible</p>
+                <p className="text-sm text-muted">Emploi · En ligne</p>
               </div>
             </div>
 
@@ -160,7 +227,7 @@ export default function HomePage() {
               href={VITAE_URL}
               className="mt-7 inline-block rounded-full bg-[var(--color-vitae)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
             >
-              Créer mon CV gratuitement
+              Ouvrir Vitae
             </a>
           </div>
 
@@ -174,14 +241,14 @@ export default function HomePage() {
           <div>
             <p className="text-xs uppercase tracking-widest text-muted2">Notre mission</p>
             <h2 className="mt-3 max-w-3xl text-2xl font-bold leading-snug sm:text-3xl">
-              Nous construisons des outils{' '}
-              <span className="bg-yellow-soft px-1.5">plus jeunes</span> que les
-              problèmes qu’ils résolvent.
+              Des outils que les Ivoiriens{' '}
+              <span className="bg-yellow-soft px-1.5">adorent utiliser</span> —
+              construits sur le terrain, pour le terrain.
             </h2>
             <p className="mt-4 max-w-2xl text-muted">
-              Créer des applications que les Ivoiriens adorent utiliser. Des
-              outils modernes, intuitifs et au juste prix — construits sur le
-              terrain, pour le terrain.
+              Les logiciels de gestion coûtent cher, s’apprennent en formation et
+              supposent une connexion stable. Rien de tout ça n’est vrai ici.
+              Alors nous repartons de zéro, une app à la fois.
             </p>
           </div>
 
@@ -195,6 +262,8 @@ export default function HomePage() {
             ))}
           </ul>
         </section>
+
+        <FounderSection />
 
         <section id="marche" className="flex flex-col gap-6">
           <div>
@@ -218,8 +287,8 @@ export default function HomePage() {
             Votre prochain emploi commence par un CV qu’on peut lire.
           </h2>
           <p className="mt-3 max-w-xl text-[color:rgba(250,250,247,0.62)]">
-            Vitae est en ligne et gratuit. Pas de compte à créer pour commencer,
-            pas de filigrane sur le PDF.
+            Vitae est en ligne et gratuit. Rien à installer, aucun compte à créer
+            pour commencer, pas de filigrane sur le PDF.
           </p>
           <a
             href={VITAE_URL}
@@ -235,7 +304,17 @@ export default function HomePage() {
           <p className="font-bold text-text">The Everyday Co.</p>
           <ul className="flex flex-wrap gap-5">
             <li><a href={VITAE_URL} className="hover:text-text">Vitae</a></li>
-            <li><a href="#mission" className="hover:text-text">Notre mission</a></li>
+            <li><a href="#mission" className="hover:text-text">Mission</a></li>
+            <li>
+              <a
+                href={FOUNDER.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-text"
+              >
+                LinkedIn
+              </a>
+            </li>
             <li>
               <a href="mailto:contact@theeveryday.co" className="hover:text-text">Contact</a>
             </li>
