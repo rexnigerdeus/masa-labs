@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
+import { ServiceWorkerRegistration } from '../components/pwa/ServiceWorkerRegistration';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -9,6 +10,16 @@ export const metadata: Metadata = {
     + 'de stage et d’emploi en Côte d’Ivoire, et apprenez les codes du recrutement.',
   applicationName: 'Vitae',
   manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    // iOS ignore le manifeste : ces méta-données sont ce qui rend
+    // l'installation correcte sur iPhone.
+    capable: true,
+    title: 'Vitae',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export const viewport: Viewport = {
@@ -32,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <body className="bg-canvas text-ink">
+        <ServiceWorkerRegistration />
         <header className="bg-header text-white">
           <nav className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
             <Link href="/" className="text-lg font-bold tracking-tight">

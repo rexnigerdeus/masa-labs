@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import type { CvDate } from '@everyday/cv-core';
 
 /** Champs de formulaire partagés par les sections de l'éditeur. */
@@ -176,19 +177,50 @@ export function LineList({ items, onChange, placeholder, addLabel }: {
   );
 }
 
-/** Liste de mots-clés (compétences), saisis un par ligne ou séparés par virgule. */
+/** Découpe une saisie libre en mots-clés exploitables. */
+function parseTags(text: string): string[] {
+  return text.split(',').map((s) => s.trim()).filter((s) => s !== '');
+}
+
+/**
+ * Liste de mots-clés (compétences), séparés par des virgules.
+ *
+ * Le texte saisi est un état local, et non `items.join(', ')` recalculé à
+ * chaque rendu. La version pilotée par la liste était inutilisable : taper une
+ * virgule produisait une entrée vide, aussitôt filtrée, donc la virgule
+ * disparaissait sous les doigts et on ne pouvait jamais saisir la deuxième
+ * compétence. Ici la frappe reste intacte, et seule la liste dérivée est
+ * nettoyée.
+ */
 export function TagInput({ items, onChange, placeholder }: {
   items: string[]; onChange: (items: string[]) => void; placeholder: string;
 }) {
+  const [text, setText] = useState(() => items.join(', '));
+
+  // Resynchronisation quand la liste change par une autre voie que la frappe
+  // (chargement d'un brouillon, import LinkedIn). La comparaison sur la liste
+  // dérivée évite d'écraser une saisie en cours, virgule finale comprise.
+  useEffect(() => {
+    // Comparaison sérialisée : un `join` sur un séparateur ordinaire
+    // confondrait ['Sage 100'] et ['Sage', '100'].
+    if (JSON.stringify(parseTags(text)) !== JSON.stringify(items)) {
+      setText(items.join(', '));
+    }
+    // `text` est volontairement absent des dépendances : le réintroduire
+    // relancerait l'effet à chaque frappe et annulerait la saisie.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
+
   return (
     <div className="flex flex-col gap-2">
       <TextArea
         rows={3}
         placeholder={placeholder}
-        value={items.join(', ')}
-        // On resplitte à chaque frappe : la liste reste la source de vérité,
-        // et l'utilisateur peut coller une liste entière d'un coup.
-        onChange={(v) => onChange(v.split(',').map((s) => s.trim()).filter((s) => s !== ''))}
+        value={text}
+        onChange={(v) => {
+          setText(v);
+          onChange(parseTags(v));
+        }}
       />
       {items.length > 0 ? (
         <ul className="flex flex-wrap gap-1.5">
