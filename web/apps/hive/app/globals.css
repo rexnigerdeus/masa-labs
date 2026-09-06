@@ -49,6 +49,29 @@ body {
   }
 }
 
+/* Champs de formulaire à 16 px sur mobile.
+ *
+ * En dessous de 16 px, Safari iOS agrandit la page dès qu'on place le curseur
+ * dans un champ — et il ne redescend jamais : le formulaire continue de
+ * déborder de l'écran une fois le clavier refermé. Nos champs sont en
+ * `text-sm`, soit 14 px, ce qui déclenche le zoom à chaque saisie.
+ *
+ * La règle est écrite hors de toute couche : les utilitaires Tailwind vivent
+ * dans `@layer utilities`, et du CSS non calqué l'emporte sur une couche quelle
+ * que soit sa spécificité. Pas besoin de `!important`.
+ *
+ * Le remède qu'on voit souvent — `maximum-scale=1` dans le viewport — est à
+ * proscrire : il supprime le symptôme en interdisant aussi le zoom manuel, dont
+ * une partie des utilisateurs a besoin pour lire.
+ */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;

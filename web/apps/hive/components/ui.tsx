@@ -14,7 +14,10 @@ export function Field({ label, hint, children }: {
   label: string; hint?: string; children: React.ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1">
+    // `min-w-0` : un élément de grille refuse par défaut de descendre sous sa
+    // largeur intrinsèque, et les champs de date d'iOS sont larges. Sans ça,
+    // la rangée « Du / Au » pousse la page au-delà de l'écran.
+    <label className="flex min-w-0 flex-col gap-1">
       <span className="text-sm font-medium">{label}</span>
       {children}
       {hint !== undefined ? <span className="text-xs text-muted">{hint}</span> : null}

@@ -69,6 +69,13 @@ export default async function MesAnnoncesPage() {
                     <Badge>{listing.status === 'retire' ? 'Retirée' : 'Suspendue'}</Badge>
                   ) : null}
 
+                  <Link
+                    href={`/annonces/${listing.id}/modifier`}
+                    className="text-sm text-primary underline"
+                  >
+                    Modifier
+                  </Link>
+
                   {/* Une annonce suspendue par la modération ne se remet pas
                       en ligne d'un clic : seul le retrait volontaire s'annule. */}
                   {listing.status !== 'suspendu' ? (
