@@ -102,6 +102,12 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
             <p className="text-sm text-muted">
               Les demandes de réservation arrivent dans « Mes annonces ».
             </p>
+            <Link
+              href={`/annonces/${listing.id}/modifier`}
+              className="rounded-full bg-primary px-4 py-2 text-center text-sm font-medium text-white hover:bg-primary-light"
+            >
+              Modifier l’annonce
+            </Link>
             <Link href="/mes-annonces" className="text-sm text-primary underline">
               Voir mes annonces
             </Link>

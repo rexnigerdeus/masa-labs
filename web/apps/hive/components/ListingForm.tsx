@@ -1,31 +1,37 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { publishListing, type FormState } from '../lib/actions/listings';
+import { saveListing, type FormState } from '../lib/actions/listings';
 import { getSupabaseClient } from '../lib/supabase/client';
 import { compressPhoto } from '../lib/photos';
 import { MAX_PHOTOS } from '../lib/limits';
 import { PHOTO_BUCKET, photoUrl } from '../lib/storage';
 import { CATEGORIES, COMMUNES, CONDITIONS } from '../lib/catalog';
 import { Button, Field, Input, Notice, Select, Textarea } from './ui';
+import type { Listing } from '../lib/types';
 
 /**
- * Création d'une annonce.
+ * Création et modification d'une annonce.
+ *
+ * Un seul formulaire pour les deux : un loueur qui corrige un prix attend le
+ * même écran que celui où il l'a saisi. `listing` absent veut dire création.
  *
  * Les photos partent au fil de la sélection, pas au moment de valider : sur
  * une connexion lente, un envoi groupé de plusieurs mégaoctets à la
  * soumission donne l'impression que le formulaire a planté. Chacune est
  * compressée dans le navigateur avant l'envoi (lib/photos.ts).
  */
-export function PublishForm({ userId, defaultCommune }: {
-  userId: string; defaultCommune: string | null;
+export function ListingForm({ userId, defaultCommune, listing }: {
+  userId: string; defaultCommune: string | null; listing?: Listing;
 }) {
-  const [state, action, pending] = useActionState<FormState, FormData>(publishListing, null);
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [state, action, pending] = useActionState<FormState, FormData>(saveListing, null);
+  const [photos, setPhotos] = useState<string[]>(listing?.photos ?? []);
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
-  const [forRent, setForRent] = useState(true);
-  const [forSale, setForSale] = useState(false);
+  const [forRent, setForRent] = useState(listing?.for_rent ?? true);
+  const [forSale, setForSale] = useState(listing?.for_sale ?? false);
+
+  const isEdit = listing !== undefined;
 
   async function addPhotos(files: FileList | null): Promise<void> {
     if (files === null || files.length === 0) return;
@@ -61,19 +67,25 @@ export function PublishForm({ userId, defaultCommune }: {
 
   return (
     <form action={action} className="flex max-w-2xl flex-col gap-5">
+      {isEdit ? <input type="hidden" name="id" value={listing.id} /> : null}
       <input type="hidden" name="photos" value={JSON.stringify(photos)} />
 
       <Field label="Titre de l’annonce" hint="Marque et modèle si vous les connaissez.">
-        <Input name="title" required placeholder="Canon EOS R6 + objectif 24-105" />
+        <Input
+          name="title"
+          required
+          defaultValue={listing?.title}
+          placeholder="Canon EOS R6 + objectif 24-105"
+        />
       </Field>
 
       <Field label="Description" hint="État, accessoires fournis, conditions de retrait.">
-        <Textarea name="description" rows={5} />
+        <Textarea name="description" rows={5} defaultValue={listing?.description} />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Catégorie">
-          <Select name="category_id" required defaultValue="">
+          <Select name="category_id" required defaultValue={listing?.category_id ?? ''}>
             <option value="" disabled>Choisir…</option>
             {CATEGORIES.map((parent) => (
               <optgroup key={parent.id} label={parent.label}>
@@ -86,13 +98,13 @@ export function PublishForm({ userId, defaultCommune }: {
         </Field>
 
         <Field label="État">
-          <Select name="condition" defaultValue="occasion">
+          <Select name="condition" defaultValue={listing?.condition ?? 'occasion'}>
             {CONDITIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
           </Select>
         </Field>
 
         <Field label="Commune" hint="Là où le matériel se retire.">
-          <Select name="commune" required defaultValue={defaultCommune ?? ''}>
+          <Select name="commune" required defaultValue={listing?.commune ?? defaultCommune ?? ''}>
             <option value="" disabled>Choisir…</option>
             {COMMUNES.map((commune) => <option key={commune}>{commune}</option>)}
           </Select>
@@ -115,10 +127,23 @@ export function PublishForm({ userId, defaultCommune }: {
         {forRent ? (
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Prix par jour (FCFA)">
-              <Input type="number" name="rent_price_day" min={0} step={500} required />
+              <Input
+                type="number"
+                name="rent_price_day"
+                min={0}
+                step={500}
+                required
+                defaultValue={listing?.rent_price_day ?? undefined}
+              />
             </Field>
             <Field label="Prix par semaine (FCFA)" hint="Facultatif, souvent plus avantageux.">
-              <Input type="number" name="rent_price_week" min={0} step={500} />
+              <Input
+                type="number"
+                name="rent_price_week"
+                min={0}
+                step={500}
+                defaultValue={listing?.rent_price_week ?? undefined}
+              />
             </Field>
           </div>
         ) : null}
@@ -135,7 +160,14 @@ export function PublishForm({ userId, defaultCommune }: {
 
         {forSale ? (
           <Field label="Prix de vente (FCFA)">
-            <Input type="number" name="sale_price" min={0} step={1000} required />
+            <Input
+              type="number"
+              name="sale_price"
+              min={0}
+              step={1000}
+              required
+              defaultValue={listing?.sale_price ?? undefined}
+            />
           </Field>
         ) : null}
       </fieldset>
@@ -175,16 +207,26 @@ export function PublishForm({ userId, defaultCommune }: {
         </ul>
       ) : null}
 
+      {isEdit && photos.length > 0 ? (
+        <p className="text-xs text-muted">
+          Une photo retirée ici est définitivement supprimée à l’enregistrement.
+        </p>
+      ) : null}
+
       {state !== null ? <Notice>{state.error}</Notice> : null}
 
       <Button type="submit" variant="solid" disabled={pending || uploading}>
-        {pending ? 'Publication…' : 'Publier l’annonce'}
+        {pending
+          ? 'Enregistrement…'
+          : isEdit ? 'Enregistrer les modifications' : 'Publier l’annonce'}
       </Button>
 
-      <p className="text-sm text-muted">
-        Votre annonce est visible immédiatement, sans validation préalable.
-        Aucune commission pendant la période de lancement.
-      </p>
+      {!isEdit ? (
+        <p className="text-sm text-muted">
+          Votre annonce est visible immédiatement, sans validation préalable.
+          Aucune commission pendant la période de lancement.
+        </p>
+      ) : null}
     </form>
   );
 }

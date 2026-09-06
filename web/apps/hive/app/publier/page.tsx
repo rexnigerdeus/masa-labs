@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { PublishForm } from '../../components/PublishForm';
+import { ListingForm } from '../../components/ListingForm';
 import { currentUser } from '../../lib/supabase/server';
 import { hiveProfile } from '../../lib/db/profile';
 
@@ -17,7 +17,7 @@ export default async function PublierPage() {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold">Publier une annonce</h1>
-      <PublishForm userId={user.id} defaultCommune={profile.commune} />
+      <ListingForm userId={user.id} defaultCommune={profile.commune} />
     </div>
   );
 }
