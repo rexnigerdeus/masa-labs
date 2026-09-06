@@ -21,8 +21,18 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const article = await fetchArticle(id);
-  if (article === null) return { title: 'Article introuvable — Vitae' };
-  return { title: `${article.title} — Vitae`, description: article.excerpt };
+  if (article === null) return { title: 'Article introuvable' };
+  return {
+    title: article.title,
+    description: article.excerpt,
+    alternates: { canonical: `/conseils/${article.id}` },
+    openGraph: {
+      type: 'article',
+      title: article.title,
+      description: article.excerpt,
+      publishedTime: article.publishedAt,
+    },
+  };
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
@@ -32,8 +42,25 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
 
   const blocks = parseContent(article.content);
 
+  // Balisage d'article : c'est lui qui permet à la date et à l'auteur
+  // d'accompagner le résultat dans les moteurs, plutôt qu'un titre seul.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.excerpt,
+    datePublished: article.publishedAt,
+    inLanguage: 'fr',
+    author: { '@type': 'Organization', name: article.author ?? 'Vitae' },
+    publisher: { '@type': 'Organization', name: 'The Everyday Co.' },
+  };
+
   return (
     <article className="mx-auto flex max-w-2xl flex-col gap-4">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <nav className="text-sm">
         <Link href="/conseils" className="text-muted hover:text-ink">
           ← Tous les conseils

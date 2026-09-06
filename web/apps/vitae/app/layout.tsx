@@ -8,12 +8,33 @@ export const metadata: Metadata = {
   // Base des URL relatives des métadonnées de partage : sans elle, Next
   // avertit au build et les aperçus sur WhatsApp ou LinkedIn sortent cassés.
   metadataBase: new URL(APP_URL),
-  title: 'Vitae — Créez un CV lisible par les recruteurs',
+  // Gabarit plutôt que titres complets : chaque page nomme seulement ce
+  // qu'elle est, et la marque s'ajoute au même endroit pour toutes.
+  title: {
+    default: 'Vitae — Créez un CV lisible par les recruteurs, gratuitement',
+    template: '%s — Vitae',
+  },
   description:
     'Créez gratuitement un CV professionnel compatible ATS, trouvez des offres '
     + 'de stage et d’emploi en Côte d’Ivoire, et apprenez les codes du recrutement.',
   applicationName: 'Vitae',
   manifest: '/manifest.webmanifest',
+  openGraph: {
+    type: 'website',
+    siteName: 'Vitae',
+    locale: 'fr_CI',
+    title: 'Vitae — Le CV qui passe les filtres',
+    description:
+      'La plupart des candidatures sont écartées par un logiciel avant d’être '
+      + 'lues. Vitae produit un CV que ces logiciels savent relire. Gratuit, '
+      + 'sans filigrane.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vitae — Le CV qui passe les filtres',
+    description: 'CV compatible ATS, score en direct, offres d’emploi en Côte d’Ivoire.',
+  },
+  alternates: { canonical: '/' },
   appleWebApp: {
     // iOS ignore le manifeste : ces méta-données sont ce qui rend
     // l'installation correcte sur iPhone.

@@ -4,7 +4,11 @@ import { currentUser } from '../../lib/supabase/server';
 import { loadResume } from '../../lib/resumes';
 
 export const metadata: Metadata = {
-  title: 'Créer mon CV — Vitae',
+  title: 'Créer mon CV',
+  description:
+    'Remplissez votre CV section par section, voyez le score progresser en '
+    + 'direct et téléchargez un PDF que les logiciels de tri savent relire.',
+  alternates: { canonical: '/cv' },
 };
 
 export default async function CvPage() {

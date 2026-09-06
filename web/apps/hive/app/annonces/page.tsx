@@ -5,7 +5,14 @@ import { EmptyState, Select } from '../../components/ui';
 import { CATEGORIES, COMMUNES, CONDITIONS } from '../../lib/catalog';
 import { PAGE_SIZE, searchListings } from '../../lib/db/listings';
 
-export const metadata: Metadata = { title: 'Annonces — Hive' };
+export const metadata: Metadata = {
+  title: 'Matériel à louer et à vendre',
+  description:
+    'Caméras, enceintes, projecteurs, instruments : cherchez par commune, '
+    + 'catégorie et budget parmi les annonces de particuliers et de '
+    + 'professionnels d’Abidjan.',
+  alternates: { canonical: '/annonces' },
+};
 
 type Params = {
   q?: string; categorie?: string; commune?: string;

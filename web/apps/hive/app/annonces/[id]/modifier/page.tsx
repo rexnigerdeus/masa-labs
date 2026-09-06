@@ -6,7 +6,7 @@ import { getListing } from '../../../../lib/db/listings';
 import { hiveProfile } from '../../../../lib/db/profile';
 import { currentUser } from '../../../../lib/supabase/server';
 
-export const metadata: Metadata = { title: 'Modifier l’annonce — Hive' };
+export const metadata: Metadata = { title: 'Modifier l’annonce', robots: { index: false } };
 
 export default async function ModifierAnnoncePage({
   params,

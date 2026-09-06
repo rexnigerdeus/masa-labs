@@ -18,13 +18,29 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { id } = await params;
   const listing = await getListing(id);
-  if (listing === null) return { title: 'Annonce introuvable — Hive' };
+  if (listing === null) return { title: 'Annonce introuvable' };
+
+  // La description reprend ce qu'on taperait pour trouver l'annonce : l'objet,
+  // le mode et la commune. Le texte libre du loueur complète s'il reste
+  // de la place — 160 caractères, au-delà les moteurs coupent.
+  const modes = [
+    listing.for_rent ? 'à louer' : null,
+    listing.for_sale ? 'à vendre' : null,
+  ].filter((m) => m !== null).join(' et ');
+
   return {
-    title: `${listing.title} — Hive`,
-    description: `${listing.title} à ${listing.commune}. ${listing.description}`.slice(0, 160),
+    title: listing.title,
+    description:
+      `${listing.title} ${modes} à ${listing.commune}, Abidjan. ${listing.description}`
+        .trim().slice(0, 160),
+    alternates: { canonical: `/annonces/${listing.id}` },
     // L'aperçu WhatsApp est le premier contact avec Hive pour la plupart des
     // visiteurs : la photo compte autant que le titre.
-    openGraph: { images: listing.photos.map((p) => photoUrl(p)).slice(0, 1) },
+    openGraph: {
+      type: 'article',
+      title: listing.title,
+      images: listing.photos.map((p) => photoUrl(p)).slice(0, 1),
+    },
   };
 }
 
@@ -38,8 +54,38 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
   const seller = await hiveProfile(listing.user_id);
   const methods = availablePaymentMethods(seller);
 
+  // Balisage produit : c'est lui qui permet au prix et à la disponibilité
+  // d'apparaître directement dans les résultats de recherche. Le prix annoncé
+  // est celui du jour de location quand l'annonce en propose une, sinon le
+  // prix de vente — c'est aussi l'ordre dans lequel la fiche les affiche.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: listing.title,
+    description: listing.description || listing.title,
+    category: CATEGORY_LABELS[listing.category_id] ?? listing.category_id,
+    itemCondition: listing.condition === 'neuf'
+      ? 'https://schema.org/NewCondition'
+      : 'https://schema.org/UsedCondition',
+    image: listing.photos.map((p) => photoUrl(p)),
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'XOF',
+      price: listing.for_rent ? listing.rent_price_day : listing.sale_price,
+      availability: listing.status === 'publie'
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      areaServed: { '@type': 'City', name: `${listing.commune}, Abidjan` },
+      seller: { '@type': 'Person', name: listing.owner?.full_name ?? 'Loueur Hive' },
+    },
+  };
+
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="flex flex-1 flex-col gap-4">
         {listing.photos.length === 0 ? (
           <div className="card flex aspect-4/3 items-center justify-center bg-surface text-sm text-muted">

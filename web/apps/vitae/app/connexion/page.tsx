@@ -4,7 +4,7 @@ import { AuthForm } from '../../components/auth/AuthForm';
 import { currentUser } from '../../lib/supabase/server';
 import { isGoogleEnabled } from '../../lib/supabase/providers';
 
-export const metadata: Metadata = { title: 'Connexion — Vitae' };
+export const metadata: Metadata = { title: 'Connexion', robots: { index: false } };
 
 export default async function ConnexionPage({
   searchParams,

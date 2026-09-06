@@ -6,7 +6,7 @@ import { baseProfile, hiveProfile } from '../../lib/db/profile';
 import { formatPhone } from '../../lib/phone';
 import { currentUser } from '../../lib/supabase/server';
 
-export const metadata: Metadata = { title: 'Mon compte — Hive' };
+export const metadata: Metadata = { title: 'Mon compte', robots: { index: false } };
 
 export default async function ComptePage() {
   const user = await currentUser();

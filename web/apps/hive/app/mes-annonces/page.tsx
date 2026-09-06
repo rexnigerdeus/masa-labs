@@ -10,7 +10,7 @@ import { formatFcfa } from '../../lib/pricing';
 import { coverUrl } from '../../lib/storage';
 import { currentUser } from '../../lib/supabase/server';
 
-export const metadata: Metadata = { title: 'Mes annonces — Hive' };
+export const metadata: Metadata = { title: 'Mes annonces', robots: { index: false } };
 
 export default async function MesAnnoncesPage() {
   const user = await currentUser();

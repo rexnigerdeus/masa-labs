@@ -6,7 +6,7 @@ import { EmptyState } from '../../components/ui';
 import { ordersAsBuyer } from '../../lib/db/orders';
 import { currentUser } from '../../lib/supabase/server';
 
-export const metadata: Metadata = { title: 'Mes commandes — Hive' };
+export const metadata: Metadata = { title: 'Mes commandes', robots: { index: false } };
 
 export default async function MesCommandesPage() {
   const user = await currentUser();

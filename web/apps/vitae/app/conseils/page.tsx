@@ -6,7 +6,8 @@ import {
 } from '../../lib/catalog';
 
 export const metadata: Metadata = {
-  title: 'Conseils carrière — Vitae',
+  title: 'Conseils carrière',
+  alternates: { canonical: '/conseils' },
   description:
     'Recherche d’emploi, entretien, réseautage et droit du travail en Côte '
     + 'd’Ivoire : des articles courts et actionnables.',
