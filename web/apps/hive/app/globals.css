@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+
+/**
+ * Design system Hive — brief §5.
+ *
+ * Palette chaude bordeaux/brique/corail : l'énergie de l'événementiel sans le
+ * rouge criard. Un seul endroit fait autorité sur les couleurs, elles
+ * deviennent utilisables comme `bg-primary`, `text-ink`, etc.
+ */
+@theme {
+  --color-primary: #9a2b32;
+  --color-primary-light: #c1443d;
+  --color-accent: #e4735e;
+  --color-surface: #f4e4de;
+  --color-canvas: #fdf8f6;
+  --color-card: #ffffff;
+  --color-ink: #2e2321;
+  --color-muted: #6b5a56;
+  --color-success: #7a8b5c;
+  --color-line: #e8d8d2;
+
+  --radius-card: 14px;
+
+  /* Pile système : zéro requête de police au chargement. Sur un forfait data
+     abidjanais, une police téléchargée est un coût sans contrepartie. */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+}
+
+html {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* Cible mobile d'entrée de gamme : on ne paie pas d'animations coûteuses. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@utility card {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
