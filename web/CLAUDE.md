@@ -1,7 +1,8 @@
 # The Everyday Co — Web
 
 Monorepo npm workspaces hébergeant **Vitae** (PWA de création de CV compatibles ATS,
-avec offres d'emploi et articles conseils, ciblant la Côte d'Ivoire) et le **site
+avec offres d'emploi et articles conseils, ciblant la Côte d'Ivoire), **Hive** (PWA de
+location et de vente de matériel audiovisuel à Abidjan) et le **site
 vitrine** The Everyday Co qui y renvoie. Produit et interface entièrement en français ;
 les commentaires et messages d'erreur du code le sont aussi.
 
@@ -26,6 +27,8 @@ police téléchargée, peu de JS client, pages revalidées plutôt que dynamique
 | [apps/vitae/](apps/vitae/) | PWA Vitae : éditeur, score, export, offres, conseils, auth |
 | [apps/vitae/lib/](apps/vitae/lib/) | Accès données et config — clients Supabase, brouillon local, requêtes offres/articles |
 | [apps/vitae/components/](apps/vitae/components/) | UI ; `editor/` est la seule zone majoritairement cliente |
+| [apps/hive/](apps/hive/) | PWA Hive : annonces, recherche, commandes, messagerie, compte |
+| [apps/hive/lib/](apps/hive/lib/) | Logique pure testée (`pricing`, `orders`, `dates`, `phone`), `db/` en lecture et `actions/` en écriture |
 | [apps/everyday-co/](apps/everyday-co/) | Site vitrine statique, sans base ni session |
 | [packages/cv-core/](packages/cv-core/) | Modèle `Resume`, descripteurs de templates, scoring déterministe. Aucune dépendance runtime |
 | [packages/cv-pdf/](packages/cv-pdf/) | Rendu PDF + harnais de validation ATS |
@@ -45,6 +48,7 @@ npm run typecheck                 # tsc --noEmit sur chaque app et package
 npm run ats:check                 # rend les 4 templates en PDF, réextrait le texte, valide
 npm run dev --workspace apps/vitae        # Vitae sur :3000
 npm run dev --workspace apps/everyday-co  # vitrine (utiliser -p 3001 si Vitae tourne)
+npm run dev --workspace apps/hive -- -p 3002   # Hive
 npm run build --workspace apps/vitae
 ```
 
@@ -71,6 +75,9 @@ Copier `.env.example` en `.env.local` dans chaque app.
 - Le score est calculé côté serveur avant écriture en base, jamais accepté du client — [apps/vitae/lib/resumes.ts:60](apps/vitae/lib/resumes.ts#L60).
 - Le service worker est écrit à la main, portée volontairement limitée à l'éditeur — [apps/vitae/public/sw.js:1](apps/vitae/public/sw.js#L1).
 - Les identifiants de catégories sont en camelCase, hérités de l'app Flutter et verrouillés par des CHECK en base — [apps/vitae/lib/catalog.ts:10](apps/vitae/lib/catalog.ts#L10).
+- Hive s'authentifie par téléphone converti en pseudo-email : aucun SMS, donc aucun coût par inscription — [apps/hive/lib/phone.ts:1](apps/hive/lib/phone.ts#L1).
+- Le total d'une commande Hive est recalculé côté serveur avant écriture, jamais accepté du client — [apps/hive/lib/actions/orders.ts:20](apps/hive/lib/actions/orders.ts#L20).
+- La messagerie de Hive interroge une route toutes les dix secondes plutôt que d'ouvrir un websocket Realtime — [apps/hive/components/Thread.tsx:8](apps/hive/components/Thread.tsx#L8).
 - Le code renvoie au brief par des références « brief §N » : voir [../masa-labs-mvp-specs.md](../masa-labs-mvp-specs.md).
 
 ## Adding New Features or Fixing Bugs
