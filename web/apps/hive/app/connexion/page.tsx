@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { AuthForm } from '../../components/auth/AuthForm';
 import { currentUser } from '../../lib/supabase/server';
 
-export const metadata: Metadata = { title: 'Connexion — Hive' };
+export const metadata: Metadata = { title: 'Connexion', robots: { index: false } };
 
 /**
  * `suite` porte la page d'où l'on vient : quelqu'un qui voulait réserver doit

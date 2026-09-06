@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-export const metadata = { title: 'Hors connexion — Vitae' };
+export const metadata = { title: 'Hors connexion', robots: { index: false } };
 
 /** Page de secours servie par le service worker quand le réseau manque. */
 export default function HorsLignePage() {

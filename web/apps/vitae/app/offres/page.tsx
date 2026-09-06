@@ -6,7 +6,8 @@ import {
 } from '../../lib/catalog';
 
 export const metadata: Metadata = {
-  title: 'Offres de stage et d’emploi en Côte d’Ivoire — Vitae',
+  title: 'Offres de stage et d’emploi en Côte d’Ivoire',
+  alternates: { canonical: '/offres' },
   description:
     'Offres de stage et d’emploi en Côte d’Ivoire, collectées chaque jour depuis '
     + 'des sources vérifiées, avec le lien de candidature direct.',

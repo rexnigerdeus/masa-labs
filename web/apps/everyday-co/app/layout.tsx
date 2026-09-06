@@ -19,7 +19,10 @@ export const metadata: Metadata = {
   title: 'The Everyday Co. — Des apps pour l’Afrique qui avance',
   description:
     'The Everyday Co. construit des applications simples et abordables pour les '
-    + 'communautés, commerces et jeunes d’Afrique de l’Ouest. Un problème. Une app. Réglé.',
+    + 'communautés, commerces et jeunes d’Afrique de l’Ouest : Vitae pour le CV '
+    + 'et l’emploi, Hive pour la location de matériel audiovisuel à Abidjan. '
+    + 'Un problème. Une app. Réglé.',
+  alternates: { canonical: '/' },
   openGraph: {
     title: 'The Everyday Co.',
     description: 'Des apps pour l’Afrique qui avance. Un problème. Une app. Réglé.',

@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { CONTACT_EMAIL, VITAE_URL } from '../lib/config';
+import { CONTACT_EMAIL, HIVE_URL, VITAE_URL } from '../lib/config';
 import { FOUNDER } from '../lib/founder';
 import {
   Divider, IconAccess, IconFocus, IconMobile, PatternBackground, PhoneMockup,
@@ -22,12 +22,13 @@ import {
  * levée de fonds, pas de client cité. Le site de référence en affiche ; nous
  * n'en avons pas, et on ne les fabrique pas.
  *
- * Une seule application est présentée : Vitae (brief §8).
+ * Deux applications sont présentées : Vitae et Hive, toutes deux en ligne.
  */
 
 const NAV = [
   { href: '#probleme', label: 'Le problème' },
   { href: '#vitae', label: 'Vitae' },
+  { href: '#hive', label: 'Hive' },
   { href: '#vision', label: 'Vision' },
   { href: '#fondatrice', label: 'Fondatrice' },
 ];
@@ -46,6 +47,17 @@ const PROBLEMS = [
     title: 'La tontine sur WhatsApp',
     body: 'Huit personnes, une cagnotte, aucune trace commune. La confiance tient jusqu’au premier désaccord sur qui a payé quoi.',
   },
+  {
+    title: 'La caméra qui dort',
+    body: 'Un vidéaste possède un boîtier à deux millions qui sert huit jours par mois. À côté, un autre refuse un mariage faute de matériel.',
+  },
+];
+
+const HIVE_FEATURES = [
+  'Location et vente, entre particuliers comme avec des professionnels',
+  'Recherche par commune, catégorie et budget — Cocody, Marcory, Yopougon…',
+  'Demande de réservation avec dates, confirmée par le loueur',
+  'Paiement en main propre à la remise, aucune commission au lancement',
 ];
 
 const VITAE_FEATURES = [
@@ -82,20 +94,20 @@ const PRINCIPLES = [
 const OBJECTIVES = [
   {
     horizon: 'Aujourd’hui',
-    title: 'Vitae en ligne, gratuit, sans filigrane',
-    body: 'Création de CV, score ATS, offres d’emploi et conseils. Fait — c’est le produit que vous pouvez ouvrir maintenant.',
+    title: 'Deux applications en ligne, gratuites',
+    body: 'Vitae pour le CV et l’emploi, Hive pour la location de matériel audiovisuel. Fait — ce sont les produits que vous pouvez ouvrir maintenant.',
     done: true,
   },
   {
     horizon: 'Prochains mois',
     title: 'Faire la preuve de l’usage',
-    body: 'Mesurer ce qui compte vraiment : combien de CV sont menés jusqu’au téléchargement, et de combien le score progresse entre la première et la dernière minute.',
+    body: 'Mesurer ce qui compte vraiment : combien de CV sont menés jusqu’au téléchargement, et combien de locations sont réellement conclues entre deux inconnus.',
     done: false,
   },
   {
     horizon: 'Ensuite',
-    title: 'La deuxième application',
-    body: 'Le même travail sur un autre problème du quotidien. Une seule à la fois, annoncée quand elle est prête — pas avant.',
+    title: 'Le troisième problème',
+    body: 'Le même travail sur un autre problème du quotidien. Une application à la fois, annoncée quand elle est prête — pas avant.',
     done: false,
   },
 ];
@@ -192,12 +204,20 @@ export default function HomePage() {
               </li>
             ))}
           </ul>
-          <a
-            href={VITAE_URL}
-            className="ml-auto rounded-full bg-dark px-4 py-2 text-sm font-medium text-bg hover:bg-dark2 lg:ml-0"
-          >
-            Ouvrir Vitae
-          </a>
+          <div className="ml-auto flex gap-2 lg:ml-0">
+            <a
+              href={VITAE_URL}
+              className="rounded-full bg-dark px-4 py-2 text-sm font-medium text-bg hover:bg-dark2"
+            >
+              Vitae
+            </a>
+            <a
+              href={HIVE_URL}
+              className="rounded-full border border-line2 px-4 py-2 text-sm font-medium hover:bg-card2"
+            >
+              Hive
+            </a>
+          </div>
         </nav>
       </header>
 
@@ -233,6 +253,12 @@ export default function HomePage() {
                   Essayer Vitae — gratuit
                 </a>
                 <a
+                  href={HIVE_URL}
+                  className="rounded-full bg-[var(--color-hive)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
+                >
+                  Découvrir Hive
+                </a>
+                <a
                   href="#vision"
                   className="rounded-full border border-line2 px-6 py-3 text-sm font-medium hover:bg-card2"
                 >
@@ -259,7 +285,7 @@ export default function HomePage() {
               </h2>
             </div>
 
-            <ul className="grid gap-4 sm:grid-cols-3">
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {PROBLEMS.map((problem) => (
                 <li key={problem.title} className="rounded-2xl border border-line bg-card p-5">
                   <h3 className="font-bold">{problem.title}</h3>
@@ -323,6 +349,60 @@ export default function HomePage() {
                 className="mt-7 inline-block rounded-full bg-[var(--color-vitae)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
               >
                 Ouvrir Vitae
+              </a>
+            </div>
+          </section>
+
+          <Divider className="text-line2" />
+
+          {/* La deuxième application. Même gabarit que Vitae : deux produits
+              présentés différemment donneraient l'impression que l'un compte
+              moins que l'autre. */}
+          <section id="hive" className="flex flex-col gap-6">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted2">
+                Notre deuxième application
+              </p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight">
+                Hive — le Vinted de l’audiovisuel.
+              </h2>
+            </div>
+
+            <div className="rounded-2xl border border-line bg-card p-6 sm:p-8">
+              <div className="flex flex-wrap items-center gap-3">
+                <span
+                  aria-hidden
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-dark text-xl font-bold text-[var(--color-hive)]"
+                >
+                  H
+                </span>
+                <div>
+                  <h3 className="text-xl font-bold">Hive</h3>
+                  <p className="text-sm text-muted">Événementiel · En ligne</p>
+                </div>
+              </div>
+
+              <p className="mt-5 max-w-2xl text-muted">
+                Une caméra à deux millions sert huit jours par mois. À côté, un
+                vidéaste refuse un mariage faute de matériel. Hive met les deux
+                en relation : le matériel qui dort chez l’un tourne chez
+                l’autre, à la journée, dans la même commune.
+              </p>
+
+              <ul className="mt-5 flex flex-col gap-2 text-sm">
+                {HIVE_FEATURES.map((feature) => (
+                  <li key={feature} className="flex gap-2">
+                    <span aria-hidden className="text-[var(--color-hive)]">—</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <a
+                href={HIVE_URL}
+                className="mt-7 inline-block rounded-full bg-[var(--color-hive)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
+              >
+                Ouvrir Hive
               </a>
             </div>
           </section>
@@ -436,20 +516,38 @@ export default function HomePage() {
 
           <FounderSection />
 
-          <section className="rounded-2xl bg-dark p-8 text-bg sm:p-12">
-            <h2 className="max-w-2xl text-2xl font-bold sm:text-3xl">
-              Votre prochain emploi commence par un CV qu’on peut lire.
-            </h2>
-            <p className="mt-3 max-w-xl text-[color:rgba(250,250,247,0.62)]">
-              Vitae est en ligne et gratuit. Rien à installer, aucun compte à
-              créer pour commencer, pas de filigrane sur le PDF.
-            </p>
-            <a
-              href={VITAE_URL}
-              className="mt-6 inline-block rounded-full bg-[var(--color-vitae)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
-            >
-              Ouvrir Vitae
-            </a>
+          <section className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col rounded-2xl bg-dark p-8 text-bg">
+              <h2 className="text-2xl font-bold">
+                Votre prochain emploi commence par un CV qu’on peut lire.
+              </h2>
+              <p className="mt-3 text-[color:rgba(250,250,247,0.62)]">
+                Vitae est en ligne et gratuit. Rien à installer, aucun compte à
+                créer pour commencer, pas de filigrane sur le PDF.
+              </p>
+              <a
+                href={VITAE_URL}
+                className="mt-6 inline-block self-start rounded-full bg-[var(--color-vitae)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
+              >
+                Ouvrir Vitae
+              </a>
+            </div>
+
+            <div className="flex flex-col rounded-2xl bg-dark p-8 text-bg">
+              <h2 className="text-2xl font-bold">
+                Votre matériel ne rapporte rien au fond de son sac.
+              </h2>
+              <p className="mt-3 text-[color:rgba(250,250,247,0.62)]">
+                Hive est en ligne, sans commission pendant le lancement. Publier
+                une annonce prend deux minutes et elle est visible aussitôt.
+              </p>
+              <a
+                href={HIVE_URL}
+                className="mt-6 inline-block self-start rounded-full bg-[var(--color-hive)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
+              >
+                Ouvrir Hive
+              </a>
+            </div>
           </section>
         </div>
       </main>
@@ -459,6 +557,7 @@ export default function HomePage() {
           <p className="font-bold text-text">The Everyday Co.</p>
           <ul className="flex flex-wrap gap-5">
             <li><a href={VITAE_URL} className="hover:text-text">Vitae</a></li>
+            <li><a href={HIVE_URL} className="hover:text-text">Hive</a></li>
             <li><a href="#vision" className="hover:text-text">Vision</a></li>
             <li>
               <a

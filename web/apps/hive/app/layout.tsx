@@ -8,12 +8,35 @@ export const metadata: Metadata = {
   // Base des URL relatives des métadonnées de partage : sans elle, les
   // aperçus sur WhatsApp — le canal de diffusion du lancement — sortent cassés.
   metadataBase: new URL(APP_URL),
-  title: 'Hive — Louez et vendez du matériel audiovisuel à Abidjan',
+  // Gabarit plutôt que titres complets : chaque page nomme seulement ce
+  // qu'elle est, et la marque s'ajoute au même endroit pour toutes.
+  title: {
+    default: 'Hive — Louer du matériel audiovisuel, son et lumière à Abidjan',
+    template: '%s — Hive',
+  },
   description:
-    'Louez, vendez et trouvez du matériel audiovisuel, de sonorisation et de '
-    + 'musique à Abidjan, entre particuliers et professionnels.',
+    'Le Vinted de l’audiovisuel. Louez caméras, enceintes, projecteurs et '
+    + 'instruments auprès de particuliers et de professionnels d’Abidjan, ou '
+    + 'mettez les vôtres en location. Sans commission, paiement en main propre.',
   applicationName: 'Hive',
   manifest: '/manifest.webmanifest',
+  openGraph: {
+    type: 'website',
+    siteName: 'Hive',
+    locale: 'fr_CI',
+    title: 'Hive — Le Vinted de l’audiovisuel, à Abidjan',
+    description:
+      'Le matériel qui dort chez l’un tourne chez l’autre. Caméras, enceintes, '
+      + 'projecteurs, instruments : à louer ou à vendre près de chez vous.',
+  },
+  // Le partage se fait surtout par WhatsApp, qui lit les balises Open Graph ;
+  // les cartes Twitter coûtent deux lignes et couvrent le reste.
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Hive — Le Vinted de l’audiovisuel, à Abidjan',
+    description: 'Louez du matériel audiovisuel, son et lumière près de chez vous.',
+  },
+  alternates: { canonical: '/' },
   appleWebApp: {
     // iOS ignore le manifeste : ces méta-données sont ce qui rend
     // l'installation correcte sur iPhone.

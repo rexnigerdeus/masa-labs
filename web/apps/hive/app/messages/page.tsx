@@ -6,7 +6,7 @@ import { conversationsOf } from '../../lib/db/messages';
 import { coverUrl } from '../../lib/storage';
 import { currentUser } from '../../lib/supabase/server';
 
-export const metadata: Metadata = { title: 'Messages — Hive' };
+export const metadata: Metadata = { title: 'Messages', robots: { index: false } };
 
 export default async function MessagesPage() {
   const user = await currentUser();

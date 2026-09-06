@@ -4,7 +4,10 @@ import { ListingForm } from '../../components/ListingForm';
 import { currentUser } from '../../lib/supabase/server';
 import { hiveProfile } from '../../lib/db/profile';
 
-export const metadata: Metadata = { title: 'Publier une annonce — Hive' };
+export const metadata: Metadata = {
+  title: 'Publier une annonce',
+  robots: { index: false },
+};
 
 export default async function PublierPage() {
   const user = await currentUser();

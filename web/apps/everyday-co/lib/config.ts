@@ -39,6 +39,28 @@ function resolveVitaeUrl(): string {
 export const VITAE_URL: string = resolveVitaeUrl();
 
 /**
+ * Adresse de l'application Hive.
+ *
+ * Même règle que Vitae, et pour la même raison : la vitrine renvoie vers Hive
+ * sans l'héberger, et une page dont les boutons mènent à un domaine imaginaire
+ * est pire qu'une page absente. Mieux vaut casser le déploiement.
+ */
+function resolveHiveUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_HIVE_URL;
+  if (configured !== undefined && configured !== '') return configured;
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'NEXT_PUBLIC_HIVE_URL est absente. Renseignez l’adresse de l’application '
+      + 'Hive avant de déployer le site : la section Hive y mène.',
+    );
+  }
+  return 'http://localhost:3002';
+}
+
+export const HIVE_URL: string = resolveHiveUrl();
+
+/**
  * Adresse de contact.
  *
  * `null` tant qu'aucune boîte n'est confirmée : afficher une adresse qui

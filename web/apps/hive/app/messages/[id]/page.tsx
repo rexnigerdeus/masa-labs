@@ -5,7 +5,7 @@ import { Thread } from '../../../components/Thread';
 import { getConversation, messagesOf } from '../../../lib/db/messages';
 import { currentUser } from '../../../lib/supabase/server';
 
-export const metadata: Metadata = { title: 'Conversation — Hive' };
+export const metadata: Metadata = { title: 'Conversation', robots: { index: false } };
 
 // Une conversation est propre à deux personnes : jamais de cache partagé.
 export const dynamic = 'force-dynamic';
