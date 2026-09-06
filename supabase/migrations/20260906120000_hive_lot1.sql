@@ -504,8 +504,17 @@ create policy "Owner deletes listing photos"
 --
 -- Les deux policies ci-dessus ouvrent des lignes de `profiles`, et la RLS
 -- s'arrête à la ligne : sans ce garde-fou, un visiteur non connecté muni de
--- la clé anon pourrait moissonner les numéros de tous les loueurs. On retire
--- la colonne à `anon` ; l'application, elle, n'affiche le numéro qu'aux deux
--- parties d'une commande, une fois la réservation faite.
+-- la clé anon pourrait moissonner les numéros de tous les loueurs.
+--
+-- Un `revoke select (phone)` seul ne suffit pas : tant que le rôle détient un
+-- SELECT au niveau de la table, Postgres n'en soustrait pas une colonne — la
+-- commande passe sans rien changer. On retire donc le SELECT de table, puis on
+-- le rend colonne par colonne, `phone` exclue. `authenticated` n'est pas
+-- touché : Rondo et Vitae lisent `profiles` avec ce rôle.
+--
+-- L'application, elle, n'affiche le numéro qu'aux deux parties d'une commande,
+-- une fois la réservation confirmée.
 -- ============================================================
-revoke select (phone) on public.profiles from anon;
+revoke select on public.profiles from anon;
+grant select (id, full_name, avatar_url, created_at, updated_at)
+  on public.profiles to anon;
