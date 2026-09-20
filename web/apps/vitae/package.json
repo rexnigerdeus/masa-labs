@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@everyday/labs-ui": "*",
     "@everyday/cv-core": "*",
     "@everyday/cv-pdf": "*",
     "@supabase/ssr": "^0.12.5",

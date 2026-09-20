@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import { CONTACT_EMAIL, HIVE_URL, VITAE_URL } from '../lib/config';
 import { FOUNDER } from '../lib/founder';
-import { LabsHero } from '../components/LabsHero';
+import { LabsHero, type LabsHeroSlide } from '@everyday/labs-ui/hero';
+import { LabsPageScript } from '@everyday/labs-ui/script';
 
 /**
  * Page d'accueil de The Everyday Co.
@@ -125,6 +126,38 @@ const APP_CARDS = [
   },
 ];
 
+/** Les deux applications en vedette dans le hero.
+ *
+ *  Trois couleurs par slide et non une : l'aplat remplit le bouton, `glow`
+ *  écrit sur le fond sombre — le rouge de Hive y vaudrait 1,01:1 — et `on`
+ *  écrit par-dessus l'aplat. */
+const HERO_SLIDES: LabsHeroSlide[] = [
+  {
+    eyebrow: 'Emploi · En ligne',
+    label: 'Vitae',
+    subtitle: 'Le CV qui passe les filtres. Gratuit, sans filigrane.',
+    cta: 'Essayer Vitae',
+    href: VITAE_URL,
+    photo: '/hero-vitae.jpg',
+    tint: '20 34 8',
+    accent: 'var(--color-vitae)',
+    glow: 'var(--color-vitae-glow)',
+    on: 'var(--color-dark)',
+  },
+  {
+    eyebrow: 'Événementiel · En ligne',
+    label: 'Hive',
+    subtitle: 'Le matériel qui dort chez l’un tourne chez l’autre.',
+    cta: 'Découvrir Hive',
+    href: HIVE_URL,
+    photo: '/hero-hive.jpg',
+    tint: '48 12 15',
+    accent: 'var(--color-hive)',
+    glow: 'var(--color-hive-glow)',
+    on: '#fff',
+  },
+];
+
 const PRINCIPLES = [
   {
     title: 'Mobile d’abord',
@@ -214,7 +247,14 @@ export default function HomePage() {
       </header>
 
       <main id="top">
-        <LabsHero vitaeUrl={VITAE_URL} hiveUrl={HIVE_URL} />
+        <LabsHero
+          place="Abidjan, Côte d’Ivoire"
+          lead="Les bons outils."
+          headline="Enfin faits pour ici."
+          slides={HERO_SLIDES}
+          secondary={{ label: 'Le problème', href: '#probleme' }}
+          scrollTo="#probleme"
+        />
 
         {/* Manifeste : la promesse de marque, seule sur sa bande. Le hero
             fait défiler les produits, il ne peut pas porter en plus une
@@ -563,60 +603,7 @@ export default function HomePage() {
         </p>
       </footer>
 
-      {/*
-        Les trois comportements qui ne tiennent pas en CSS, en un seul script
-        sans dépendance (~1 Ko) : révélation au scroll, état de la barre de
-        navigation, et point d'origine du remplissage des boutons liquides.
-      */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `(function(){
-            var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-            /* 1. Révélation au scroll. Sans IntersectionObserver (ou en mode
-                  animations réduites), tout est affiché d'emblée. */
-            var els = document.querySelectorAll('.labs-reveal');
-            if (reduce || !('IntersectionObserver' in window)) {
-              for (var i = 0; i < els.length; i++) els[i].classList.add('is-in');
-            } else {
-              var io = new IntersectionObserver(function(entries){
-                entries.forEach(function(e){
-                  if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
-                });
-              }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-              els.forEach(function(el){ io.observe(el); });
-            }
-
-            /* 2. Navigation : fond opaque dès qu'on quitte le hero, et repli
-                  vers le haut quand on descend — l'écran d'un téléphone est
-                  trop court pour qu'une barre fixe y reste en permanence. */
-            var nav = document.getElementById('labs-nav');
-            var last = 0;
-            var ticking = false;
-            function onScroll(){
-              var y = window.scrollY;
-              nav.classList.toggle('is-scrolled', y > 24);
-              nav.classList.toggle('is-hidden', y > 320 && y > last + 4);
-              last = y;
-              ticking = false;
-            }
-            window.addEventListener('scroll', function(){
-              if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
-            }, { passive: true });
-            onScroll();
-
-            /* 3. Boutons liquides : la pastille grossit depuis l'endroit où
-                  le curseur est entré, pas depuis le centre. */
-            document.addEventListener('pointerenter', function(e){
-              var btn = e.target instanceof Element ? e.target.closest('.is-liquid') : null;
-              if (btn === null) return;
-              var r = btn.getBoundingClientRect();
-              btn.style.setProperty('--lx', ((e.clientX - r.left) / r.width * 100) + '%');
-              btn.style.setProperty('--ly', ((e.clientY - r.top) / r.height * 100) + '%');
-            }, true);
-          })();`,
-        }}
-      />
+      <LabsPageScript />
     </>
   );
 }

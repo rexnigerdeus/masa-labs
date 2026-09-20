@@ -10,6 +10,13 @@
 @theme {
   --color-accent: #6fae2e;
   --color-accent-dark: #5c9226;
+  /* Deux variantes du vert produit, pour le langage `labs-ui`. Le vert de
+     marque ne vaut que 2,7:1 en texte sur blanc et 2,8:1 sur un fond
+     photo assombri : illisible des deux côtés. `ink` écrit sur clair
+     (5,1:1), `glow` écrit sur sombre (5,3:1). Les aplats, eux, gardent la
+     couleur de marque. */
+  --color-accent-ink: #4a7a1f;
+  --color-accent-glow: #9ede56;
   --color-accent-soft: #dff3d0;
   --color-warn-soft: #ffdbb7;
   --color-header: #17210c;

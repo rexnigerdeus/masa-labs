@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "motion": "^13.4.0",
+    "@everyday/labs-ui": "*",
     "next": "^15.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

@@ -1,0 +1,27 @@
+{
+  "name": "@everyday/labs-ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./labs.css": "./labs.css",
+    "./hero": {
+      "types": "./LabsHero.tsx",
+      "default": "./LabsHero.tsx"
+    },
+    "./script": {
+      "types": "./LabsPageScript.tsx",
+      "default": "./LabsPageScript.tsx"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "motion": "^13.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.7.2"
+  }
+}

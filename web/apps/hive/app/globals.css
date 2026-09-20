@@ -10,7 +10,14 @@
 @theme {
   --color-primary: #9a2b32;
   --color-primary-light: #c1443d;
+  /* Le bordeaux tient déjà 7,6:1 en texte sur blanc : il est sa propre
+     encre. Sur un fond photo assombri il tombe en revanche à 1,01:1 —
+     littéralement invisible — d'où cette version corail, à 4,2:1. */
+  --color-primary-glow: #ffa8a0;
   --color-accent: #e4735e;
+  /* Le corail vif est un aplat, pas une encre : 3,0:1 sur blanc et 2,5:1
+     sur le fond sable. Cette version brûlée tient 6,0:1 et 4,8:1. */
+  --color-accent-ink: #ad3f29;
   --color-surface: #f4e4de;
   --color-canvas: #fdf8f6;
   --color-card: #ffffff;
