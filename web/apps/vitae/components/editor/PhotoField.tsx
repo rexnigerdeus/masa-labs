@@ -40,6 +40,9 @@ async function toSquareJpeg(file: File): Promise<string> {
     (source.width - side) / 2, (source.height - side) / 2, side, side,
     0, 0, SIDE, SIDE,
   );
+  // Le bitmap décodé occupe la taille réelle de la photo du téléphone, soit
+  // plusieurs dizaines de Mo en mémoire : on le rend tout de suite.
+  if (typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap) source.close();
   return canvas.toDataURL('image/jpeg', 0.82);
 }
 
