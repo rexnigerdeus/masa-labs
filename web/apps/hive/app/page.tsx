@@ -1,45 +1,89 @@
+// Feuille propre à cette route : voir l'en-tête du fichier.
+import './accueil.css';
 import Link from 'next/link';
+import { LabsHero, type LabsHeroSlide } from '@everyday/labs-ui/hero';
+import { LabsPageScript } from '@everyday/labs-ui/script';
 import { ListingCard } from '../components/ListingCard';
 import { CATEGORIES } from '../lib/catalog';
 import { latestListings } from '../lib/db/listings';
 import { APP_URL } from '../lib/config';
 
+/**
+ * Accueil de Hive.
+ *
+ * Langage visuel `labs-ui`, partagé avec la vitrine et Vitae : hero plein
+ * cadre, voiles dégradés, titres géants, boutons « liquides »,
+ * révélations au défilement. La forme vient du paquet, la palette de
+ * Hive — voir `accueil.css`.
+ *
+ * ── Ce que le hero fait tourner ───────────────────────────────────────
+ * La vitrine y fait tourner ses deux applications. Hive n'a qu'un produit
+ * mais deux publics qui ne se ressemblent pas : celui qui cherche du
+ * matériel et celui qui en possède. Ce sont eux qui tournent. Une place
+ * de marché doit convaincre les deux, et les mélanger dans un même
+ * paragraphe ne parle ni à l'un ni à l'autre — la section « Comment ça
+ * marche » garde d'ailleurs la même séparation, en deux colonnes.
+ *
+ * ── Décisions de produit conservées ───────────────────────────────────
+ * Le champ de recherche reste dans le hero. C'est la porte d'entrée d'une
+ * place de marché : le remplacer par un bouton rallongerait le chemin de
+ * quelqu'un qui sait déjà ce qu'il cherche. Formulaire GET, il fonctionne
+ * avant tout JavaScript.
+ *
+ * L'état vide du catalogue reste un argument plutôt qu'un manque (brief
+ * §6.3) : les premières annonces publiées sont celles qu'on met en avant.
+ *
+ * Aucune preuve sociale inventée : les quatre garanties affichées sont
+ * les règles du jeu, toutes vérifiables en publiant une annonce.
+ *
+ * ── Contraintes tenues ────────────────────────────────────────────────
+ * Composant serveur, aucune police téléchargée. Le seul JavaScript client
+ * est le hero, et `motion` n'y est chargé qu'à la demande pour la
+ * parallaxe. Les métadonnées viennent du gabarit — cette page est la
+ * racine, elle n'a rien à y ajouter.
+ */
 // Les annonces bougent, mais pas à la seconde : trente secondes de cache
 // épargnent une requête par visiteur sur l'écran le plus consulté.
 export const revalidate = 30;
 
-/**
- * Comment fonctionne Hive, des deux côtés du marché.
- *
- * Une place de marché doit convaincre deux personnes qui ne se ressemblent
- * pas : celle qui cherche du matériel et celle qui en possède. Les mélanger
- * dans un même paragraphe ne parle ni à l'une ni à l'autre.
- */
-const STEPS = [
+/** Les deux côtés du marché, en vedette à tour de rôle. */
+const HERO_SLIDES: LabsHeroSlide[] = [
   {
-    side: 'Vous cherchez du matériel',
-    steps: [
-      'Cherchez, filtrez par commune, par catégorie et par budget.',
-      'Envoyez une demande avec vos dates. Rien n’est débité.',
-      'Le loueur confirme, vous récupérez le matériel et vous le réglez sur place.',
-    ],
+    eyebrow: 'Vous cherchez du matériel',
+    label: 'Louer',
+    subtitle: 'Caméras, enceintes, projecteurs, instruments — à la journée, dans votre commune.',
+    cta: 'Parcourir les annonces',
+    href: '/annonces',
+    photo: '/hero-chercher.jpg',
+    focus: '55% 45%',
+    // Photo d'extérieur en plein jour : au réglage courant, le titre corail
+    // n'atteignait que 2,4:1 sur la zone la plus claire.
+    dim: 0.4,
+    tint: '48 12 15',
+    accent: 'var(--color-primary)',
+    glow: 'var(--color-primary-glow)',
+    on: '#fff',
   },
   {
-    side: 'Vous avez du matériel',
-    steps: [
-      'Photographiez-le et publiez : cinq photos, un prix par jour, c’est tout.',
-      'Recevez les demandes et acceptez celles qui vous arrangent.',
-      'Remettez le matériel, encaissez directement. Hive ne prend rien.',
-    ],
+    eyebrow: 'Vous avez du matériel',
+    label: 'Publier',
+    subtitle: 'Cinq photos, un prix par jour, et votre annonce est en ligne. Sans commission.',
+    cta: 'Publier une annonce',
+    href: '/publier',
+    photo: '/hero-louer.jpg',
+    focus: '50% 40%',
+    tint: '40 16 12',
+    accent: 'var(--color-primary)',
+    glow: 'var(--color-primary-glow)',
+    on: '#fff',
   },
 ];
 
 /**
  * Ce qui lève les objections d'un premier visiteur.
  *
- * Hive est nouveau et n'a aucune preuve sociale à montrer — on n'en fabrique
- * pas. Ce qui reste, et qui est vrai, ce sont les règles du jeu : elles se
- * disent en une ligne chacune.
+ * Hive est nouveau et n'a aucune preuve sociale à montrer — on n'en
+ * fabrique pas. Ce qui reste, et qui est vrai, ce sont les règles du jeu.
  */
 const REASSURANCE = [
   {
@@ -57,6 +101,31 @@ const REASSURANCE = [
   {
     title: 'Dans votre commune',
     body: 'Cocody, Marcory, Yopougon… on filtre par commune, parce qu’un jeu de projecteurs ne traverse pas Abidjan.',
+  },
+];
+
+/** Le parcours, de chaque côté du marché. */
+const SIDES = [
+  {
+    side: 'Vous cherchez du matériel',
+    accent: 'var(--color-primary)',
+    accentInk: 'var(--color-primary)',
+    steps: [
+      'Cherchez, filtrez par commune, par catégorie et par budget.',
+      'Envoyez une demande avec vos dates. Rien n’est débité.',
+      'Le loueur confirme, vous récupérez le matériel et vous le réglez sur place.',
+    ],
+  },
+  {
+    side: 'Vous avez du matériel',
+    accent: 'var(--color-accent)',
+    // Le corail vif borde la carte ; son encre écrit le texte.
+    accentInk: 'var(--color-accent-ink)',
+    steps: [
+      'Photographiez-le et publiez : cinq photos, un prix par jour, c’est tout.',
+      'Recevez les demandes et acceptez celles qui vous arrangent.',
+      'Remettez le matériel, encaissez directement. Hive ne prend rien.',
+    ],
   },
 ];
 
@@ -80,77 +149,76 @@ export default async function AccueilPage() {
   };
 
   return (
-    <div className="flex flex-col gap-12">
+    // Le gabarit de l'application centre chaque page dans un `max-w-6xl
+    // px-4 py-6`. Le hero et les bandes sombres doivent en sortir : une
+    // seule échappée à la racine, plutôt qu'une par section.
+    <div className="labs-bleed labs-page -my-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <section className="card flex flex-col gap-5 bg-surface p-6 sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-          Le Vinted de l’audiovisuel · Abidjan
-        </p>
-
-        <h1 className="max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">
-          Le matériel qui dort chez l’un tourne chez l’autre.
-        </h1>
-
-        <p className="max-w-2xl text-lg text-muted">
-          Caméras, enceintes, projecteurs, instruments. Louez ce dont vous avez
-          besoin le temps d’un mariage, d’un tournage ou d’une soirée — auprès
-          de quelqu’un de votre commune. Et si le vôtre dort dans un placard,
-          mettez-le en location : il finira par payer le prochain.
-        </p>
-
-        <form action="/annonces" className="flex flex-col gap-2 sm:flex-row">
+      <LabsHero
+        place="Le Vinted de l’audiovisuel · Abidjan"
+        lead="Le matériel qui dort"
+        headline="tourne chez l’autre."
+        slides={HERO_SLIDES}
+        scrollTo="#etapes"
+      >
+        {/* La porte d'entrée d'une place de marché est un champ de
+            recherche, pas un bouton de plus. Formulaire GET vers /annonces :
+            il fonctionne avant tout JavaScript. */}
+        <form action="/annonces" className="labs-search" role="search">
           <input
             type="search"
             name="q"
-            placeholder="Que cherchez-vous ? (caméra, enceinte, projecteur…)"
+            placeholder="Caméra, enceinte, projecteur…"
             aria-label="Rechercher du matériel"
-            className="w-full rounded-full border border-line bg-white px-4 py-3 focus:border-primary focus:outline-none"
+            className="labs-search__field"
           />
-          <button
-            type="submit"
-            className="rounded-full bg-primary px-6 py-3 font-medium text-white hover:bg-primary-light"
-          >
-            Rechercher
-          </button>
+          <button type="submit" className="labs-search__submit">Rechercher</button>
         </form>
+      </LabsHero>
 
-        <p className="text-sm text-muted">
-          Vous avez du matériel qui dort ?{' '}
-          <Link href="/publier" className="font-medium text-primary underline">
-            Publiez une annonce
-          </Link>{' '}
-          — c’est gratuit et sans commission.
-        </p>
+      {/* Manifeste : la phrase qui contient tout le produit, seule sur sa
+          bande. Le hero fait tourner les deux publics, il ne peut pas
+          porter en plus une vérité qui ne change jamais. */}
+      <section className="labs-manifesto">
+        <div className="labs-manifesto__inner labs-reveal">
+          <p className="labs-manifesto__text">
+            Une caméra à deux millions sert huit jours par mois. À côté, un
+            vidéaste refuse un mariage faute de matériel. Les deux habitent la
+            même commune et ne se connaissent pas.
+          </p>
+          <p className="labs-manifesto__claim">Zéro commission au lancement.</p>
+        </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {REASSURANCE.map((item) => (
-          <div key={item.title} className="card flex flex-col gap-1.5 p-4">
-            <p className="font-semibold">{item.title}</p>
-            <p className="text-sm text-muted">{item.body}</p>
-          </div>
-        ))}
-      </section>
+      {/* Les deux parcours, côte à côte */}
+      <section id="etapes" className="labs-section">
+        <div className="labs-section-head labs-reveal">
+          <p className="labs-eyebrow">Comment ça marche</p>
+          <h2 className="labs-h2 labs-h2--max">
+            Deux façons d’utiliser Hive. Aucune ne demande de carte bancaire.
+          </h2>
+        </div>
 
-      <section className="flex flex-col gap-5">
-        <h2 className="text-xl font-bold">Comment ça marche</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {STEPS.map((column) => (
-            <div key={column.side} className="card flex flex-col gap-3 p-5">
-              <p className="font-semibold text-primary">{column.side}</p>
-              <ol className="flex flex-col gap-3">
+        <div className="labs-sides">
+          {SIDES.map((column, i) => (
+            <div
+              key={column.side}
+              className="labs-side labs-reveal"
+              style={{
+                ['--i' as string]: i,
+                ['--side-accent' as string]: column.accent,
+                ['--side-accent-ink' as string]: column.accentInk,
+              }}
+            >
+              <p className="labs-side__title">{column.side}</p>
+              <ol className="labs-side__steps">
                 {column.steps.map((step, index) => (
-                  <li key={step} className="flex gap-3 text-sm">
-                    <span
-                      aria-hidden
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-semibold text-primary"
-                    >
-                      {index + 1}
-                    </span>
+                  <li key={step}>
+                    <span aria-hidden className="labs-side__num">{index + 1}</span>
                     <span>{step}</span>
                   </li>
                 ))}
@@ -160,18 +228,49 @@ export default async function AccueilPage() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-bold">Parcourir par catégorie</h2>
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {CATEGORIES.map((category) => (
-            <li key={category.id}>
-              <Link
-                href={`/annonces?categorie=${category.id}`}
-                className="card flex h-full flex-col gap-1 p-4 hover:border-primary"
-              >
-                <span className="font-medium">{category.label}</span>
-                <span className="text-xs text-muted">
-                  {category.children.map((c) => c.label).join(', ')}
+      {/* Les règles du jeu — la seule « preuve » qu'on affiche */}
+      <section id="garanties" className="labs-section">
+        <div className="labs-section-head labs-reveal">
+          <p className="labs-eyebrow">Ce qui est garanti</p>
+          <h2 className="labs-h2">Quatre règles, et rien d’écrit en petit.</h2>
+        </div>
+
+        <ul className="labs-problem-grid">
+          {REASSURANCE.map((item, i) => (
+            <li
+              key={item.title}
+              className="labs-problem labs-reveal"
+              style={{ ['--i' as string]: i }}
+            >
+              <span className="labs-problem__num" aria-hidden>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Catégories */}
+      <section id="categories" className="labs-section">
+        <div className="labs-section-head labs-reveal">
+          <p className="labs-eyebrow">Parcourir</p>
+          <h2 className="labs-h2">Quatre familles de matériel.</h2>
+        </div>
+
+        <ul className="labs-cats">
+          {CATEGORIES.map((category, i) => (
+            <li key={category.id} className="labs-reveal" style={{ ['--i' as string]: i }}>
+              <Link href={`/annonces?categorie=${category.id}`}>
+                <span className="labs-cats__label">{category.label}</span>
+                <span className="labs-cats__children">
+                  {category.children.map((c) => c.label).join(' · ')}
+                </span>
+                <span className="labs-cats__go" aria-hidden>
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    <path d="M3 8h10M9 4l4 4-4 4" />
+                  </svg>
                 </span>
               </Link>
             </li>
@@ -179,59 +278,92 @@ export default async function AccueilPage() {
         </ul>
       </section>
 
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xl font-bold">Dernières annonces</h2>
-          <Link href="/annonces" className="text-sm text-primary underline">
-            Tout voir
-          </Link>
+      {/* Dernières annonces, ou l'état vide assumé */}
+      <section id="annonces" className="labs-section">
+        <div className="labs-section-head labs-reveal">
+          <p className="labs-eyebrow">En ce moment</p>
+          <h2 className="labs-h2">Dernières annonces.</h2>
         </div>
 
         {listings.length === 0 ? (
-          // Un catalogue vide est la vérité du premier jour. Plutôt que de le
-          // masquer, on en fait l'argument : les premières annonces sont
-          // celles qu'on met en avant (brief §6.3).
-          <div className="card flex flex-col items-start gap-3 p-6">
-            <p className="text-lg font-semibold">Hive démarre à Abidjan.</p>
-            <p className="max-w-xl text-muted">
+          // Un catalogue vide est la vérité du premier jour. Plutôt que de
+          // le masquer, on en fait l'argument (brief §6.3).
+          <div className="labs-note labs-reveal">
+            <h3>Hive démarre à Abidjan.</h3>
+            <p>
               Le catalogue se construit en ce moment même. Les premières
               annonces publiées sont celles que nous mettons en avant — et il
               n’y a aucune commission à payer pendant toute la période de
               lancement.
             </p>
-            <Link
-              href="/publier"
-              className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-light"
-            >
+            <Link href="/publier" className="labs-inline-link">
               Publier la première annonce
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M3 8h10M9 4l4 4-4 4" />
+              </svg>
             </Link>
           </div>
         ) : (
-          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {listings.map((listing) => (
-              <li key={listing.id}>
-                <ListingCard listing={listing} />
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="labs-listings labs-reveal">
+              {listings.map((listing) => (
+                <li key={listing.id}>
+                  <ListingCard listing={listing} />
+                </li>
+              ))}
+            </ul>
+            <Link href="/annonces" className="labs-inline-link labs-reveal">
+              Voir toutes les annonces
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M3 8h10M9 4l4 4-4 4" />
+              </svg>
+            </Link>
+          </>
         )}
       </section>
 
-      <section className="card flex flex-col items-start gap-3 bg-primary p-6 text-white sm:p-8">
-        <h2 className="max-w-2xl text-2xl font-bold">
-          Votre caméra ne rapporte rien au fond de son sac.
-        </h2>
-        <p className="max-w-xl text-white/80">
-          Publier une annonce prend deux minutes, elle est en ligne
-          immédiatement, et vous gardez cent pour cent de ce que vous louez.
-        </p>
-        <Link
-          href="/publier"
-          className="rounded-full bg-white px-5 py-2.5 text-sm font-medium text-primary hover:bg-surface"
-        >
-          Mettre mon matériel en location
-        </Link>
+      {/* Double appel à l'action final */}
+      <section className="labs-section labs-section--final">
+        <div className="labs-final-grid">
+          <Link
+            href="/publier"
+            className="labs-final-card labs-reveal"
+            style={{
+              background: 'var(--color-primary)',
+              ['--on-accent' as string]: '#fff',
+              ['--i' as string]: 0,
+            }}
+          >
+            <p className="labs-final-card__eyebrow">Vous possédez</p>
+            <h3>Votre caméra ne rapporte rien au fond de son sac.</h3>
+            <p className="labs-final-card__body">
+              Publier prend deux minutes, l’annonce est en ligne
+              immédiatement, et vous gardez cent pour cent de ce que vous
+              louez.
+            </p>
+            <span className="labs-final-card__cta">Publier une annonce →</span>
+          </Link>
+          <Link
+            href="/annonces"
+            className="labs-final-card labs-reveal"
+            style={{
+              background: '#2a1715',
+              ['--on-accent' as string]: '#fff',
+              ['--i' as string]: 1,
+            }}
+          >
+            <p className="labs-final-card__eyebrow">Vous cherchez</p>
+            <h3>Le matériel est déjà dans votre commune.</h3>
+            <p className="labs-final-card__body">
+              Filtrez par commune, par catégorie et par budget. Vous ne payez
+              qu’à la remise, en main propre.
+            </p>
+            <span className="labs-final-card__cta">Parcourir les annonces →</span>
+          </Link>
+        </div>
       </section>
+
+      <LabsPageScript />
     </div>
   );
 }
