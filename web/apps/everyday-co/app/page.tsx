@@ -1,39 +1,55 @@
 import Image from 'next/image';
 import { CONTACT_EMAIL, HIVE_URL, VITAE_URL } from '../lib/config';
 import { FOUNDER } from '../lib/founder';
-import {
-  Divider, IconAccess, IconFocus, IconMobile, PatternBackground, PhoneMockup,
-} from '../components/graphics';
+import { LabsHero } from '../components/LabsHero';
 
 /**
  * Page d'accueil de The Everyday Co.
  *
- * Rythme repris de themobilefirstcompany.com (brief §8) : constat, promesse,
- * action, produit — puis seulement l'argumentaire long.
+ * ── Présentation ──────────────────────────────────────────────────────
+ * Le langage visuel est emprunté à labs.google — d'où le préfixe `labs-`
+ * des classes dans `globals.css`, qui nomme ce langage et non un
+ * brouillon :
+ *  1. hero plein cadre, voiles dégradés, très grand titre en bas à gauche,
+ *     pastille « lieu », boutons pilules et barres de progression
+ *     cliquables qui font défiler les applications vedettes ;
+ *  2. des cartes produit visuelles (photo + nom posé dessus + description
+ *     + lien), défilement par à-coups sur téléphone, grille sur écran
+ *     large ;
+ *  3. un rythme éditorial : une grande section par idée, titres énormes,
+ *     respirations généreuses, boutons « liquides ».
  *
- * Le texte doit tenir deux lectures à la fois. Un jeune diplômé cherche « à
- * quoi ça me sert, maintenant » : il trouve des phrases courtes, des scènes
- * concrètes et un bouton. Un investisseur cherche le problème, la taille du
- * marché, la stratégie et le modèle : il trouve les sections Vision, Objectifs
- * et Modèle. Aucune des deux lectures ne dilue l'autre, parce qu'elles ne se
- * disputent pas les mêmes blocs.
+ * ── Ce qui ne change pas ──────────────────────────────────────────────
+ * Le rythme de fond reste celui du brief §8 (themobilefirstcompany.com) :
+ * constat, promesse, action, produit — puis l'argumentaire long.
  *
- * Ce qui n'y figure pas est volontaire : pas de preuve sociale chiffrée, pas de
- * levée de fonds, pas de client cité. Le site de référence en affiche ; nous
- * n'en avons pas, et on ne les fabrique pas.
+ * Le texte tient deux lectures à la fois. Un jeune diplômé cherche « à
+ * quoi ça me sert, maintenant » : il trouve des phrases courtes, des
+ * scènes concrètes et un bouton. Un investisseur cherche le problème, la
+ * taille du marché, la stratégie et le modèle : il trouve les sections
+ * Vision, Et après ? et Pourquoi maintenant. Aucune des deux lectures ne
+ * dilue l'autre, parce qu'elles ne se disputent pas les mêmes blocs.
  *
- * Deux applications sont présentées : Vitae et Hive, toutes deux en ligne.
+ * Ce qui n'y figure pas est volontaire : pas de preuve sociale chiffrée,
+ * pas de levée de fonds, pas de client cité. Le site de référence en
+ * affiche ; nous n'en avons pas, et on ne les fabrique pas. La seule
+ * preuve avancée — « En ligne » sur chaque carte — se vérifie en un clic.
+ *
+ * ── Budget ────────────────────────────────────────────────────────────
+ * Réseau lent, téléphone d'entrée de gamme : tout ce qui pouvait être
+ * fait en CSS l'est (révélations, parallaxe, barre de lecture, boutons
+ * liquides) ; `motion` n'est chargé, à la demande, que par le hero.
  */
 
 const NAV = [
   { href: '#probleme', label: 'Le problème' },
-  { href: '#vitae', label: 'Vitae' },
-  { href: '#hive', label: 'Hive' },
+  { href: '#apps', label: 'Nos apps' },
   { href: '#vision', label: 'Vision' },
+  { href: '#apres', label: 'Et après ?' },
   { href: '#fondatrice', label: 'Fondatrice' },
 ];
 
-/** Trois scènes concrètes plutôt qu'un paragraphe d'analyse. */
+/** Scènes concrètes plutôt qu'un paragraphe d'analyse. */
 const PROBLEMS = [
   {
     title: 'Le CV qui ne passe pas',
@@ -53,33 +69,72 @@ const PROBLEMS = [
   },
 ];
 
-const HIVE_FEATURES = [
-  'Location et vente, entre particuliers comme avec des professionnels',
-  'Recherche par commune, catégorie et budget — Cocody, Marcory, Yopougon…',
-  'Demande de réservation avec dates, confirmée par le loueur',
-  'Paiement en main propre à la remise, aucune commission au lancement',
-];
-
-const VITAE_FEATURES = [
-  'Modèles vérifiés lisibles par les logiciels de tri (ATS)',
-  'Score et conseils de correction en direct, section par section',
-  'Offres de stage et d’emploi en Côte d’Ivoire, mises à jour chaque jour',
-  'Téléchargement PDF gratuit, sans filigrane',
+/** Cartes des applications.
+ *
+ *  La vignette est une photo de la personne à qui l'application sert — un
+ *  jeune diplômé devant son ordinateur, un vidéaste en tournage — et non
+ *  une capture d'écran de l'app. Deux raisons : réduite à la taille d'une
+ *  carte, une capture n'est plus lisible, on y devine une page web sans
+ *  distinguer laquelle ; et les personnes montrées sont celles qui se
+ *  servent de ces outils ici, ce que des captures ne disent pas.
+ *
+ *  `id` reprend les ancres de l'ancienne page (#vitae, #hive) : les liens
+ *  déjà partagés continuent d'atterrir au bon endroit. */
+const APP_CARDS = [
+  {
+    id: 'vitae',
+    name: 'Vitae',
+    tag: 'Emploi',
+    status: 'En ligne',
+    pitch: 'Le CV qui passe les filtres.',
+    desc: 'La plupart des candidatures sont écartées par un logiciel de tri avant qu’un humain ne les lise. Vitae guide la rédaction section par section, note le CV en direct, et produit un PDF que ces logiciels savent relire.',
+    features: [
+      'Modèles vérifiés lisibles par les logiciels de tri (ATS)',
+      'Score et conseils de correction en direct, section par section',
+      'Offres de stage et d’emploi en Côte d’Ivoire, mises à jour chaque jour',
+      'Téléchargement PDF gratuit, sans filigrane',
+    ],
+    href: VITAE_URL,
+    cta: 'Ouvrir Vitae',
+    accent: 'var(--color-vitae)',
+    // Le vert vif ne passe pas en texte sur blanc : l'encre prend le relais.
+    accentInk: 'var(--color-vitae-ink)',
+    thumbnail: '/thumbnail-vitae.jpg',
+    alt: 'Un jeune homme souriant devant son ordinateur portable, dans un espace de travail partagé',
+  },
+  {
+    id: 'hive',
+    name: 'Hive',
+    tag: 'Événementiel',
+    status: 'En ligne',
+    pitch: 'Le Vinted de l’audiovisuel.',
+    desc: 'Une caméra à deux millions sert huit jours par mois. À côté, un vidéaste refuse un mariage faute de matériel. Hive met les deux en relation, à la journée, dans la même commune.',
+    features: [
+      'Location et vente, entre particuliers comme avec des professionnels',
+      'Recherche par commune, catégorie et budget — Cocody, Marcory, Yopougon…',
+      'Demande de réservation avec dates, confirmée par le loueur',
+      'Paiement en main propre à la remise, aucune commission au lancement',
+    ],
+    href: HIVE_URL,
+    cta: 'Ouvrir Hive',
+    accent: 'var(--color-hive)',
+    // Déjà à 7,6:1 sur blanc : le rouge de Hive est sa propre encre.
+    accentInk: 'var(--color-hive)',
+    thumbnail: '/thumbnail-hive.jpg',
+    alt: 'Un jeune vidéaste filmant en extérieur, caméra montée sur stabilisateur',
+  },
 ];
 
 const PRINCIPLES = [
   {
-    Icon: IconMobile,
     title: 'Mobile d’abord',
     body: 'Ici, le téléphone est déjà la banque, la boutique et le bureau. Nos outils partent de là — ils ne s’y adaptent pas après coup.',
   },
   {
-    Icon: IconFocus,
     title: 'Un problème. Une app.',
     body: 'Chaque produit règle une seule chose, complètement. Pas de tableau de bord dont personne n’a besoin.',
   },
   {
-    Icon: IconAccess,
     title: 'Marche en 3G',
     body: 'Téléphone d’entrée de gamme, connexion capricieuse, forfait compté. Ce n’est pas un cas limite : c’est le cahier des charges.',
   },
@@ -89,7 +144,7 @@ const PRINCIPLES = [
  * Objectifs déclarés, par horizon.
  *
  * Formulés comme des intentions et non comme des résultats : rien ici n'est
- * présenté comme déjà atteint, hormis la mise en ligne de Vitae, qui l'est.
+ * présenté comme déjà atteint, hormis la mise en ligne des deux apps.
  */
 const OBJECTIVES = [
   {
@@ -119,468 +174,449 @@ const MARKET = [
   { figure: '10M', label: 'Emplois numériques attendus en Afrique d’ici 2030 (Banque mondiale)' },
 ];
 
-function FounderSection() {
-  return (
-    <section id="fondatrice" className="flex flex-col gap-6">
-      <div>
-        <p className="text-xs uppercase tracking-widest text-muted2">Qui construit</p>
-        <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
-          Une fondatrice, à Abidjan.
-        </h2>
-      </div>
-
-      <div className="flex flex-col gap-6 rounded-2xl border border-line bg-card p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-8">
-        {FOUNDER.photo === '' ? null : (
-          // Cadrage sur le visage, en CSS, sans toucher au fichier.
-          //
-          // `object-fit: cover` ne suffit pas : sur un portrait 3:4 ramené dans
-          // un carré, il ne rogne qu'un quart de la hauteur, et la personne
-          // reste minuscule au milieu du décor. Il faut donc agrandir l'image à
-          // 400 % du cadre et la décaler pour amener le visage au centre. Les
-          // décalages sont exprimés en pourcentage du cadre, ils suivent donc
-          // sa taille. Ils valent pour cette photo précise : une autre photo
-          // demandera d'autres valeurs.
-          <div className="relative h-44 w-44 shrink-0 overflow-hidden rounded-2xl bg-card2">
-            <Image
-              src={FOUNDER.photo}
-              alt={FOUNDER.name}
-              width={960}
-              height={1280}
-              // 704 px et non 176 : l'image est rendue à 400 % du cadre.
-              // Annoncer la taille du cadre ferait choisir au navigateur une
-              // source trop petite, étirée puis floue.
-              sizes="704px"
-              className="absolute left-[-137%] top-[-181%] w-[400%] max-w-none"
-            />
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3">
-          <div>
-            <h3 className="text-xl font-bold">{FOUNDER.name}</h3>
-            <p className="text-muted">
-              {FOUNDER.role} · {FOUNDER.location}
-            </p>
-          </div>
-
-          {FOUNDER.bio === '' ? null : (
-            <p className="max-w-xl text-muted">{FOUNDER.bio}</p>
-          )}
-
-          <div className="flex flex-wrap gap-3">
-            <a
-              href={FOUNDER.linkedinUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border border-line2 px-5 py-2 text-sm font-medium hover:bg-card2"
-            >
-              Profil LinkedIn
-            </a>
-            {CONTACT_EMAIL === null ? null : (
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className="rounded-full border border-line2 px-5 py-2 text-sm font-medium hover:bg-card2"
-              >
-                La contacter
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function HomePage() {
   return (
     <>
-      <header className="sticky top-0 z-10 border-b border-line bg-bg/85 backdrop-blur">
-        <nav className="mx-auto flex max-w-5xl items-center gap-6 px-5 py-4">
-          <a href="#top" className="font-bold tracking-tight">The Everyday Co.</a>
-          <ul className="hidden flex-1 gap-6 text-sm text-muted lg:flex">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <a href={item.href} className="hover:text-text">{item.label}</a>
+      {/* Barre de lecture : pur CSS (`animation-timeline: scroll()`),
+          masquée là où la propriété n'existe pas plutôt que figée à zéro. */}
+      <div className="labs-scroll-progress" aria-hidden />
+
+      <header className="labs-nav" id="labs-nav">
+        <a href="#top" className="labs-nav__logo">
+          The Everyday Co.
+        </a>
+        <ul className="labs-nav__links">
+          {NAV.map((item) => (
+            <li key={item.href}>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))}
+        </ul>
+        <div className="labs-nav__ctas">
+          <a
+            href={VITAE_URL}
+            className="gl-btn gl-btn--small is-liquid"
+            style={{ ['--liquid-fill' as string]: 'var(--color-vitae)' }}
+          >
+            <span>Vitae</span>
+          </a>
+          {/* Les deux applications valent la même chose : elles ont le même
+              traitement jusque dans la barre de navigation. Hive n'apparaît
+              qu'à partir de 380 px, faute de place avant. */}
+          <a
+            href={HIVE_URL}
+            className="gl-btn gl-btn--small gl-btn--wide is-liquid"
+            style={{ ['--liquid-fill' as string]: 'var(--color-hive)' }}
+          >
+            <span>Hive</span>
+          </a>
+        </div>
+      </header>
+
+      <main id="top">
+        <LabsHero vitaeUrl={VITAE_URL} hiveUrl={HIVE_URL} />
+
+        {/* Manifeste : la promesse de marque, seule sur sa bande. Le hero
+            fait défiler les produits, il ne peut pas porter en plus une
+            phrase qui ne change jamais. */}
+        <section className="labs-manifesto">
+          <div className="labs-manifesto__inner labs-reveal">
+            <p className="labs-manifesto__text">
+              Nos parents ont géré leur travail dans des cahiers, faute de
+              mieux. Nous construisons les outils qu’ils n’ont jamais eus —
+              pour le téléphone qu’on a déjà dans la poche.
+            </p>
+            <p className="labs-manifesto__claim">Un problème. Une app. Réglé.</p>
+          </div>
+        </section>
+
+        {/* Le problème. Un jeune s'y reconnaît, un investisseur y lit le
+            marché adressable. */}
+        <section id="probleme" className="labs-section">
+          <div className="labs-section-head labs-reveal">
+            <p className="labs-eyebrow">Le problème</p>
+            <h2 className="labs-h2 labs-h2--max">
+              Ce n’est pas que les gens manquent d’ambition. C’est qu’ils
+              travaillent sans outils.
+            </h2>
+          </div>
+
+          <ul className="labs-problem-grid">
+            {PROBLEMS.map((problem, i) => (
+              <li
+                key={problem.title}
+                className="labs-problem labs-reveal"
+                style={{ ['--i' as string]: i }}
+              >
+                <span className="labs-problem__num" aria-hidden>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <h3>{problem.title}</h3>
+                <p>{problem.body}</p>
               </li>
             ))}
           </ul>
-          <div className="ml-auto flex gap-2 lg:ml-0">
-            <a
-              href={VITAE_URL}
-              className="rounded-full bg-dark px-4 py-2 text-sm font-medium text-bg hover:bg-dark2"
-            >
-              Vitae
-            </a>
-            <a
-              href={HIVE_URL}
-              className="rounded-full border border-line2 px-4 py-2 text-sm font-medium hover:bg-card2"
-            >
-              Hive
-            </a>
-          </div>
-        </nav>
-      </header>
 
-      <main id="top" className="flex flex-col">
-        {/* Accroche. Le motif de fond donne de la matière sans rien ajouter à
-            lire ni un seul octet d'image à télécharger. */}
-        <section className="relative overflow-hidden border-b border-line">
-          <div className="pointer-events-none absolute inset-0 text-dark opacity-[0.05]">
-            <PatternBackground className="h-full w-full" />
+          <p className="labs-note labs-reveal">
+            Les logiciels qui règlent ces problèmes existent — ailleurs. Ils
+            coûtent en euros, s’apprennent en formation et supposent une
+            connexion stable. Aucune de ces trois conditions n’est vraie ici.
+          </p>
+        </section>
+
+        {/* Les applications — défilement par à-coups sur téléphone, grille
+            ensuite. Même gabarit pour les deux : deux produits présentés
+            différemment donneraient l'impression que l'un compte moins. */}
+        <section id="apps" className="labs-carousel-section">
+          <div className="labs-section-head labs-reveal">
+            <p className="labs-eyebrow">Nos applications</p>
+            <h2 className="labs-h2">Deux applications en ligne. Gratuites.</h2>
+            <p className="labs-sub">
+              Chaque application règle un seul problème, complètement — comme
+              les expérimentations d’un labo, mais pour le quotidien d’ici.
+            </p>
           </div>
 
-          <div className="relative mx-auto grid max-w-5xl items-center gap-10 px-5 py-16 lg:grid-cols-[1.15fr_1fr] lg:py-24">
-            <div className="flex flex-col gap-6">
-              <p className="text-sm text-muted2">Abidjan, Côte d’Ivoire</p>
-              <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
-                Les bons outils.{' '}
-                <span className="bg-yellow-soft px-1.5">Enfin faits pour ici.</span>
-              </h1>
-              <p className="max-w-xl text-lg text-muted">
-                Nos parents ont géré leur travail dans des cahiers, faute de
-                mieux. Nous construisons les outils qu’ils n’ont jamais eus —
-                pour le téléphone qu’on a déjà dans la poche.
-              </p>
-              <p className="max-w-xl font-medium">
-                Un problème. Une app. Réglé.
-              </p>
+          {/* La révélation est portée par la piste, pas par chaque carte :
+              sur téléphone la seconde carte est hors de l'écran à droite, un
+              observateur posé sur elle ne se déclencherait jamais — elle
+              resterait invisible et on perdrait l'indice qu'il y en a deux. */}
+          <div className="labs-carousel labs-reveal">
+            <ul className="labs-carousel__track">
+              {APP_CARDS.map((app, i) => (
+                <li key={app.name} id={app.id} className="labs-card-slot">
+                  <a
+                    href={app.href}
+                    className="labs-card"
+                    style={{
+                      ['--i' as string]: i,
+                      ['--accent' as string]: app.accent,
+                      ['--accent-ink' as string]: app.accentInk,
+                    }}
+                  >
+                    <div className="labs-card__media">
+                      <Image
+                        src={app.thumbnail}
+                        alt={app.alt}
+                        fill
+                        sizes="(min-width: 768px) 36rem, 86vw"
+                        className="labs-card__img"
+                        loading="eager"
+                      />
+                      {/* Dégradé du bas : le nom de l'app est posé sur la
+                          photo, il lui faut le même socle sombre que le hero */}
+                      <span aria-hidden className="labs-card__scrim" />
+                      <span className="labs-card__badge">
+                        <span className="labs-card__badge-dot" aria-hidden />
+                        {app.status}
+                      </span>
+                      <div className="labs-card__overlay">
+                        <p className="labs-card__tag">{app.tag}</p>
+                        <h3 className="labs-card__name">{app.name}</h3>
+                      </div>
+                      <span aria-hidden className="labs-card__accent-bar" />
+                    </div>
+                    <div className="labs-card__body">
+                      <p className="labs-card__pitch">{app.pitch}</p>
+                      <p className="labs-card__desc">{app.desc}</p>
+                      {/* Le détail que cherchent ceux qui hésitent encore :
+                          quatre lignes vérifiables, pas des arguments. */}
+                      <ul className="labs-card__features">
+                        {app.features.map((feature) => (
+                          <li key={feature}>{feature}</li>
+                        ))}
+                      </ul>
+                      <span className="labs-card__cta">
+                        {app.cta}
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                          <path d="M3 8h10M9 4l4 4-4 4" />
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
 
-              <div className="flex flex-wrap gap-3 pt-1">
-                <a
-                  href={VITAE_URL}
-                  className="rounded-full bg-[var(--color-vitae)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
+        {/* Vision et mission — deux phrases à citer de mémoire */}
+        <section id="vision" className="labs-section">
+          <div className="labs-section-head labs-reveal">
+            <p className="labs-eyebrow">Notre vision</p>
+            <h2 className="labs-h2">
+              Que chacun ici travaille avec des outils aussi bons que ceux
+              d’une grande entreprise — depuis un téléphone, et gratuitement
+              pour commencer.
+            </h2>
+          </div>
+
+          <ul className="labs-principles">
+            {PRINCIPLES.map((principle, i) => (
+              <li key={principle.title} className="labs-reveal" style={{ ['--i' as string]: i }}>
+                <h3>{principle.title}</h3>
+                <p>{principle.body}</p>
+              </li>
+            ))}
+          </ul>
+
+          <div className="labs-mission labs-reveal">
+            <p className="labs-eyebrow">Notre mission</p>
+            <p className="labs-mission__text">
+              Sortir une application à la fois, qui règle complètement un
+              problème du quotidien et qui marche sur le téléphone que les
+              gens ont déjà.
+            </p>
+          </div>
+        </section>
+
+        {/* « Et après ? » — les objectifs, section que lit un investisseur.
+            `#objectifs` reste en ancre secondaire pour les liens déjà
+            partagés vers l'ancienne page. */}
+        <section id="apres" className="labs-after">
+          <div className="labs-after__inner">
+            <span id="objectifs" className="labs-anchor" aria-hidden />
+            <p className="labs-eyebrow">La suite</p>
+            <h2 className="labs-after__title">Et après ?</h2>
+            <p className="labs-after__desc">
+              Chaque application sort quand elle est prête — annoncée une fois,
+              jamais avant. Une chose à la fois, dans cet ordre.
+            </p>
+
+            <ol className="labs-timeline">
+              {OBJECTIVES.map((objective, i) => (
+                <li
+                  key={objective.title}
+                  className={`labs-timeline__item labs-reveal ${objective.done ? 'is-done' : ''}`}
+                  style={{ ['--i' as string]: i }}
                 >
-                  Essayer Vitae — gratuit
-                </a>
-                <a
-                  href={HIVE_URL}
-                  className="rounded-full bg-[var(--color-hive)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
-                >
-                  Découvrir Hive
-                </a>
-                <a
-                  href="#vision"
-                  className="rounded-full border border-line2 px-6 py-3 text-sm font-medium hover:bg-card2"
-                >
-                  Notre vision
-                </a>
+                  <span
+                    className={`labs-timeline__dot ${objective.done ? 'is-done' : ''}`}
+                    aria-hidden
+                  />
+                  <p className="labs-timeline__horizon">
+                    {objective.horizon}{objective.done ? ' · fait' : null}
+                  </p>
+                  <h3 className="labs-timeline__title">{objective.title}</h3>
+                  <p className="labs-timeline__body">{objective.body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* Marché — la lecture investisseur */}
+        <section id="marche" className="labs-section">
+          <div className="labs-section-head labs-reveal">
+            <p className="labs-eyebrow">Pourquoi maintenant</p>
+            <h2 className="labs-h2">Un continent sous-outillé. Un marché immense.</h2>
+          </div>
+
+          <ul className="labs-stats">
+            {MARKET.map((stat, i) => (
+              <li key={stat.figure} className="labs-reveal" style={{ ['--i' as string]: i }}>
+                <p className="labs-stat__figure">{stat.figure}</p>
+                <p className="labs-stat__label">{stat.label}</p>
+              </li>
+            ))}
+          </ul>
+
+          {/* Le modèle économique, dit franchement : un investisseur le
+              cherche, et un utilisateur a le droit de savoir ce qui est
+              gratuit et pourquoi. */}
+          <div className="labs-note labs-reveal">
+            <h3>Comment ça se finance</h3>
+            <p>
+              Tout est gratuit aujourd’hui, y compris le téléchargement du CV :
+              à ce stade, ce qui compte est l’usage, pas le revenu. Le modèle
+              viendra plus tard des fonctionnalités avancées — jamais de la
+              porte d’entrée, et jamais en rendant payant ce qui est gratuit
+              aujourd’hui.
+            </p>
+          </div>
+        </section>
+
+        {/* Fondatrice */}
+        <section id="fondatrice" className="labs-section">
+          <div className="labs-section-head labs-reveal">
+            <p className="labs-eyebrow">Qui construit</p>
+            <h2 className="labs-h2">Une fondatrice, à Abidjan.</h2>
+          </div>
+
+          <div className="labs-founder labs-reveal">
+            {FOUNDER.photo === '' ? null : (
+              // Cadrage sur le visage, en CSS, sans toucher au fichier.
+              //
+              // `object-fit: cover` ne suffit pas : sur un portrait 3:4 ramené
+              // dans un carré, il ne rogne qu'un quart de la hauteur, et la
+              // personne reste minuscule au milieu du décor. L'image est donc
+              // agrandie à 400 % du cadre et décalée pour amener le visage au
+              // centre — voir `.labs-founder__img`. Les valeurs valent pour
+              // cette photo précise : une autre photo en demandera d'autres.
+              <div className="labs-founder__photo">
+                <Image
+                  src={FOUNDER.photo}
+                  alt={FOUNDER.name}
+                  width={960}
+                  height={1280}
+                  // 704 px et non 176 : l'image est rendue à 400 % du cadre.
+                  // Annoncer la taille du cadre ferait choisir au navigateur
+                  // une source trop petite, étirée puis floue.
+                  sizes="704px"
+                  className="labs-founder__img"
+                />
               </div>
-            </div>
-
-            <div className="mx-auto w-full max-w-[260px] lg:max-w-none">
-              <PhoneMockup className="h-auto w-full" />
+            )}
+            <div className="labs-founder__info">
+              <h3>{FOUNDER.name}</h3>
+              <p className="labs-founder__role">
+                {FOUNDER.role} · {FOUNDER.location}
+              </p>
+              {FOUNDER.bio === '' ? null : (
+                <p className="labs-founder__bio">{FOUNDER.bio}</p>
+              )}
+              <div className="labs-founder__links">
+                <a
+                  href={FOUNDER.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="gl-btn gl-btn--small is-liquid"
+                  style={{ ['--liquid-fill' as string]: 'var(--color-text)' }}
+                >
+                  <span>Profil LinkedIn</span>
+                </a>
+                {CONTACT_EMAIL === null ? null : (
+                  <a
+                    href={`mailto:${CONTACT_EMAIL}`}
+                    className="gl-btn gl-btn--small is-liquid"
+                    style={{ ['--liquid-fill' as string]: 'var(--color-text)' }}
+                  >
+                    <span>La contacter</span>
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </section>
 
-        <div className="mx-auto flex max-w-5xl flex-col gap-24 px-5 py-20">
-          {/* Le problème, en trois scènes. Un jeune s'y reconnaît, un
-              investisseur y lit le marché adressable. */}
-          <section id="probleme" className="flex flex-col gap-8">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted2">Le problème</p>
-              <h2 className="mt-3 max-w-3xl text-2xl font-bold leading-snug sm:text-3xl">
-                Ce n’est pas que les gens manquent d’ambition. C’est qu’ils
-                travaillent sans outils.
-              </h2>
-            </div>
-
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {PROBLEMS.map((problem) => (
-                <li key={problem.title} className="rounded-2xl border border-line bg-card p-5">
-                  <h3 className="font-bold">{problem.title}</h3>
-                  <p className="mt-2 text-sm text-muted">{problem.body}</p>
-                </li>
-              ))}
-            </ul>
-
-            <p className="max-w-2xl text-muted">
-              Les logiciels qui règlent ces problèmes existent — ailleurs. Ils
-              coûtent en euros, s’apprennent en formation et supposent une
-              connexion stable. Aucune de ces trois conditions n’est vraie ici.
-            </p>
-          </section>
-
-          <Divider className="text-line2" />
-
-          {/* Le produit : la seule chose concrète à montrer. */}
-          <section id="vitae" className="flex flex-col gap-6">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted2">
-                Notre première application
-              </p>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight">
-                Vitae — le CV qui passe les filtres.
-              </h2>
-            </div>
-
-            <div className="rounded-2xl border border-line bg-card p-6 sm:p-8">
-              <div className="flex flex-wrap items-center gap-3">
-                <span
-                  aria-hidden
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-dark text-xl font-bold text-[var(--color-vitae)]"
-                >
-                  V
-                </span>
-                <div>
-                  <h3 className="text-xl font-bold">Vitae</h3>
-                  <p className="text-sm text-muted">Emploi · En ligne</p>
-                </div>
-              </div>
-
-              <p className="mt-5 max-w-2xl text-muted">
-                La plupart des candidatures sont écartées par un logiciel de tri
-                avant qu’un humain ne les lise. Vitae guide la rédaction section
-                par section, note le CV en direct, et produit un PDF que ces
-                logiciels savent relire — puis renvoie vers de vraies offres.
-              </p>
-
-              <ul className="mt-5 flex flex-col gap-2 text-sm">
-                {VITAE_FEATURES.map((feature) => (
-                  <li key={feature} className="flex gap-2">
-                    <span aria-hidden className="text-[var(--color-vitae)]">—</span>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <a
-                href={VITAE_URL}
-                className="mt-7 inline-block rounded-full bg-[var(--color-vitae)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
-              >
-                Ouvrir Vitae
-              </a>
-            </div>
-          </section>
-
-          <Divider className="text-line2" />
-
-          {/* La deuxième application. Même gabarit que Vitae : deux produits
-              présentés différemment donneraient l'impression que l'un compte
-              moins que l'autre. */}
-          <section id="hive" className="flex flex-col gap-6">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted2">
-                Notre deuxième application
-              </p>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight">
-                Hive — le Vinted de l’audiovisuel.
-              </h2>
-            </div>
-
-            <div className="rounded-2xl border border-line bg-card p-6 sm:p-8">
-              <div className="flex flex-wrap items-center gap-3">
-                <span
-                  aria-hidden
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-dark text-xl font-bold text-[var(--color-hive)]"
-                >
-                  H
-                </span>
-                <div>
-                  <h3 className="text-xl font-bold">Hive</h3>
-                  <p className="text-sm text-muted">Événementiel · En ligne</p>
-                </div>
-              </div>
-
-              <p className="mt-5 max-w-2xl text-muted">
-                Une caméra à deux millions sert huit jours par mois. À côté, un
-                vidéaste refuse un mariage faute de matériel. Hive met les deux
-                en relation : le matériel qui dort chez l’un tourne chez
-                l’autre, à la journée, dans la même commune.
-              </p>
-
-              <ul className="mt-5 flex flex-col gap-2 text-sm">
-                {HIVE_FEATURES.map((feature) => (
-                  <li key={feature} className="flex gap-2">
-                    <span aria-hidden className="text-[var(--color-hive)]">—</span>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <a
-                href={HIVE_URL}
-                className="mt-7 inline-block rounded-full bg-[var(--color-hive)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
-              >
-                Ouvrir Hive
-              </a>
-            </div>
-          </section>
-
-          {/* Vision et mission : deux phrases, séparées, qu'on doit pouvoir
-              citer de mémoire. */}
-          <section id="vision" className="flex flex-col gap-10">
-            <div className="grid gap-8 sm:grid-cols-2">
-              <div className="rounded-2xl bg-dark p-7 text-bg">
-                <p className="text-xs uppercase tracking-widest text-[color:rgba(250,250,247,0.5)]">
-                  Notre vision
-                </p>
-                <p className="mt-4 text-xl font-bold leading-snug">
-                  Que chacun ici travaille avec des outils aussi bons que ceux
-                  d’une grande entreprise — depuis un téléphone, et gratuitement
-                  pour commencer.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-line bg-card p-7">
-                <p className="text-xs uppercase tracking-widest text-muted2">Notre mission</p>
-                <p className="mt-4 text-xl font-bold leading-snug">
-                  Sortir une application à la fois, qui règle complètement un
-                  problème du quotidien et qui marche sur le téléphone que les
-                  gens ont déjà.
-                </p>
-              </div>
-            </div>
-
-            <ul className="grid gap-4 sm:grid-cols-3">
-              {PRINCIPLES.map(({ Icon, title, body }) => (
-                <li key={title} className="rounded-2xl border border-line bg-card p-5">
-                  <span className="text-[var(--color-vitae)]">
-                    <Icon />
-                  </span>
-                  <h3 className="mt-3 font-bold">{title}</h3>
-                  <p className="mt-2 text-sm text-muted">{body}</p>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {/* Objectifs : la section que lit un investisseur. Chronologie
-              explicite, et ce qui est fait est distingué de ce qui est visé. */}
-          <section id="objectifs" className="flex flex-col gap-8">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted2">Nos objectifs</p>
-              <h2 className="mt-3 max-w-3xl text-2xl font-bold leading-snug sm:text-3xl">
-                Une chose à la fois, dans cet ordre.
-              </h2>
-            </div>
-
-            <ol className="flex flex-col">
-              {OBJECTIVES.map((objective, index) => (
-                <li
-                  key={objective.title}
-                  className="flex gap-5 border-l border-line2 pb-8 pl-6 last:pb-0"
-                >
-                  <div className="-ml-[31px] flex flex-col items-center">
-                    <span
-                      aria-hidden
-                      className={`mt-1 flex h-3 w-3 rounded-full ring-4 ring-bg ${
-                        objective.done ? 'bg-[var(--color-vitae)]' : 'bg-line2'
-                      }`}
-                    />
-                  </div>
-                  <div className="-mt-1">
-                    <p className="text-xs uppercase tracking-widest text-muted2">
-                      {objective.horizon}
-                      {objective.done ? ' · fait' : null}
-                    </p>
-                    <h3 className="mt-1.5 font-bold">{objective.title}</h3>
-                    <p className="mt-1.5 max-w-2xl text-sm text-muted">{objective.body}</p>
-                  </div>
-                  <span className="sr-only">{`Étape ${index + 1}`}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          <section id="marche" className="flex flex-col gap-6">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted2">Pourquoi maintenant</p>
-              <h2 className="mt-3 text-2xl font-bold sm:text-3xl">
-                Un continent sous-outillé. Un marché immense.
-              </h2>
-            </div>
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {MARKET.map((stat) => (
-                <li key={stat.figure} className="rounded-2xl bg-card2 p-5">
-                  <p className="text-3xl font-extrabold tracking-tight">{stat.figure}</p>
-                  <p className="mt-2 text-sm text-muted">{stat.label}</p>
-                </li>
-              ))}
-            </ul>
-
-            {/* Le modèle économique, dit franchement : un investisseur le
-                cherche, et un utilisateur a le droit de savoir ce qui est
-                gratuit et pourquoi. */}
-            <div className="mt-2 rounded-2xl border border-line bg-card p-6">
-              <h3 className="font-bold">Comment ça se finance</h3>
-              <p className="mt-2 max-w-2xl text-sm text-muted">
-                Tout est gratuit aujourd’hui, y compris le téléchargement du CV :
-                à ce stade, ce qui compte est l’usage, pas le revenu. Le modèle
-                viendra plus tard des fonctionnalités avancées — jamais de la
-                porte d’entrée, et jamais en rendant payant ce qui est gratuit
-                aujourd’hui.
-              </p>
-            </div>
-          </section>
-
-          <FounderSection />
-
-          <section className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col rounded-2xl bg-dark p-8 text-bg">
-              <h2 className="text-2xl font-bold">
-                Votre prochain emploi commence par un CV qu’on peut lire.
-              </h2>
-              <p className="mt-3 text-[color:rgba(250,250,247,0.62)]">
+        {/* Double CTA final */}
+        <section className="labs-section labs-section--final">
+          <div className="labs-final-grid">
+            <a
+              href={VITAE_URL}
+              className="labs-final-card labs-reveal"
+              style={{
+                background: 'var(--color-vitae)',
+                ['--on-accent' as string]: 'var(--color-dark)',
+                ['--i' as string]: 0,
+              }}
+            >
+              <p className="labs-final-card__eyebrow">Emploi</p>
+              <h3>Votre prochain emploi commence par un CV qu’on peut lire.</h3>
+              <p className="labs-final-card__body">
                 Vitae est en ligne et gratuit. Rien à installer, aucun compte à
                 créer pour commencer, pas de filigrane sur le PDF.
               </p>
-              <a
-                href={VITAE_URL}
-                className="mt-6 inline-block self-start rounded-full bg-[var(--color-vitae)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
-              >
-                Ouvrir Vitae
-              </a>
-            </div>
-
-            <div className="flex flex-col rounded-2xl bg-dark p-8 text-bg">
-              <h2 className="text-2xl font-bold">
-                Votre matériel ne rapporte rien au fond de son sac.
-              </h2>
-              <p className="mt-3 text-[color:rgba(250,250,247,0.62)]">
+              <span className="labs-final-card__cta">Ouvrir Vitae →</span>
+            </a>
+            <a
+              href={HIVE_URL}
+              className="labs-final-card labs-reveal"
+              style={{
+                background: 'var(--color-hive)',
+                ['--on-accent' as string]: '#fff',
+                ['--i' as string]: 1,
+              }}
+            >
+              <p className="labs-final-card__eyebrow">Événementiel</p>
+              <h3>Votre matériel ne rapporte rien au fond de son sac.</h3>
+              <p className="labs-final-card__body">
                 Hive est en ligne, sans commission pendant le lancement. Publier
                 une annonce prend deux minutes et elle est visible aussitôt.
               </p>
-              <a
-                href={HIVE_URL}
-                className="mt-6 inline-block self-start rounded-full bg-[var(--color-hive)] px-6 py-3 text-sm font-medium text-white hover:opacity-90"
-              >
-                Ouvrir Hive
-              </a>
-            </div>
-          </section>
-        </div>
+              <span className="labs-final-card__cta">Ouvrir Hive →</span>
+            </a>
+          </div>
+        </section>
       </main>
 
-      <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-5 py-10 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-bold text-text">The Everyday Co.</p>
-          <ul className="flex flex-wrap gap-5">
-            <li><a href={VITAE_URL} className="hover:text-text">Vitae</a></li>
-            <li><a href={HIVE_URL} className="hover:text-text">Hive</a></li>
-            <li><a href="#vision" className="hover:text-text">Vision</a></li>
+      <footer className="labs-footer">
+        <div className="labs-footer__row">
+          <p className="labs-nav__logo">The Everyday Co.</p>
+          <ul className="labs-footer__links">
+            <li><a href={VITAE_URL}>Vitae</a></li>
+            <li><a href={HIVE_URL}>Hive</a></li>
+            <li><a href="#vision">Vision</a></li>
             <li>
-              <a
-                href={FOUNDER.linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-text"
-              >
+              <a href={FOUNDER.linkedinUrl} target="_blank" rel="noopener noreferrer">
                 LinkedIn
               </a>
             </li>
             {CONTACT_EMAIL === null ? null : (
-              <li>
-                <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-text">Contact</a>
-              </li>
+              <li><a href={`mailto:${CONTACT_EMAIL}`}>Contact</a></li>
             )}
           </ul>
         </div>
-        <p className="mx-auto max-w-5xl px-5 pb-10 text-xs text-muted2">
+        <p className="labs-footer__copy">
           © {new Date().getFullYear()} The Everyday Co. · Abidjan, Côte d’Ivoire ·
           Bâtisseurs de solutions du quotidien
         </p>
       </footer>
+
+      {/*
+        Les trois comportements qui ne tiennent pas en CSS, en un seul script
+        sans dépendance (~1 Ko) : révélation au scroll, état de la barre de
+        navigation, et point d'origine du remplissage des boutons liquides.
+      */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){
+            var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            /* 1. Révélation au scroll. Sans IntersectionObserver (ou en mode
+                  animations réduites), tout est affiché d'emblée. */
+            var els = document.querySelectorAll('.labs-reveal');
+            if (reduce || !('IntersectionObserver' in window)) {
+              for (var i = 0; i < els.length; i++) els[i].classList.add('is-in');
+            } else {
+              var io = new IntersectionObserver(function(entries){
+                entries.forEach(function(e){
+                  if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+                });
+              }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+              els.forEach(function(el){ io.observe(el); });
+            }
+
+            /* 2. Navigation : fond opaque dès qu'on quitte le hero, et repli
+                  vers le haut quand on descend — l'écran d'un téléphone est
+                  trop court pour qu'une barre fixe y reste en permanence. */
+            var nav = document.getElementById('labs-nav');
+            var last = 0;
+            var ticking = false;
+            function onScroll(){
+              var y = window.scrollY;
+              nav.classList.toggle('is-scrolled', y > 24);
+              nav.classList.toggle('is-hidden', y > 320 && y > last + 4);
+              last = y;
+              ticking = false;
+            }
+            window.addEventListener('scroll', function(){
+              if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
+            }, { passive: true });
+            onScroll();
+
+            /* 3. Boutons liquides : la pastille grossit depuis l'endroit où
+                  le curseur est entré, pas depuis le centre. */
+            document.addEventListener('pointerenter', function(e){
+              var btn = e.target instanceof Element ? e.target.closest('.is-liquid') : null;
+              if (btn === null) return;
+              var r = btn.getBoundingClientRect();
+              btn.style.setProperty('--lx', ((e.clientX - r.left) / r.width * 100) + '%');
+              btn.style.setProperty('--ly', ((e.clientY - r.top) / r.height * 100) + '%');
+            }, true);
+          })();`,
+        }}
+      />
     </>
   );
 }

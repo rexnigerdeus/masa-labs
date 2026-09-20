@@ -20,8 +20,8 @@ candidat est posée *à côté* du texte, jamais à sa place).
 - **@react-pdf/renderer** pour l'export PDF, polices Roboto embarquées
 - **node:test** + `--experimental-strip-types` pour les tests (aucun runner tiers)
 - **motion** (motion.dev) — seule dépendance d'animation, et seulement dans la
-  proposition de vitrine : importée dynamiquement par le hero, ~6,6 Ko gzip
-  hors du premier chargement. Tout le reste de la page est en CSS.
+  vitrine : importée dynamiquement par le hero de la page d'accueil, ~6,6 Ko
+  gzip hors du premier chargement. Tout le reste de la page est en CSS.
 - Déploiement **Vercel**, une app par projet ; migrations SQL dans [../supabase/migrations/](../supabase/migrations/)
 
 ## Structure
