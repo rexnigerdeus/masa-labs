@@ -3,7 +3,7 @@ import type { NextConfig } from 'next';
 const config: NextConfig = {
   // Les packages du workspace sont publiés en TypeScript brut : Next les
   // compile lui-même, ce qui évite une étape de build intermédiaire.
-  transpilePackages: ['@everyday/cv-core', '@everyday/cv-pdf'],
+  transpilePackages: ['@everyday/cv-core', '@everyday/cv-pdf', '@everyday/labs-ui'],
 
   // @react-pdf/renderer et unpdf embarquent des binaires et des chemins de
   // fichiers (les polices) : ils doivent rester externes au bundle serveur.

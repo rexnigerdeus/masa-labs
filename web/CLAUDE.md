@@ -19,9 +19,9 @@ candidat est posée *à côté* du texte, jamais à sa place).
 - **Supabase** (Postgres + Auth + RLS) via `@supabase/ssr` — session en cookies httpOnly
 - **@react-pdf/renderer** pour l'export PDF, polices Roboto embarquées
 - **node:test** + `--experimental-strip-types` pour les tests (aucun runner tiers)
-- **motion** (motion.dev) — seule dépendance d'animation, et seulement dans la
-  vitrine : importée dynamiquement par le hero de la page d'accueil, ~6,6 Ko
-  gzip hors du premier chargement. Tout le reste de la page est en CSS.
+- **motion** (motion.dev) — seule dépendance d'animation, chargée
+  dynamiquement par le hero de `@everyday/labs-ui` : ~6,6 Ko gzip, hors du
+  premier chargement. Tout le reste du langage visuel est en CSS.
 - Déploiement **Vercel**, une app par projet ; migrations SQL dans [../supabase/migrations/](../supabase/migrations/)
 
 ## Structure
@@ -34,6 +34,7 @@ candidat est posée *à côté* du texte, jamais à sa place).
 | [apps/hive/](apps/hive/) | PWA Hive : annonces, recherche, commandes, messagerie, compte |
 | [apps/hive/lib/](apps/hive/lib/) | Logique pure testée (`pricing`, `orders`, `dates`, `phone`), `db/` en lecture et `actions/` en écriture |
 | [apps/everyday-co/](apps/everyday-co/) | Site vitrine statique, sans base ni session |
+| [packages/labs-ui/](packages/labs-ui/) | Langage visuel partagé (préfixe `labs-`) : feuille de styles, hero, script de page. Sans couleur en dur — chaque app branche sa palette |
 | [packages/cv-core/](packages/cv-core/) | Modèle `Resume`, descripteurs de templates, scoring déterministe. Aucune dépendance runtime |
 | [packages/cv-pdf/](packages/cv-pdf/) | Rendu PDF + harnais de validation ATS |
 | [../supabase/](../supabase/) | Migrations et Edge Function `scrape-job-offers` (hors de ce workspace) |
@@ -79,6 +80,8 @@ Copier `.env.example` en `.env.local` dans chaque app.
 - Un CV porte sa photo et sa couleur primaire ; tout CV venu du navigateur ou de la base passe par `normalizeResume` avant d'atteindre un renderer — [packages/cv-core/src/resume.ts:1](packages/cv-core/src/resume.ts#L1).
 - La photo est recadrée et compressée dans le navigateur, puis stockée avec le CV : aucun bucket, rien à charger à l'ouverture de l'éditeur — [apps/vitae/components/editor/PhotoField.tsx:1](apps/vitae/components/editor/PhotoField.tsx#L1).
 - Les vignettes de modèles sont des croquis SVG dérivés du descripteur, pas des CV de démonstration réduits — [apps/vitae/components/TemplateSketch.tsx:1](apps/vitae/components/TemplateSketch.tsx#L1).
+- Le langage visuel `labs-ui` demande **trois variantes** de chaque couleur produit, et ce n'est pas un excès de zèle : l'aplat (`--labs-accent`), son encre pour écrire sur fond clair (`--labs-accent-ink`) et sa version éclaircie pour écrire sur fond sombre (`--labs-accent-glow`). Le vert de Vitae tombe à 2,7:1 en texte sur blanc, le rouge de Hive à 1,01:1 en texte sur un hero — [packages/labs-ui/labs.css:1](packages/labs-ui/labs.css#L1).
+- La feuille `labs-ui` est importée **par la page** dans Vitae et Hive, pas par `globals.css` : la proposition ne fait pas payer ses kilo-octets aux écrans que les gens utilisent vraiment — [apps/vitae/app/proposition/proposition.css:1](apps/vitae/app/proposition/proposition.css#L1).
 - Le score est calculé côté serveur avant écriture en base, jamais accepté du client — [apps/vitae/lib/resumes.ts:60](apps/vitae/lib/resumes.ts#L60).
 - Le service worker est écrit à la main, portée volontairement limitée à l'éditeur — [apps/vitae/public/sw.js:1](apps/vitae/public/sw.js#L1).
 - Les identifiants de catégories sont en camelCase, hérités de l'app Flutter et verrouillés par des CHECK en base — [apps/vitae/lib/catalog.ts:10](apps/vitae/lib/catalog.ts#L10).

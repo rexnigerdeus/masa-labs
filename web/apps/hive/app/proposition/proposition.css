@@ -1,0 +1,213 @@
+/**
+ * Feuille de la page /proposition — chargée par elle seule.
+ *
+ * Elle n'est pas dans `globals.css` à dessein : le langage `labs-ui` pèse
+ * quelques kilo-octets, et rien ne justifie de les faire télécharger à
+ * quelqu'un qui ouvre l'éditeur ou une annonce. Importée depuis la page,
+ * Next la range dans le lot de cette route seulement.
+ *
+ * Les variantes de couleur nécessaires au contraste (`-ink`, `-glow`)
+ * restent, elles, dans `globals.css` : ce sont des couleurs de marque, pas
+ * des détails de cette page.
+ */
+@import '@everyday/labs-ui/labs.css';
+
+/* ============================================================
+   Branchement du langage visuel partagé — page /proposition
+   La forme vit dans `@everyday/labs-ui` ; ici on dit seulement
+   quelle couleur de Hive joue quel rôle. Les classes `labs-`
+   n'étant utilisées que par la proposition, le reste de
+   l'application n'est pas touché.
+   ============================================================ */
+:root {
+  --labs-ink: var(--color-ink);
+  --labs-muted: var(--color-muted);
+  /* Assombri pour le petit texte : la valeur précédente ne tenait que
+     3,9:1 sur le fond de page, sous les 4,5:1 exigés. Elle sert aux
+     numéros de scène, aux mentions « Idéal pour » et au pied de page. */
+  --labs-muted-2: #7a6862;
+  --labs-surface: var(--color-canvas);
+  --labs-surface-2: var(--color-surface);
+  --labs-card: var(--color-card);
+  --labs-line: var(--color-line);
+  --labs-line-2: #dcc6be;
+  --labs-dark: #2a1715;
+  --labs-dark-2: #3a201d;
+  /* La couleur d'attention de Hive est son corail, pas un jaune. */
+  --labs-signal: var(--color-accent);
+
+  --labs-accent: var(--color-primary);
+  --labs-accent-ink: var(--color-primary);
+  --labs-accent-glow: var(--color-primary-glow);
+  --labs-on-accent: #ffffff;
+
+  /* L'en-tête de l'application défile avec la page : aucune barre fixe à
+     compenser, contrairement à la vitrine. Il occupe en revanche les 52
+     premiers pixels de l'écran, qu'un hero « plein écran » doit déduire —
+     sinon ses barres de progression tombent sous la ligne de
+     flottaison. */
+  --labs-nav-h: 0px;
+  --labs-hero-offset: 3.25rem;
+}
+
+/* ---------- Propres à la proposition de Hive ----------
+   Ce que le langage partagé n'a pas à connaître : le champ de recherche du
+   hero, les deux parcours, les familles de matériel et la grille
+   d'annonces. Le reste de la page réutilise tel quel
+   `@everyday/labs-ui`. */
+
+/* Recherche posée sur la photo du hero : fond translucide flouté, pour que
+   le champ se détache quelle que soit la zone de l'image derrière. */
+.labs-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(100%, 34rem);
+  margin-top: 0.25rem;
+}
+@media (min-width: 30rem) {
+  .labs-search { flex-direction: row; }
+}
+.labs-search__field {
+  flex: 1;
+  min-width: 0;
+  border: 1.6px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(20, 12, 11, 0.55);
+  backdrop-filter: blur(10px);
+  /* 16 px : en dessous, Safari iOS agrandit la page à la mise au point et
+     n'en redescend jamais. Même raison que les champs de l'application. */
+  padding: 0.85rem 1.25rem;
+  font-size: 1rem;
+  color: #fff;
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+.labs-search__field::placeholder { color: rgba(255, 255, 255, 0.72); }
+.labs-search__field:focus {
+  outline: none;
+  border-color: var(--color-primary-glow);
+  background: rgba(20, 12, 11, 0.72);
+}
+.labs-search__submit {
+  border: none;
+  border-radius: 999px;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-primary);
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+.labs-search__submit:hover { background: var(--color-primary-light); }
+
+/* Les deux parcours. Une colonne par public : les mélanger ne parlerait
+   ni à l'un ni à l'autre. */
+.labs-sides {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .labs-sides { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+}
+.labs-side {
+  background: var(--labs-card);
+  border: 1px solid var(--labs-line);
+  border-top: 3px solid var(--side-accent);
+  border-radius: 1.6rem;
+  padding: 1.6rem 1.4rem;
+}
+.labs-side__title {
+  font-weight: 700;
+  color: var(--side-accent-ink, var(--side-accent));
+  margin: 0 0 1rem;
+}
+.labs-side__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.labs-side__steps li {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--labs-muted);
+}
+.labs-side__num {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--labs-surface-2);
+  color: var(--side-accent-ink, var(--side-accent));
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Familles de matériel : des cibles, pas des cartes à lire. */
+.labs-cats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 640px) {
+  .labs-cats { grid-template-columns: 1fr 1fr; gap: 1rem; }
+}
+.labs-cats a {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.25rem 1rem;
+  height: 100%;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--labs-line);
+  border-radius: 1.6rem;
+  background: var(--labs-card);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.3s ease, transform 0.45s var(--labs-ease);
+}
+.labs-cats a:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-3px);
+}
+.labs-cats__label { font-weight: 700; font-size: 1.05rem; }
+.labs-cats__children {
+  grid-column: 1;
+  font-size: 0.82rem;
+  color: var(--labs-muted);
+  line-height: 1.5;
+}
+.labs-cats__go {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  color: var(--color-primary);
+}
+.labs-cats__go svg { width: 18px; height: 18px; transition: transform 0.25s ease; }
+.labs-cats a:hover .labs-cats__go svg { transform: translateX(4px); }
+
+/* Grille d'annonces : la vignette `ListingCard` de l'application est
+   reprise telle quelle — c'est la même partout, et la proposition ne
+   redessine pas ce qui marche déjà. */
+.labs-listings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .labs-listings { grid-template-columns: repeat(4, 1fr); }
+}
