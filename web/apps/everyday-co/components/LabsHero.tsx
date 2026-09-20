@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Hero plein écran de la proposition — façon labs.google.
+ * Hero plein écran de la page d’accueil — façon labs.google.
  *
  * Repris de labs.google :
  *  - plein cadre, hauteur écran, voile dégradé pour la lisibilité ;
@@ -48,7 +48,11 @@ const HERO_SLIDES = [
     title: 'Vitae',
     subtitle: 'Le CV qui passe les filtres. Gratuit, sans filigrane.',
     cta: 'Essayer Vitae',
+    /* `accent` remplit (pastille du bouton, point de la slide), `glow`
+       écrit sur le fond sombre, `on` écrit par-dessus `accent`. */
     accent: 'var(--color-vitae)',
+    glow: 'var(--color-vitae-glow)',
+    on: 'var(--color-dark)',
     backdrop: 'labs-hero__backdrop--vitae',
     photo: '/hero-vitae.jpg',
   },
@@ -58,6 +62,8 @@ const HERO_SLIDES = [
     subtitle: 'Le matériel qui dort chez l’un tourne chez l’autre.',
     cta: 'Découvrir Hive',
     accent: 'var(--color-hive)',
+    glow: 'var(--color-hive-glow)',
+    on: '#fff',
     backdrop: 'labs-hero__backdrop--hive',
     photo: '/hero-hive.jpg',
   },
@@ -230,7 +236,7 @@ export function LabsHero({ vitaeUrl, hiveUrl }: { vitaeUrl: string; hiveUrl: str
             Abidjan, Côte d’Ivoire
           </p>
           <p key={`${slide.title}-tag`} className="labs-hero__slide-tag">
-            <span className="labs-hero__slide-dot" style={{ background: slide.accent }} aria-hidden />
+            <span className="labs-hero__slide-dot" style={{ background: slide.glow }} aria-hidden />
             {slide.eyebrow}
           </p>
         </div>
@@ -241,7 +247,7 @@ export function LabsHero({ vitaeUrl, hiveUrl }: { vitaeUrl: string; hiveUrl: str
                 chargement, comme les titres de labs.google */}
             <span className="labs-hero__line"><span>Les bons outils.</span></span>
             <span className="labs-hero__line">
-              <span className="labs-hero__title-accent" style={{ color: slide.accent }}>
+              <span className="labs-hero__title-accent" style={{ color: slide.glow }}>
                 Enfin faits pour ici.
               </span>
             </span>
@@ -256,7 +262,10 @@ export function LabsHero({ vitaeUrl, hiveUrl }: { vitaeUrl: string; hiveUrl: str
               key={`${slide.title}-cta`}
               href={slideUrl}
               className="gl-btn gl-btn--cta is-liquid"
-              style={{ ['--liquid-fill' as string]: slide.accent }}
+              style={{
+                ['--liquid-fill' as string]: slide.accent,
+                ['--liquid-on' as string]: slide.on,
+              }}
             >
               <span>{slide.cta}</span>
             </a>

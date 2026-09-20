@@ -27,6 +27,17 @@
   --color-yellow-soft: #fff6a6;
   --color-vitae: #6fae2e;
   --color-hive: #9a2b32;
+  /* Le vert de marque est trop lumineux pour porter du texte : 2,7:1 sur
+     blanc, très en dessous des 4,5:1 demandés. Cette variante assombrie
+     atteint 5,1:1 et sert partout où le vert est de l'encre plutôt qu'un
+     aplat. Le rouge de Hive, lui, est déjà à 7,6:1 et n'en a pas besoin. */
+  --color-vitae-ink: #4a7a1f;
+  /* Et l'inverse, pour le hero : sur le fond sombre, le vert de marque
+     tombe à 2,8:1 et le rouge de Hive à 1,01:1 — un titre littéralement
+     invisible. Ces deux versions éclaircies passent à 4,8:1 et 4,2:1 tout
+     en restant reconnaissables comme la couleur de leur produit. */
+  --color-vitae-glow: #9ede56;
+  --color-hive-glow: #ffa8a0;
 }
 
 html {
@@ -50,23 +61,28 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-vitae);
+  outline: 2px solid var(--color-vitae-ink);
   outline-offset: 3px;
 }
 
 /* ============================================================
-   PROPOSITION DE DESIGN — /proposition
-   Présentation et animations inspirées de labs.google :
-   hero plein écran plein cadre, voiles dégradés, titres géants,
-   boutons « liquides », cartes produit visuelles, reveal au scroll.
-   Préfixe labs-* : rien ne touche aux styles de la page en
-   production, qui restent inchangés tant que la proposition
-   n'est pas validée.
+   LANGAGE VISUEL DE LA PAGE D'ACCUEIL
+   Présentation et animations inspirées de labs.google : hero
+   plein cadre, voiles dégradés, titres géants, boutons
+   « liquides », cartes produit visuelles, reveal au scroll.
+
+   Le préfixe `labs-` nomme ce langage — celui de labs.google —
+   et non un brouillon : depuis la refonte, c'est la page
+   publiée. Il est conservé parce qu'il dit d'où vient la forme.
 
    Écrit mobile d'abord : la règle de base décrit le téléphone,
    les `min-width` élargissent ensuite. C'est l'ordre du brief —
    le téléphone n'est pas une adaptation, c'est le support.
    ============================================================ */
+
+/* La barre de navigation est fixe : sans cette marge, un saut vers une
+   ancre place le titre de la section dessous. */
+[id] { scroll-margin-top: calc(var(--labs-nav-h, 3.75rem) + 1rem); }
 
 .labs-page,
 .labs-nav,
@@ -244,8 +260,11 @@ body {
   --btn-fg: #171411;
   border-color: #fff;
 }
+/* Au survol, la pastille colorée recouvre le bouton : le texte prend la
+   couleur qui se lit sur ce remplissage-là — encre sur le vert vif,
+   blanc sur le rouge profond. Du blanc sur le vert ne ferait que 2,6:1. */
 .gl-btn--cta:hover span,
-.gl-btn--cta:focus-visible span { color: #fff; }
+.gl-btn--cta:focus-visible span { color: var(--liquid-on, #fff); }
 /* Bouton fantôme posé sur une photo : un fond translucide flouté lui rend
    sa lisibilité là où l'image est claire */
 .gl-btn--ghost {
@@ -256,6 +275,13 @@ body {
 .gl-btn--small {
   padding: 0.55rem 1.15rem;
   font-size: 0.85rem;
+}
+/* Sous 380 px, deux pilules et le logo ne tiennent pas sur une ligne : le
+   second bouton s'efface. Les deux applications restent atteignables par le
+   hero, les cartes et le pied de page. */
+.gl-btn--wide { display: none; }
+@media (min-width: 380px) {
+  .gl-btn--wide { display: inline-flex; }
 }
 /* Sur les sections claires, les boutons retrouvent l'encre noire */
 .labs-section .gl-btn--small,
@@ -626,6 +652,45 @@ body {
   60% { transform: translateY(11px); opacity: 0.2; }
 }
 
+/* ---------- Bande manifeste ----------
+   La promesse de marque, seule sur fond sombre, entre le hero et le
+   problème. Le hero fait défiler les produits ; il ne peut pas porter en
+   plus une phrase qui ne change jamais. */
+.labs-manifesto {
+  background: var(--color-dark);
+  color: var(--color-bg);
+  padding: clamp(3rem, 8vw, 5.5rem) clamp(1.25rem, 4vw, 3rem);
+}
+.labs-manifesto__inner {
+  max-width: 62rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.labs-manifesto__text {
+  font-size: clamp(1.15rem, 4vw, 1.8rem);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  color: rgba(250, 250, 247, 0.78);
+  margin: 0;
+  text-wrap: balance;
+}
+/* La seule phrase de la page posée sur le jaune signature */
+.labs-manifesto__claim {
+  align-self: flex-start;
+  font-size: clamp(1.15rem, 4vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+  margin: 0;
+  color: var(--color-dark);
+  background: var(--color-yellow);
+  padding: 0.15em 0.5em;
+  border-radius: 0.35rem;
+}
+
 /* ---------- Sections claires ---------- */
 .labs-section {
   max-width: 76rem;
@@ -680,7 +745,7 @@ body {
   margin-bottom: 0.7rem;
   transition: color 0.3s ease;
 }
-.labs-problem:hover .labs-problem__num { color: var(--color-vitae); }
+.labs-problem:hover .labs-problem__num { color: var(--color-vitae-ink); }
 .labs-problem h3 { font-size: 1rem; font-weight: 700; margin: 0 0 0.5rem; }
 .labs-problem p { font-size: 0.9rem; color: var(--color-muted); margin: 0; line-height: 1.65; }
 
@@ -860,7 +925,43 @@ body {
   gap: 0.5rem;
   flex: 1;
 }
+/* Accroche de positionnement, une ligne, dans la couleur du produit */
+.labs-card__pitch {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--accent-ink, var(--accent));
+  margin: 0;
+}
 .labs-card__desc { font-size: 0.92rem; color: var(--color-muted); line-height: 1.65; margin: 0; }
+/* Ce que fait l'app, en quatre lignes vérifiables. Le tiret est dessiné en
+   `::before` plutôt que posé comme puce de liste : il prend la couleur du
+   produit sans que le texte ne s'aligne dessus. */
+.labs-card__features {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.labs-card__features li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+.labs-card__features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 0.6rem;
+  height: 1.5px;
+  border-radius: 999px;
+  background: var(--accent);
+}
 .labs-card__cta {
   margin-top: auto;
   padding-top: 1rem;
@@ -869,7 +970,7 @@ body {
   gap: 0.4rem;
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--accent-ink, var(--accent));
 }
 .labs-card__cta svg { width: 14px; height: 14px; transition: transform 0.25s ease; }
 .labs-card:hover .labs-card__cta svg { transform: translateX(4px); }
@@ -996,6 +1097,10 @@ body {
 .labs-timeline__title { font-size: 1.05rem; font-weight: 700; margin: 0 0 0.5rem; }
 .labs-timeline__body { font-size: 0.88rem; opacity: 0.65; line-height: 1.65; margin: 0; }
 
+/* Ancre de compatibilité : cible de saut sans occuper de place, pour les
+   liens partagés vers les identifiants de l'ancienne page. */
+.labs-anchor { display: block; height: 0; }
+
 /* ---------- Marché ---------- */
 .labs-stats {
   list-style: none;
@@ -1063,6 +1168,7 @@ body {
 .labs-founder__info { display: flex; flex-direction: column; gap: 0.5rem; }
 .labs-founder__info h3 { font-size: 1.35rem; font-weight: 700; margin: 0; }
 .labs-founder__role { color: var(--color-muted); margin: 0; }
+.labs-founder__bio { color: var(--color-muted); max-width: 34rem; line-height: 1.65; margin: 0.25rem 0 0; }
 .labs-founder__links { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 0.75rem; }
 
 /* ---------- Double CTA final ---------- */
@@ -1080,7 +1186,9 @@ body {
   gap: 0.7rem;
   border-radius: 1.6rem;
   padding: clamp(1.5rem, 4vw, 2.5rem);
-  color: #fff;
+  /* Le texte suit son fond : encre foncée sur le vert vif (7:1), blanc sur
+     le rouge profond (7,6:1). Du blanc sur le vert ne donnerait que 2,6:1. */
+  color: var(--on-accent, #fff);
   text-decoration: none;
   transition: transform 0.45s var(--labs-ease), box-shadow 0.45s ease;
 }
@@ -1105,7 +1213,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.8;
+  opacity: 0.75;
   margin: 0;
 }
 .labs-final-card h3 {
@@ -1116,7 +1224,7 @@ body {
   margin: 0;
   text-wrap: balance;
 }
-.labs-final-card__body { font-size: 0.9rem; opacity: 0.88; line-height: 1.65; margin: 0; }
+.labs-final-card__body { font-size: 0.9rem; opacity: 0.85; line-height: 1.65; margin: 0; }
 .labs-final-card__cta {
   margin-top: auto;
   padding-top: 1rem;

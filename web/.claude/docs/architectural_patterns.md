@@ -129,8 +129,10 @@ pile système, contrainte réseau — [app/globals.css:10](../../apps/vitae/app/
 Les formulaires n'écrivent pas de `<input>` nus : ils composent `Field`, `TextInput`,
 `TextArea`, `DateInput`, `TagInput`, `LineList`, `Button` —
 [editor/fields.tsx:1](../../apps/vitae/components/editor/fields.tsx#L1).
-Les illustrations sont des SVG inline dans `components/graphics.tsx` : aucune requête
-d'image, aucune librairie d'icônes.
+Aucune librairie d'icônes : les rares pictogrammes sont des `<svg>` écrits à la
+main dans le composant qui s'en sert. La vitrine, elle, illustre en photographie
+depuis sa refonte — les mêmes personnes que celles à qui les apps servent, plutôt
+que des dessins ou des captures d'écran illisibles à la taille d'une carte.
 
 ## 11. Le commentaire explique le *pourquoi*
 
