@@ -1,10 +1,11 @@
 /**
- * Feuille de la page /proposition — chargée par elle seule.
+ * Feuille de la page d'accueil — chargée par elle seule.
  *
  * Elle n'est pas dans `globals.css` à dessein : le langage `labs-ui` pèse
  * quelques kilo-octets, et rien ne justifie de les faire télécharger à
- * quelqu'un qui ouvre l'éditeur ou une annonce. Importée depuis la page,
- * Next la range dans le lot de cette route seulement.
+ * quelqu'un qui ouvre l'éditeur, une annonce ou sa messagerie. Importée
+ * depuis la page, Next la range dans le lot de cette route seulement —
+ * les autres écrans gardent exactement le CSS qu'ils avaient.
  *
  * Les variantes de couleur nécessaires au contraste (`-ink`, `-glow`)
  * restent, elles, dans `globals.css` : ce sont des couleurs de marque, pas
@@ -13,11 +14,11 @@
 @import '@everyday/labs-ui/labs.css';
 
 /* ============================================================
-   Branchement du langage visuel partagé — page /proposition
+   Branchement du langage visuel partagé — page d'accueil
    La forme vit dans `@everyday/labs-ui` ; ici on dit seulement
    quelle couleur de Vitae joue quel rôle. Les classes `labs-`
-   n'étant utilisées que par la proposition, le reste de
-   l'application n'est pas touché.
+   ne servent qu'ici : le reste de l'application n'est pas
+   touché.
    ============================================================ */
 :root {
   --labs-ink: var(--color-ink);
@@ -50,7 +51,7 @@
   --labs-hero-offset: 3.25rem;
 }
 
-/* ---------- Propres à la proposition de Vitae ----------
+/* ---------- Propres à l'accueil de Vitae ----------
    Ce que le langage partagé n'a pas à connaître : la grille de croquis de
    modèles et le score. Les autres blocs de la page réutilisent tels quels
    les classes de `@everyday/labs-ui`. */

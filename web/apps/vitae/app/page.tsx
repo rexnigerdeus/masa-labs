@@ -1,166 +1,358 @@
+// Feuille propre à cette route : voir l'en-tête du fichier.
+import './accueil.css';
 import Link from 'next/link';
 import { SAMPLE_RESUME, TEMPLATE_LIST, scoreResume } from '@everyday/cv-core';
+import { LabsHero, type LabsHeroSlide } from '@everyday/labs-ui/hero';
+import { LabsPageScript } from '@everyday/labs-ui/script';
 import { TemplateSketch } from '../components/TemplateSketch';
-import {
-  AtsFilterIllustration, DotGrid, IconApply, IconCreate, IconLearn,
-} from '../components/graphics';
 
 /**
- * Accueil.
+ * Accueil de Vitae.
  *
- * Composant serveur, sans JavaScript client : c'est la page qui doit s'afficher
- * le plus vite sur une connexion lente.
+ * Langage visuel `labs-ui`, partagé avec la vitrine et Hive : hero plein
+ * cadre, voiles dégradés, titres géants, boutons « liquides »,
+ * révélations au défilement. La forme vient du paquet, la palette de
+ * Vitae — voir `accueil.css`.
  *
- * Les modèles sont montrés en croquis et non en CV de démonstration. Un CV
- * complet réduit à 200 px de large ne se lit pas : on y voit du gris, et deux
- * modèles pourtant très différents y paraissent identiques. Le croquis, lui,
- * est dérivé du descripteur du modèle — il montre au bon rapport ce qui les
- * distingue vraiment, sans faire passer un exemple inventé pour un vrai CV.
- * Le rendu réel, avec ses propres mots, est à un clic dans l'éditeur.
+ * ── Ce que le hero fait tourner ───────────────────────────────────────
+ * La vitrine y fait tourner ses deux applications. Vitae n'a qu'un
+ * produit : ce sont ses trois usages qui tournent — créer, postuler,
+ * progresser. Les trois cartes qui vivaient en bas de page remontent là
+ * où on les voit, et restent en bas pour qui descend.
+ *
+ * ── Décisions de produit conservées ───────────────────────────────────
+ * Les modèles sont montrés en croquis, pas en photo ni en CV de
+ * démonstration. Un CV complet réduit à 200 px ne se lit pas, et un faux
+ * CV passerait pour un modèle imposé. Le croquis est dérivé du
+ * descripteur du modèle : il ne peut pas mentir sur ce que le modèle
+ * produit — [components/TemplateSketch.tsx](../components/TemplateSketch.tsx).
+ *
+ * Le score affiché est celui du CV d'exemple, calculé au rendu par la
+ * fonction de l'éditeur. Aucun chiffre n'est écrit à la main ici.
+ *
+ * Rien n'est avancé qui ne se vérifie en ouvrant l'éditeur : pas
+ * d'utilisateur cité, pas de chiffre d'usage. Les quatre nombres de la
+ * section « ce que ça vous coûte » décrivent le produit, pas son succès.
+ *
+ * ── Contraintes tenues ────────────────────────────────────────────────
+ * Composant serveur, aucune police téléchargée. Le seul JavaScript
+ * client est le hero, et `motion` n'y est chargé qu'à la demande pour la
+ * parallaxe. Les métadonnées viennent du gabarit — cette page est la
+ * racine, elle n'a rien à y ajouter.
  */
-export default function HomePage() {
+/** Les trois usages de Vitae, en vedette à tour de rôle. */
+const HERO_SLIDES: LabsHeroSlide[] = [
+  {
+    eyebrow: 'Créer · Gratuit',
+    label: 'Créer',
+    subtitle: 'Un formulaire guidé, un score en direct, un PDF propre en quelques minutes.',
+    cta: 'Créer mon CV',
+    href: '/cv',
+    photo: '/hero-creer.jpg',
+    focus: '38% 40%',
+    tint: '20 34 8',
+    accent: 'var(--color-accent)',
+    glow: 'var(--color-accent-glow)',
+    on: 'var(--color-header)',
+  },
+  {
+    eyebrow: 'Postuler · Mis à jour chaque jour',
+    label: 'Postuler',
+    subtitle: 'Des offres de stage et d’emploi réelles, avec le lien de candidature direct.',
+    cta: 'Voir les offres',
+    href: '/offres',
+    photo: '/hero-postuler.jpg',
+    focus: '62% 45%',
+    tint: '26 30 14',
+    accent: 'var(--color-accent)',
+    glow: 'var(--color-accent-glow)',
+    on: 'var(--color-header)',
+  },
+  {
+    eyebrow: 'Progresser · Conseils',
+    label: 'Progresser',
+    subtitle: 'Entretien, relance, droit du travail : les codes du recrutement expliqués.',
+    cta: 'Lire les conseils',
+    href: '/conseils',
+    photo: '/hero-progresser.jpg',
+    focus: '50% 55%',
+    tint: '24 28 10',
+    accent: 'var(--color-accent)',
+    glow: 'var(--color-accent-glow)',
+    on: 'var(--color-header)',
+  },
+];
+
+/**
+ * Ce que le logiciel de tri écarte, en quatre cas.
+ *
+ * La page actuelle l'explique en deux paragraphes. Les quatre pièges y
+ * sont nommés en fin de phrase (« colonnes, tableaux, icônes, texte en
+ * image ») : les sortir en scènes leur donne le poids qu'ils méritent,
+ * puisque c'est précisément ce que le visiteur ignore.
+ */
+const PITFALLS = [
+  {
+    title: 'Deux colonnes',
+    body: 'Le logiciel lit de gauche à droite, ligne par ligne. Votre colonne de gauche se mélange à celle de droite, et votre parcours devient illisible.',
+  },
+  {
+    title: 'Un tableau',
+    body: 'Les dates rangées dans une grille sortent collées les unes aux autres. L’expérience la plus récente se retrouve datée de 2016.',
+  },
+  {
+    title: 'Des icônes',
+    body: 'Le pictogramme du téléphone n’est pas un numéro. Le champ « contact » repart vide, et personne ne peut vous rappeler.',
+  },
+  {
+    title: 'Du texte en image',
+    body: 'Un titre exporté en image ne contient aucun caractère. Le poste que vous visez n’est tout simplement pas dans le fichier.',
+  },
+];
+
+/** Les trois temps du produit. Mêmes textes que la page en production. */
+const STEPS = [
+  {
+    title: 'Créer',
+    body: 'Un formulaire guidé, un score en direct, un PDF propre en quelques minutes.',
+    href: '/cv',
+    link: 'Ouvrir l’éditeur',
+  },
+  {
+    title: 'Postuler',
+    body: 'Des offres de stage et d’emploi réelles, avec le lien de candidature direct.',
+    href: '/offres',
+    link: 'Voir les offres',
+  },
+  {
+    title: 'Progresser',
+    body: 'Entretien, relance, droit du travail : les codes du recrutement expliqués.',
+    href: '/conseils',
+    link: 'Lire les conseils',
+  },
+];
+
+/**
+ * Ce qui est vrai et vérifiable, pas de la preuve sociale.
+ *
+ * Vitae n'a ni utilisateurs à citer ni chiffres d'usage à montrer, et on
+ * n'en invente pas. Les quatre nombres ci-dessous décrivent le produit
+ * lui-même : ils se vérifient en ouvrant l'éditeur.
+ */
+const FACTS = [
+  { figure: '4', label: 'Modèles, tous vérifiés lisibles par les logiciels de tri' },
+  { figure: '0 F', label: 'Pour créer, corriger et télécharger le PDF' },
+  { figure: '0', label: 'Filigrane sur le document, jamais' },
+  { figure: '/100', label: 'Un score recalculé à chaque mot que vous tapez' },
+];
+
+export default function AccueilPage() {
   const demo = scoreResume(SAMPLE_RESUME);
 
   return (
-    <div className="flex flex-col gap-12">
-      {/* `isolate` est indispensable : sans contexte d'empilement propre, le
-          `-z-10` du fond ponctué le renvoie derrière l'arrière-plan de la page
-          et le rend invisible. */}
-      <section className="relative isolate grid items-center gap-8 lg:grid-cols-2">
-        <div className="pointer-events-none absolute -inset-x-4 -inset-y-8 -z-10 overflow-hidden text-ink opacity-[0.08]">
-          <DotGrid className="h-full w-full" />
-        </div>
-        <div className="flex flex-col gap-4">
-          <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
-            Un CV que les recruteurs — et leurs logiciels — savent lire.
-          </h1>
-          <p className="text-muted">
-            Vitae vous guide section par section, note votre CV en direct et vous
-            dit quoi corriger. Pas de mise en page à gérer, pas de logiciel à
-            installer, pas de paiement.
-          </p>
-          <ul className="flex flex-col gap-1.5 text-sm">
-            <li>· Quatre modèles vérifiés lisibles par les logiciels de tri (ATS)</li>
-            <li>· Votre photo sur le CV, affichée ou masquée d’un clic</li>
-            <li>· La couleur principale de votre choix sur chaque modèle</li>
-            <li>· Score et conseils calculés dans votre navigateur, en direct</li>
-            <li>· Téléchargement PDF gratuit, sans filigrane</li>
-            <li>· Offres de stage et d’emploi en Côte d’Ivoire, mises à jour chaque jour</li>
-          </ul>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link
-              href="/cv"
-              className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent-dark"
-            >
-              Créer mon CV
-            </Link>
-            <Link
-              href="/cv?import=linkedin"
-              className="rounded-full border border-accent px-5 py-2.5 text-sm font-medium text-accent-dark hover:bg-accent-soft"
-            >
-              Importer depuis LinkedIn
-            </Link>
-          </div>
-        </div>
+    // Le gabarit de l'application centre chaque page dans un `max-w-6xl
+    // px-4 py-6`. Le hero et les bandes sombres doivent en sortir : une
+    // seule échappée à la racine, plutôt qu'une par section.
+    <div className="labs-bleed labs-page -my-6">
+      <LabsHero
+        place="Abidjan, Côte d’Ivoire"
+        lead="Lisible par la machine."
+        headline="Lu par le recruteur."
+        slides={HERO_SLIDES}
+        secondary={{ label: 'Pourquoi ça bloque', href: '#tri' }}
+        scrollTo="#tri"
+      />
 
-        {/* Le CV dessiné, pas photographié : la vignette illustre le produit
-            sans exhiber un faux CV qu'on prendrait pour un modèle imposé. */}
-        <div className="mx-auto w-full max-w-xs">
-          <div className="relative">
-            <TemplateSketch
-              templateId="classique"
-              className="w-full rounded-lg border border-line shadow-sm"
-            />
-            <p className="absolute -bottom-3 -right-2 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white shadow-sm">
-              Score {demo.total}/100
-            </p>
-          </div>
-          <p className="mt-5 text-center text-xs text-muted">
-            Un CV noté en direct pendant que vous le remplissez.
-          </p>
-        </div>
-      </section>
-
-      {/* Le tri automatique montré plutôt qu'expliqué : c'est la notion que
-          la cible ne connaît pas, et une image la fait comprendre plus vite
-          qu'un paragraphe. */}
-      <section className="card grid items-center gap-6 p-6 sm:grid-cols-[1fr_auto]">
-        <div>
-          <h2 className="text-xl font-bold">Pourquoi votre CV n’a pas de réponse</h2>
-          <p className="mt-2 max-w-lg text-sm text-muted">
+      {/* Manifeste : la phrase qui explique tout le produit, seule sur sa
+          bande. Le hero fait tourner les usages, il ne peut pas porter en
+          plus une vérité qui ne change jamais. */}
+      <section className="labs-manifesto">
+        <div className="labs-manifesto__inner labs-reveal">
+          <p className="labs-manifesto__text">
             Avant d’arriver sur le bureau d’un recruteur, la plupart des
             candidatures passent par un logiciel qui lit le fichier et écarte
-            ce qu’il ne comprend pas : colonnes, tableaux, icônes, texte en
-            image. Un beau CV illisible par la machine ne sera jamais lu par
-            personne.
+            ce qu’il ne comprend pas.
           </p>
-          <p className="mt-2 max-w-lg text-sm text-muted">
-            Les modèles de Vitae sont conçus pour franchir cette étape — et
-            vérifiés automatiquement, en réextrayant le texte de chaque PDF
-            produit.
+          <p className="labs-manifesto__claim">
+            Un beau CV illisible ne sera jamais lu.
           </p>
         </div>
-        <AtsFilterIllustration className="h-auto w-full max-w-sm sm:w-80" />
       </section>
 
-      <section>
-        <h2 className="mb-1 text-xl font-bold">Les quatre modèles</h2>
-        <p className="mb-4 max-w-2xl text-sm text-muted">
-          Tous gratuits, tous vérifiés lisibles par les logiciels de tri. Une
-          seule colonne, pas d’icône ni de tableau : c’est ce qui les rend
-          relisibles. Chacun accepte votre photo et la couleur de votre choix ;
-          les croquis ci-dessous en montrent la mise en page.
+      {/* Le tri automatique, en quatre pièges concrets */}
+      <section id="tri" className="labs-section">
+        <div className="labs-section-head labs-reveal">
+          <p className="labs-eyebrow">Pourquoi votre CV n’a pas de réponse</p>
+          <h2 className="labs-h2 labs-h2--max">
+            Ce n’est pas votre parcours qu’on a refusé. C’est votre fichier
+            qu’on n’a pas su lire.
+          </h2>
+        </div>
+
+        <ul className="labs-problem-grid">
+          {PITFALLS.map((pitfall, i) => (
+            <li
+              key={pitfall.title}
+              className="labs-problem labs-reveal"
+              style={{ ['--i' as string]: i }}
+            >
+              <span className="labs-problem__num" aria-hidden>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <h3>{pitfall.title}</h3>
+              <p>{pitfall.body}</p>
+            </li>
+          ))}
+        </ul>
+
+        <p className="labs-note labs-reveal">
+          Les modèles de Vitae sont conçus pour franchir cette étape — et
+          vérifiés automatiquement, en réextrayant le texte de chaque PDF
+          produit. Un modèle qui ne se relit pas ne sort pas.
         </p>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {TEMPLATE_LIST.map((t) => (
-            <li key={t.id} className="flex flex-col gap-3">
-              {/* Le croquis lit le descripteur du modèle : marges, densité,
-                  habillage des titres et place de la photo y sont à l'échelle
-                  de la page. Il ne peut donc pas mentir sur ce que produit le
-                  modèle, même s'il n'en montre pas les mots. */}
-              <TemplateSketch
-                templateId={t.id}
-                className="w-full rounded-lg border border-line bg-white"
-              />
-              <div>
-                <h3 className="font-semibold">{t.name}</h3>
-                <p className="mt-1 text-sm text-muted">{t.description}</p>
-                <p className="mt-1 text-xs text-muted">Idéal pour : {t.bestFor}</p>
-              </div>
+      </section>
+
+      {/* Les modèles. Croquis et non photos : voir le bloc d'en-tête. */}
+      <section id="modeles" className="labs-section">
+        <div className="labs-section-head labs-reveal">
+          <p className="labs-eyebrow">Les quatre modèles</p>
+          <h2 className="labs-h2">Une seule colonne. Aucune icône. Aucun tableau.</h2>
+          <p className="labs-sub">
+            C’est ce qui les rend relisibles par la machine. Chacun accepte
+            votre photo et la couleur de votre choix ; les croquis montrent la
+            mise en page réelle, pas un CV inventé.
+          </p>
+        </div>
+
+        <ul className="labs-templates">
+          {TEMPLATE_LIST.map((t, i) => (
+            <li key={t.id} className="labs-reveal" style={{ ['--i' as string]: i }}>
+              <TemplateSketch templateId={t.id} className="labs-template__sketch" />
+              <h3>{t.name}</h3>
+              <p>{t.description}</p>
+              <p className="labs-template__for">Idéal pour : {t.bestFor}</p>
+            </li>
+          ))}
+        </ul>
+
+        {/* Ce que l'ancienne page listait en puces sous l'accroche, et qui
+            reste vrai : ce sont les deux seuls réglages, et la raison pour
+            laquelle il n'y en a pas d'autres tient en une phrase. */}
+        <div className="labs-note labs-reveal">
+          <h3>Ce que vous réglez vous-même</h3>
+          <p>
+            Sur chacun des quatre modèles : votre photo, affichée ou masquée
+            d’un clic, et la couleur principale de votre choix. Le reste —
+            marges, hiérarchie, ordre des sections — est fixé, parce que c’est
+            précisément ce qui garde le fichier relisible par la machine.
+          </p>
+        </div>
+      </section>
+
+      {/* Le score, montré plutôt que promis */}
+      <section className="labs-section">
+        <div className="labs-mission labs-reveal">
+          <p className="labs-eyebrow">Le score</p>
+          <p className="labs-mission__text">
+            Vitae note votre CV pendant que vous l’écrivez et vous dit quoi
+            corriger, section par section. Le CV d’exemple atteint{' '}
+            <strong className="labs-score">{demo.total}/100</strong> — le vôtre
+            part de là.
+          </p>
+        </div>
+      </section>
+
+      {/* Les trois temps du produit */}
+      <section id="etapes" className="labs-section">
+        <div className="labs-section-head labs-reveal">
+          <p className="labs-eyebrow">Ce que Vitae fait pour vous</p>
+          <h2 className="labs-h2">Créer, postuler, progresser.</h2>
+        </div>
+
+        <ul className="labs-principles">
+          {STEPS.map((step, i) => (
+            <li key={step.title} className="labs-reveal" style={{ ['--i' as string]: i }}>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+              <Link href={step.href} className="labs-inline-link">
+                {step.link}
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M3 8h10M9 4l4 4-4 4" />
+                </svg>
+              </Link>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        <div className="card p-4">
-          <span className="text-accent-dark"><IconCreate /></span>
-          <h2 className="mt-2 font-semibold">Créer</h2>
-          <p className="mt-1 text-sm text-muted">
-            Un formulaire guidé, un score en direct, un PDF propre en quelques minutes.
+      {/* Ce qui est vrai, chiffré */}
+      <section className="labs-section">
+        <div className="labs-section-head labs-reveal">
+          <p className="labs-eyebrow">Ce que ça vous coûte</p>
+          <h2 className="labs-h2">Rien, et sans contrepartie cachée.</h2>
+        </div>
+
+        <ul className="labs-stats">
+          {FACTS.map((fact, i) => (
+            <li key={fact.label} className="labs-reveal" style={{ ['--i' as string]: i }}>
+              <p className="labs-stat__figure">{fact.figure}</p>
+              <p className="labs-stat__label">{fact.label}</p>
+            </li>
+          ))}
+        </ul>
+
+        <div className="labs-note labs-reveal">
+          <h3>Pourquoi c’est gratuit</h3>
+          <p>
+            À ce stade, ce qui compte est que des CV sortent et soient lus, pas
+            le revenu. Le modèle viendra plus tard de fonctionnalités avancées
+            — jamais de la porte d’entrée, et jamais en rendant payant ce qui
+            est gratuit aujourd’hui.
           </p>
         </div>
-        <div className="card p-4">
-          <span className="text-accent-dark"><IconApply /></span>
-          <h2 className="mt-2 font-semibold">Postuler</h2>
-          <p className="mt-1 text-sm text-muted">
-            Des offres de stage et d’emploi réelles, avec le lien de candidature direct.
-          </p>
-          <Link href="/offres" className="mt-2 inline-block text-sm text-accent-dark underline">
-            Voir les offres
+      </section>
+
+      {/* Double appel à l'action final */}
+      <section className="labs-section labs-section--final">
+        <div className="labs-final-grid">
+          <Link
+            href="/cv"
+            className="labs-final-card labs-reveal"
+            style={{
+              background: 'var(--color-accent)',
+              ['--on-accent' as string]: 'var(--color-header)',
+              ['--i' as string]: 0,
+            }}
+          >
+            <p className="labs-final-card__eyebrow">Créer</p>
+            <h3>Votre CV, en quelques minutes et sans compte.</h3>
+            <p className="labs-final-card__body">
+              Le formulaire vous guide, le score vous corrige, le PDF sort
+              gratuit et sans filigrane.
+            </p>
+            <span className="labs-final-card__cta">Créer mon CV →</span>
           </Link>
-        </div>
-        <div className="card p-4">
-          <span className="text-accent-dark"><IconLearn /></span>
-          <h2 className="mt-2 font-semibold">Progresser</h2>
-          <p className="mt-1 text-sm text-muted">
-            Entretien, relance, droit du travail : les codes du recrutement expliqués.
-          </p>
-          <Link href="/conseils" className="mt-2 inline-block text-sm text-accent-dark underline">
-            Lire les conseils
+          <Link
+            href="/offres"
+            className="labs-final-card labs-reveal"
+            style={{
+              background: 'var(--color-header)',
+              ['--on-accent' as string]: '#fff',
+              ['--i' as string]: 1,
+            }}
+          >
+            <p className="labs-final-card__eyebrow">Postuler</p>
+            <h3>Un CV sans offre à qui l’envoyer ne sert à rien.</h3>
+            <p className="labs-final-card__body">
+              Des offres de stage et d’emploi en Côte d’Ivoire, mises à jour
+              chaque jour, avec le lien de candidature direct.
+            </p>
+            <span className="labs-final-card__cta">Voir les offres →</span>
           </Link>
         </div>
       </section>
+
+      <LabsPageScript />
     </div>
   );
 }
