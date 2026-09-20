@@ -1,4 +1,5 @@
-import { emptyResume, type Resume } from '../src/types.ts';
+import type { Resume } from '../src/types.ts';
+import { emptyResume } from '../src/resume.ts';
 import { SAMPLE_RESUME } from '../src/samples.ts';
 
 /** CV vierge, tel qu'à l'ouverture de l'éditeur. */
@@ -10,14 +11,17 @@ export const EMPTY: Resume = emptyResume();
  * C'est le cas que le panneau de recommandations doit savoir redresser.
  */
 export const PARTIAL: Resume = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   templateId: 'classique',
+  accentColor: '#1f3d5c',
   personal: {
     fullName: 'Aya Koffi',
     location: 'Abidjan, Côte d’Ivoire',
     phone: '+225 07 00 00 00 00',
     email: 'aya.koffi@example.ci',
     links: [],
+    photo: null,
+    showPhoto: true,
   },
   headline: 'Comptable',
   summary: 'Je cherche un poste de comptable.',

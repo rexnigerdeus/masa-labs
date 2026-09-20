@@ -9,7 +9,8 @@ les commentaires et messages d'erreur du code le sont aussi.
 Deux contraintes gouvernent la plupart des décisions techniques et sont citées
 explicitement dans le code : **réseau lent / mobile d'entrée de gamme** (aucune
 police téléchargée, peu de JS client, pages revalidées plutôt que dynamiques) et
-**lisibilité ATS** (le PDF contient du texte réel, jamais une image).
+**lisibilité ATS** (le PDF contient du texte réel, jamais une image — la photo du
+candidat est posée *à côté* du texte, jamais à sa place).
 
 ## Stack
 
@@ -72,6 +73,9 @@ Copier `.env.example` en `.env.local` dans chaque app.
 ## Repères
 
 - Le seul écran exigeant un compte est le téléchargement PDF — [apps/vitae/app/api/export/route.ts:20](apps/vitae/app/api/export/route.ts#L20).
+- Un CV porte sa photo et sa couleur primaire ; tout CV venu du navigateur ou de la base passe par `normalizeResume` avant d'atteindre un renderer — [packages/cv-core/src/resume.ts:1](packages/cv-core/src/resume.ts#L1).
+- La photo est recadrée et compressée dans le navigateur, puis stockée avec le CV : aucun bucket, rien à charger à l'ouverture de l'éditeur — [apps/vitae/components/editor/PhotoField.tsx:1](apps/vitae/components/editor/PhotoField.tsx#L1).
+- Les vignettes de modèles sont des croquis SVG dérivés du descripteur, pas des CV de démonstration réduits — [apps/vitae/components/TemplateSketch.tsx:1](apps/vitae/components/TemplateSketch.tsx#L1).
 - Le score est calculé côté serveur avant écriture en base, jamais accepté du client — [apps/vitae/lib/resumes.ts:60](apps/vitae/lib/resumes.ts#L60).
 - Le service worker est écrit à la main, portée volontairement limitée à l'éditeur — [apps/vitae/public/sw.js:1](apps/vitae/public/sw.js#L1).
 - Les identifiants de catégories sont en camelCase, hérités de l'app Flutter et verrouillés par des CHECK en base — [apps/vitae/lib/catalog.ts:10](apps/vitae/lib/catalog.ts#L10).

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { SAMPLE_RESUME, TEMPLATE_LIST, scoreResume } from '@everyday/cv-core';
-import { ResumePreview } from '../components/ResumePreview';
+import { TemplateSketch } from '../components/TemplateSketch';
 import {
   AtsFilterIllustration, DotGrid, IconApply, IconCreate, IconLearn,
 } from '../components/graphics';
@@ -9,8 +9,14 @@ import {
  * Accueil.
  *
  * Composant serveur, sans JavaScript client : c'est la page qui doit s'afficher
- * le plus vite sur une connexion lente. L'aperçu du CV de démonstration est
- * rendu côté serveur, il n'y a rien à hydrater.
+ * le plus vite sur une connexion lente.
+ *
+ * Les modèles sont montrés en croquis et non en CV de démonstration. Un CV
+ * complet réduit à 200 px de large ne se lit pas : on y voit du gris, et deux
+ * modèles pourtant très différents y paraissent identiques. Le croquis, lui,
+ * est dérivé du descripteur du modèle — il montre au bon rapport ce qui les
+ * distingue vraiment, sans faire passer un exemple inventé pour un vrai CV.
+ * Le rendu réel, avec ses propres mots, est à un clic dans l'éditeur.
  */
 export default function HomePage() {
   const demo = scoreResume(SAMPLE_RESUME);
@@ -35,6 +41,8 @@ export default function HomePage() {
           </p>
           <ul className="flex flex-col gap-1.5 text-sm">
             <li>· Quatre modèles vérifiés lisibles par les logiciels de tri (ATS)</li>
+            <li>· Votre photo sur le CV, affichée ou masquée d’un clic</li>
+            <li>· La couleur principale de votre choix sur chaque modèle</li>
             <li>· Score et conseils calculés dans votre navigateur, en direct</li>
             <li>· Téléchargement PDF gratuit, sans filigrane</li>
             <li>· Offres de stage et d’emploi en Côte d’Ivoire, mises à jour chaque jour</li>
@@ -55,10 +63,20 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-sm">
-          <ResumePreview resume={SAMPLE_RESUME} />
-          <p className="mt-2 text-center text-xs text-muted">
-            Exemple de CV — score {demo.total}/100
+        {/* Le CV dessiné, pas photographié : la vignette illustre le produit
+            sans exhiber un faux CV qu'on prendrait pour un modèle imposé. */}
+        <div className="mx-auto w-full max-w-xs">
+          <div className="relative">
+            <TemplateSketch
+              templateId="classique"
+              className="w-full rounded-lg border border-line shadow-sm"
+            />
+            <p className="absolute -bottom-3 -right-2 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white shadow-sm">
+              Score {demo.total}/100
+            </p>
+          </div>
+          <p className="mt-5 text-center text-xs text-muted">
+            Un CV noté en direct pendant que vous le remplissez.
           </p>
         </div>
       </section>
@@ -90,17 +108,20 @@ export default function HomePage() {
         <p className="mb-4 max-w-2xl text-sm text-muted">
           Tous gratuits, tous vérifiés lisibles par les logiciels de tri. Une
           seule colonne, pas d’icône ni de tableau : c’est ce qui les rend
-          relisibles. Ce que vous voyez ici est le rendu réel, pas une image.
+          relisibles. Chacun accepte votre photo et la couleur de votre choix ;
+          les croquis ci-dessous en montrent la mise en page.
         </p>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TEMPLATE_LIST.map((t) => (
             <li key={t.id} className="flex flex-col gap-3">
-              {/* Miniature rendue par le même composant que l'aperçu de
-                  l'éditeur, avec le même CV d'exemple : la vignette ne peut
-                  pas mentir sur ce que produit le modèle. */}
-              <div className="overflow-hidden rounded-lg border border-line">
-                <ResumePreview resume={{ ...SAMPLE_RESUME, templateId: t.id }} />
-              </div>
+              {/* Le croquis lit le descripteur du modèle : marges, densité,
+                  habillage des titres et place de la photo y sont à l'échelle
+                  de la page. Il ne peut donc pas mentir sur ce que produit le
+                  modèle, même s'il n'en montre pas les mots. */}
+              <TemplateSketch
+                templateId={t.id}
+                className="w-full rounded-lg border border-line bg-white"
+              />
               <div>
                 <h3 className="font-semibold">{t.name}</h3>
                 <p className="mt-1 text-sm text-muted">{t.description}</p>

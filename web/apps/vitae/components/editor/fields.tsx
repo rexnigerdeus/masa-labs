@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { CvDate } from '@everyday/cv-core';
+import { ACCENT_PRESETS, type CvDate } from '@everyday/cv-core';
 
 /** Champs de formulaire partagés par les sections de l'éditeur. */
 
@@ -234,6 +234,63 @@ export function TagInput({ items, onChange, placeholder }: {
           ))}
         </ul>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Choix de la couleur primaire du CV.
+ *
+ * Huit teintes d'un clic, plus la pipette du système pour celles et ceux qui
+ * ont une couleur imposée — une charte d'entreprise, un secteur, un goût. Les
+ * propositions sont toutes assez sombres pour porter du texte blanc : le
+ * modèle « Compact » pose le nom sur un bandeau plein, et une primaire trop
+ * claire y rendrait l'identité illisible.
+ */
+export function ColorPicker({ value, onChange }: {
+  value: string; onChange: (value: string) => void;
+}) {
+  const isPreset = ACCENT_PRESETS.some((p) => p.value === value.toLowerCase());
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {ACCENT_PRESETS.map((preset) => {
+        const selected = preset.value === value.toLowerCase();
+        return (
+          <button
+            key={preset.value}
+            type="button"
+            title={preset.label}
+            aria-label={preset.label}
+            aria-pressed={selected}
+            onClick={() => onChange(preset.value)}
+            className={`h-8 w-8 rounded-full border-2 transition-transform ${
+              selected ? 'border-ink scale-110' : 'border-line'
+            }`}
+            style={{ background: preset.value }}
+          />
+        );
+      })}
+
+      <label
+        className={`relative flex h-8 items-center gap-1.5 rounded-full border-2 px-2.5 text-xs ${
+          isPreset ? 'border-line' : 'border-ink'
+        }`}
+      >
+        <span
+          aria-hidden
+          className="h-4 w-4 rounded-full border border-line"
+          style={{ background: value }}
+        />
+        Autre
+        <input
+          type="color"
+          value={value}
+          aria-label="Choisir une autre couleur"
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 cursor-pointer opacity-0"
+        />
+      </label>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { TEMPLATES } from './templates.ts';
 import type { Resume } from './types.ts';
 
 /**
@@ -8,14 +9,19 @@ import type { Resume } from './types.ts';
  * et contenu de l'aperçu de démonstration dans l'écran de choix de template.
  */
 export const SAMPLE_RESUME: Resume = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   templateId: 'classique',
+  accentColor: TEMPLATES.classique.defaultAccent,
   personal: {
     fullName: 'Aya Koffi',
     location: 'Abidjan, Côte d’Ivoire',
     phone: '+225 07 00 00 00 00',
     email: 'aya.koffi@example.ci',
     links: ['linkedin.com/in/ayakoffi'],
+    // Le CV de référence n'embarque pas d'image : le harnais ATS en injecte
+    // une lui-même pour vérifier qu'une photo ne gêne pas l'extraction.
+    photo: null,
+    showPhoto: true,
   },
   headline: 'Comptable junior spécialisée en comptabilité fournisseurs',
   summary:
