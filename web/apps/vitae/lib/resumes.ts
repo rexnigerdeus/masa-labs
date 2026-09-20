@@ -1,7 +1,7 @@
 'use server';
 
 import type { Resume } from '@everyday/cv-core';
-import { scoreResume } from '@everyday/cv-core';
+import { normalizeResume, scoreResume } from '@everyday/cv-core';
 import { createClient, currentUser } from './supabase/server';
 
 /**
@@ -43,9 +43,16 @@ export async function loadResume(): Promise<StoredResume | null> {
     .maybeSingle();
 
   if (error !== null || data === null) return null;
+
+  // La colonne est du `jsonb` : ce qui en sort n'est un `Resume` que par
+  // convention. Une ligne écrite avant la photo ou la couleur primaire est
+  // remontée ici, une ligne illisible est traitée comme une absence.
+  const resume = normalizeResume(data.data);
+  if (resume === null) return null;
+
   return {
     id: data.id as string,
-    data: data.data as Resume,
+    data: resume,
     updatedAt: data.updated_at as string,
   };
 }

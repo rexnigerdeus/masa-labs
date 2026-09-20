@@ -1,4 +1,4 @@
-import { emptyResume, type Resume } from '@everyday/cv-core';
+import { emptyResume, normalizeResume, type Resume } from '@everyday/cv-core';
 
 /**
  * Brouillon local.
@@ -21,7 +21,10 @@ export function loadDraft(): Resume {
     const raw = window.localStorage.getItem(KEY);
     if (raw === null) return emptyResume();
     const parsed: unknown = JSON.parse(raw);
-    return isResume(parsed) ? parsed : emptyResume();
+    // `normalizeResume` complète les champs apparus depuis l'écriture du
+    // brouillon (photo, couleur primaire) : quelqu'un qui revient après une
+    // mise à jour retrouve son CV, il ne repart pas d'une page blanche.
+    return normalizeResume(parsed) ?? emptyResume();
   } catch {
     // Stockage indisponible (navigation privée, quota, données corrompues) :
     // on repart d'un CV vierge plutôt que de bloquer l'éditeur.
@@ -45,21 +48,4 @@ export function clearDraft(): void {
   } catch {
     // Rien à faire : l'appelant n'a pas de recours utile.
   }
-}
-
-/**
- * Garde-fou de forme. On ne valide pas le contenu champ par champ : le but est
- * seulement d'éviter qu'un brouillon d'une version antérieure fasse planter
- * l'éditeur au chargement.
- */
-function isResume(value: unknown): value is Resume {
-  if (typeof value !== 'object' || value === null) return false;
-  const v = value as Partial<Resume>;
-  return (
-    v.schemaVersion === 1
-    && typeof v.personal === 'object'
-    && Array.isArray(v.experiences)
-    && Array.isArray(v.education)
-    && Array.isArray(v.skills)
-  );
 }

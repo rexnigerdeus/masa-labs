@@ -14,6 +14,7 @@
  */
 
 import { writeFile, mkdir } from 'node:fs/promises';
+import { deflateSync } from 'node:zlib';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { extractText, getDocumentProxy } from 'unpdf';
@@ -49,8 +50,17 @@ interface Failure {
 
 const failures: Failure[] = [];
 
+/**
+ * Libelle de la passe en cours.
+ *
+ * Les echecs sont regroupes par libelle et non par template : une meme mise en
+ * page est verifiee deux fois, sans photo puis avec, et les deux passes doivent
+ * rester distinguables dans le rapport.
+ */
+let current = '';
+
 function expect(spec: TemplateSpec, condition: boolean, message: string): void {
-  if (!condition) failures.push({ template: spec.name, message });
+  if (!condition) failures.push({ template: current, message });
 }
 
 /** Vérifie la présence d'un fragment, en tolérant les coupures d'extraction. */
@@ -58,10 +68,67 @@ function contains(haystack: string, needle: string): boolean {
   return haystack.includes(normalize(needle));
 }
 
-async function checkTemplate(spec: TemplateSpec, resume: Resume): Promise<void> {
-  const pdf = await renderResumePdf({ ...resume, templateId: spec.id });
-  await writeFile(join(OUT_DIR, `${spec.id}.pdf`), pdf);
+/**
+ * Photo de test, fabriquee ici plutot que lue sur le disque.
+ *
+ * Deux aplats dans un PNG de 48 px : ca ne ressemble a personne, et ca suffit
+ * pour ce qu'on verifie — qu'une image posee dans l'en-tete ne deplace ni ne
+ * masque le texte que le logiciel de tri va lire.
+ */
+function testPhoto(): string {
+  const SIDE = 48;
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = (c & 1) !== 0 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[n] = c >>> 0;
+  }
+  const crc32 = (bytes: Buffer): number => {
+    let c = 0xffffffff;
+    for (const b of bytes) c = (table[(c ^ b) & 0xff] ?? 0) ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type: string, data: Buffer): Buffer => {
+    const head = Buffer.alloc(4);
+    head.writeUInt32BE(data.length, 0);
+    const body = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(body), 0);
+    return Buffer.concat([head, body, crc]);
+  };
 
+  const raw: number[] = [];
+  for (let y = 0; y < SIDE; y += 1) {
+    raw.push(0); // octet de filtre : aucun
+    for (let x = 0; x < SIDE; x += 1) {
+      const head = (x - SIDE / 2) ** 2 + (y - SIDE * 0.42) ** 2 < (SIDE * 0.2) ** 2;
+      raw.push(...(head ? [93, 107, 119] : [201, 214, 227]));
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(SIDE, 0);
+  ihdr.writeUInt32BE(SIDE, 4);
+  ihdr[8] = 8; // 8 bits par canal
+  ihdr[9] = 2; // couleur vraie, sans alpha
+  const png = Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', deflateSync(Buffer.from(raw))),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+  return `data:image/png;base64,${png.toString('base64')}`;
+}
+
+async function checkTemplate(
+  spec: TemplateSpec,
+  resume: Resume,
+  label: string = spec.name,
+  file: string = spec.id,
+): Promise<void> {
+  const pdf = await renderResumePdf({ ...resume, templateId: spec.id });
+  await writeFile(join(OUT_DIR, `${file}.pdf`), pdf);
+
+  current = label;
   const doc = await getDocumentProxy(new Uint8Array(pdf));
   const { totalPages, text } = await extractText(doc, { mergePages: true });
   const flat = normalize(text);
@@ -126,9 +193,9 @@ async function checkTemplate(spec: TemplateSpec, resume: Resume): Promise<void> 
     `${totalPages} pages rendues, ${spec.maxPages} annoncée(s) — le CV de référence déborde`,
   );
 
-  const own = failures.filter((f) => f.template === spec.name);
+  const own = failures.filter((f) => f.template === label);
   const status = own.length === 0 ? 'OK  ' : 'ÉCHEC';
-  console.log(`  ${status}  ${spec.name.padEnd(10)} ${totalPages} page(s), ${flat.length} caractères extraits`);
+  console.log(`  ${status}  ${label.padEnd(20)} ${totalPages} page(s), ${flat.length} caractères extraits`);
   for (const f of own) console.log(`         · ${f.message}`);
 }
 
@@ -138,6 +205,18 @@ async function main(): Promise<void> {
 
   for (const spec of TEMPLATE_LIST) {
     await checkTemplate(spec, SAMPLE_RESUME);
+  }
+
+  // La photo est la norme sur un CV ivoirien : elle doit tenir dans la page
+  // sans repousser une ligne de texte hors du document ni gêner l'extraction.
+  // Le modèle « Stage » est le plus exposé — il promet une seule page.
+  console.log(`\nAvec photo`);
+  const withPhoto: Resume = {
+    ...SAMPLE_RESUME,
+    personal: { ...SAMPLE_RESUME.personal, photo: testPhoto(), showPhoto: true },
+  };
+  for (const spec of TEMPLATE_LIST) {
+    await checkTemplate(spec, withPhoto, `${spec.name} + photo`, `${spec.id}-photo`);
   }
 
   console.log(`\nPDF conservés dans ${OUT_DIR}`);

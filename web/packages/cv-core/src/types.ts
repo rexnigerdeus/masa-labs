@@ -7,6 +7,15 @@
  * ligne en base structurellement identiques.
  */
 
+/**
+ * Version du modèle de données.
+ *
+ * 1 : version initiale. 2 : ajout de la photo et de la couleur primaire.
+ * `normalizeResume` accepte les deux et remonte les anciens brouillons, ce qui
+ * évite de perdre le CV de quelqu'un qui revient après une mise à jour.
+ */
+export type SchemaVersion = 1 | 2;
+
 /** Date d'expérience/formation. Mois optionnel : beaucoup de CV ne donnent que l'année. */
 export interface CvDate {
   /** Année sur 4 chiffres. */
@@ -23,6 +32,26 @@ export interface Personal {
   email: string;
   /** Liens optionnels (LinkedIn, portfolio). Affichés en texte, jamais en icône. */
   links: string[];
+  /**
+   * Photo d'identité, encodée en data URL (JPEG), recadrée carrée à la saisie.
+   *
+   * En Côte d'Ivoire, la photo sur le CV est la norme attendue par les
+   * recruteurs : le produit doit la porter. Elle est stockée avec le CV plutôt
+   * que dans un bucket — quelques dizaines de kilo-octets, aucune requête
+   * supplémentaire à l'ouverture de l'éditeur, et le brouillon local reste
+   * complet hors ligne.
+   *
+   * `null` = aucune photo fournie.
+   */
+  photo: string | null;
+  /**
+   * Affichage de la photo sur le document.
+   *
+   * Séparé de `photo` à dessein : on l'enlève pour une candidature à
+   * l'étranger, ou pour un ATS dont on se méfie, sans avoir à la recharger au
+   * retour.
+   */
+  showPhoto: boolean;
 }
 
 export interface Experience {
@@ -75,8 +104,17 @@ export interface Project {
 
 export interface Resume {
   /** Version du modèle, pour migrer les brouillons locaux sans les perdre. */
-  schemaVersion: 1;
+  schemaVersion: SchemaVersion;
   templateId: TemplateId;
+  /**
+   * Couleur primaire du CV, en hexadécimal `#rrggbb`.
+   *
+   * Chaque modèle en propose une par défaut ; l'utilisateur la change sans
+   * changer de modèle. Les teintes dérivées (fond, texte lisible sur aplat)
+   * sont calculées dans `colors.ts`, jamais stockées : une seule valeur en
+   * base, donc aucune combinaison incohérente possible.
+   */
+  accentColor: string;
   personal: Personal;
   /** Titre professionnel court — « Développeur web junior », pas une phrase. */
   headline: string;
@@ -102,19 +140,3 @@ export type SectionId =
   | 'education'
   | 'skills'
   | 'extras';
-
-export function emptyResume(templateId: TemplateId = 'classique'): Resume {
-  return {
-    schemaVersion: 1,
-    templateId,
-    personal: { fullName: '', location: '', phone: '', email: '', links: [] },
-    headline: '',
-    summary: '',
-    experiences: [],
-    education: [],
-    skills: [],
-    languages: [],
-    certifications: [],
-    projects: [],
-  };
-}

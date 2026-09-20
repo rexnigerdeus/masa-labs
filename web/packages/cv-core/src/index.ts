@@ -1,5 +1,7 @@
 export * from './types.ts';
 export * from './templates.ts';
+export * from './colors.ts';
+export * from './resume.ts';
 export * from './dates.ts';
 export { SAMPLE_RESUME } from './samples.ts';
 export * from './scoring/index.ts';

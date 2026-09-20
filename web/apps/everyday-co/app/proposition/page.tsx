@@ -8,15 +8,15 @@ import { LabsHero } from './labs-hero';
  * PROPOSITION DE DESIGN — inspiration labs.google.
  *
  * Ce qui est repris de labs.google :
- *  1. Un hero plein écran (100vh) avec visuel plein cadre, voile dégradé bas
- *     pour le texte, très grand titre en bas à gauche, pastille « lieu »,
- *     boutons pilules et barres de progression cliquables qui font défiler
- *     les expérimentations vedettes.
- *  2. Un carousel horizontal de cartes (visuel + titre + description + lien),
- *     flèches circulaires beige pour naviguer, toutes de même taille.
+ *  1. Un hero plein écran avec visuel plein cadre, voiles dégradés pour le
+ *     texte, très grand titre en bas à gauche, pastille « lieu », boutons
+ *     pilules et barres de progression cliquables qui font défiler les
+ *     expérimentations vedettes.
+ *  2. Des cartes produit visuelles (photo + titre posé dessus + description
+ *     + lien), défilement par à-coups sur téléphone, grille sur écran large.
  *  3. Le rythme éditorial : une grande section par idée, titres énormes,
  *     respirations généreuses, boutons « liquides » (pastille pleine qui
- *     remplit au survol).
+ *     remplit depuis le point d'entrée du curseur).
  *  4. La section « Life beyond the Lab » devient « Et après ? » : mêmes
  *     questions, réponses en cartes visuelles.
  *
@@ -25,6 +25,11 @@ import { LabsHero } from './labs-hero';
  *  - le contenu français du site en production, à l'identique ;
  *  - les principes du brief : deux lectures simultanées (utilisateur /
  *    investisseur), pas de preuve sociale inventée.
+ *
+ * Le budget d'animation reste celui du reste du dépôt — réseau lent,
+ * téléphone d'entrée de gamme. Tout ce qui pouvait être fait en CSS l'est
+ * (révélations, parallaxe de section, barre de progression de lecture,
+ * boutons liquides) ; `motion` n'est chargé, à la demande, que par le hero.
  *
  * Cette page est une proposition : tant qu'elle n'est pas validée, la page
  * en production (app/page.tsx) n'est pas modifiée.
@@ -58,26 +63,32 @@ const PROBLEMS = [
   },
 ];
 
-/** Cartes du carousel « nos expériences » — comme le carousel labs.google.
- *  La vignette est une capture d'écran réelle de l'app en ligne : deux fois
- *  plus convaincante qu'un fond de couleur, et même taille garantie par le
- *  ratio 16:10 fixé en CSS. */
+/** Cartes des applications.
+ *
+ *  La vignette est une photo de la situation que l'app règle — un bureau et
+ *  un ordinateur pour Vitae, une équipe en tournage pour Hive — et non plus
+ *  une capture d'écran de l'app. Réduite à la taille d'une carte, une
+ *  capture n'est plus lisible : on y devine une page web sans distinguer
+ *  laquelle. La photo, elle, se lit en un coup d'œil et reprend le langage
+ *  visuel des fonds du hero. */
 const APP_CARDS = [
   {
     name: 'Vitae',
-    tag: 'Emploi · En ligne',
+    tag: 'Emploi',
+    status: 'En ligne',
     desc: 'Guide la rédaction section par section, note le CV en direct, et produit un PDF que les logiciels de tri savent relire.',
     href: VITAE_URL,
-    cta: 'Ouvrir',
+    cta: 'Ouvrir Vitae',
     accent: 'var(--color-vitae)',
     thumbnail: '/thumbnail-vitae.jpg',
   },
   {
     name: 'Hive',
-    tag: 'Événementiel · En ligne',
+    tag: 'Événementiel',
+    status: 'En ligne',
     desc: 'Location de matériel audiovisuel entre particuliers, à la journée, dans la même commune. Publier prend deux minutes.',
     href: HIVE_URL,
-    cta: 'Ouvrir',
+    cta: 'Ouvrir Hive',
     accent: 'var(--color-hive)',
     thumbnail: '/thumbnail-hive.jpg',
   },
@@ -135,7 +146,11 @@ export const metadata: Metadata = {
 export default function PropositionPage() {
   return (
     <>
-      <header className="labs-nav">
+      {/* Barre de lecture : pur CSS (`animation-timeline: scroll()`),
+          masquée là où la propriété n'existe pas plutôt que figée à zéro. */}
+      <div className="labs-scroll-progress" aria-hidden />
+
+      <header className="labs-nav" id="labs-nav">
         <a href="#top" className="labs-nav__logo">
           The Everyday Co.
         </a>
@@ -172,7 +187,14 @@ export default function PropositionPage() {
 
           <ul className="labs-problem-grid">
             {PROBLEMS.map((problem, i) => (
-              <li key={problem.title} className={`labs-problem labs-reveal labs-reveal--d${i % 3 + 1}`}>
+              <li
+                key={problem.title}
+                className="labs-problem labs-reveal"
+                style={{ ['--i' as string]: i }}
+              >
+                <span className="labs-problem__num" aria-hidden>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
                 <h3>{problem.title}</h3>
                 <p>{problem.body}</p>
               </li>
@@ -186,7 +208,7 @@ export default function PropositionPage() {
           </p>
         </section>
 
-        {/* Carousel des applications — homologue du carousel labs.google */}
+        {/* Applications — défilement par à-coups sur téléphone, grille ensuite */}
         <section id="apps" className="labs-carousel-section">
           <div className="labs-section-head labs-reveal">
             <p className="labs-eyebrow">Nos expériences</p>
@@ -197,41 +219,54 @@ export default function PropositionPage() {
             </p>
           </div>
 
-          <div className="labs-carousel">
-            <div className="labs-carousel__track">
-              {APP_CARDS.map((app) => (
-                <a key={app.name} href={app.href} className="labs-card labs-reveal">
-                  <div className="labs-card__media">
-                    <Image
-                      src={app.thumbnail}
-                      alt={`Aperçu de ${app.name}`}
-                      fill
-                      sizes="(min-width: 768px) 384px, 82vw"
-                      className="labs-card__img"
-                      loading="eager"
-                    />
-                    {/* Filet de couleur du produit en bas du visuel :
-                        identité conservée sans remplacer la capture */}
-                    <span
-                      aria-hidden
-                      className="labs-card__accent-bar"
-                      style={{ background: app.accent }}
-                    />
-                  </div>
-                  <div className="labs-card__body">
-                    <p className="labs-card__tag">{app.tag}</p>
-                    <h3 className="labs-card__name">{app.name}</h3>
-                    <p className="labs-card__desc">{app.desc}</p>
-                    <span className="labs-card__cta">
-                      {app.cta}
-                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
-                        <path d="M3 8h10M9 4l4 4-4 4" />
-                      </svg>
-                    </span>
-                  </div>
-                </a>
+          {/* La révélation est portée par la piste, pas par chaque carte :
+              sur téléphone la seconde carte est hors de l'écran à droite, un
+              observateur posé sur elle ne se déclencherait jamais — elle
+              resterait invisible et on perdrait l'indice qu'il y en a deux. */}
+          <div className="labs-carousel labs-reveal">
+            <ul className="labs-carousel__track">
+              {APP_CARDS.map((app, i) => (
+                <li key={app.name} className="labs-card-slot">
+                  <a
+                    href={app.href}
+                    className="labs-card"
+                    style={{ ['--i' as string]: i, ['--accent' as string]: app.accent }}
+                  >
+                    <div className="labs-card__media">
+                      <Image
+                        src={app.thumbnail}
+                        alt={`${app.name} — ${app.tag}`}
+                        fill
+                        sizes="(min-width: 768px) 36rem, 86vw"
+                        className="labs-card__img"
+                        loading="eager"
+                      />
+                      {/* Dégradé du bas : le nom de l'app est posé sur la
+                          photo, il lui faut le même socle sombre que le hero */}
+                      <span aria-hidden className="labs-card__scrim" />
+                      <span className="labs-card__badge">
+                        <span className="labs-card__badge-dot" aria-hidden />
+                        {app.status}
+                      </span>
+                      <div className="labs-card__overlay">
+                        <p className="labs-card__tag">{app.tag}</p>
+                        <h3 className="labs-card__name">{app.name}</h3>
+                      </div>
+                      <span aria-hidden className="labs-card__accent-bar" />
+                    </div>
+                    <div className="labs-card__body">
+                      <p className="labs-card__desc">{app.desc}</p>
+                      <span className="labs-card__cta">
+                        {app.cta}
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                          <path d="M3 8h10M9 4l4 4-4 4" />
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </section>
 
@@ -247,7 +282,7 @@ export default function PropositionPage() {
 
           <ul className="labs-principles">
             {PRINCIPLES.map((principle, i) => (
-              <li key={principle.title} className={`labs-reveal labs-reveal--d${i % 3 + 1}`}>
+              <li key={principle.title} className="labs-reveal" style={{ ['--i' as string]: i }}>
                 <h3>{principle.title}</h3>
                 <p>{principle.body}</p>
               </li>
@@ -275,8 +310,12 @@ export default function PropositionPage() {
             </p>
 
             <ol className="labs-timeline">
-              {OBJECTIVES.map((objective) => (
-                <li key={objective.title} className="labs-timeline__item labs-reveal">
+              {OBJECTIVES.map((objective, i) => (
+                <li
+                  key={objective.title}
+                  className={`labs-timeline__item labs-reveal ${objective.done ? 'is-done' : ''}`}
+                  style={{ ['--i' as string]: i }}
+                >
                   <span
                     className={`labs-timeline__dot ${objective.done ? 'is-done' : ''}`}
                     aria-hidden
@@ -301,7 +340,7 @@ export default function PropositionPage() {
 
           <ul className="labs-stats">
             {MARKET.map((stat, i) => (
-              <li key={stat.figure} className={`labs-reveal labs-reveal--d${i % 3 + 1}`}>
+              <li key={stat.figure} className="labs-reveal" style={{ ['--i' as string]: i }}>
                 <p className="labs-stat__figure">{stat.figure}</p>
                 <p className="labs-stat__label">{stat.label}</p>
               </li>
@@ -375,7 +414,7 @@ export default function PropositionPage() {
             <a
               href={VITAE_URL}
               className="labs-final-card labs-reveal"
-              style={{ background: 'var(--color-vitae)' }}
+              style={{ background: 'var(--color-vitae)', ['--i' as string]: 0 }}
             >
               <p className="labs-final-card__eyebrow">Emploi</p>
               <h3>Votre prochain emploi commence par un CV qu’on peut lire.</h3>
@@ -387,8 +426,8 @@ export default function PropositionPage() {
             </a>
             <a
               href={HIVE_URL}
-              className="labs-final-card labs-reveal labs-reveal--d1"
-              style={{ background: 'var(--color-hive)' }}
+              className="labs-final-card labs-reveal"
+              style={{ background: 'var(--color-hive)', ['--i' as string]: 1 }}
             >
               <p className="labs-final-card__eyebrow">Événementiel</p>
               <h3>Votre matériel ne rapporte rien au fond de son sac.</h3>
@@ -425,21 +464,57 @@ export default function PropositionPage() {
         </p>
       </footer>
 
-      {/* Révélations au scroll, comme les sections labs.google */}
+      {/*
+        Les trois comportements qui ne tiennent pas en CSS, en un seul script
+        sans dépendance (~1 Ko) : révélation au scroll, état de la barre de
+        navigation, et point d'origine du remplissage des boutons liquides.
+      */}
       <script
         dangerouslySetInnerHTML={{
           __html: `(function(){
+            var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            /* 1. Révélation au scroll. Sans IntersectionObserver (ou en mode
+                  animations réduites), tout est affiché d'emblée. */
             var els = document.querySelectorAll('.labs-reveal');
-            if (!('IntersectionObserver' in window)) {
+            if (reduce || !('IntersectionObserver' in window)) {
               for (var i = 0; i < els.length; i++) els[i].classList.add('is-in');
-              return;
+            } else {
+              var io = new IntersectionObserver(function(entries){
+                entries.forEach(function(e){
+                  if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+                });
+              }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+              els.forEach(function(el){ io.observe(el); });
             }
-            var io = new IntersectionObserver(function(entries){
-              entries.forEach(function(e){
-                if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
-              });
-            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-            els.forEach(function(el){ io.observe(el); });
+
+            /* 2. Navigation : fond opaque dès qu'on quitte le hero, et repli
+                  vers le haut quand on descend — l'écran d'un téléphone est
+                  trop court pour qu'une barre fixe y reste en permanence. */
+            var nav = document.getElementById('labs-nav');
+            var last = 0;
+            var ticking = false;
+            function onScroll(){
+              var y = window.scrollY;
+              nav.classList.toggle('is-scrolled', y > 24);
+              nav.classList.toggle('is-hidden', y > 320 && y > last + 4);
+              last = y;
+              ticking = false;
+            }
+            window.addEventListener('scroll', function(){
+              if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
+            }, { passive: true });
+            onScroll();
+
+            /* 3. Boutons liquides : la pastille grossit depuis l'endroit où
+                  le curseur est entré, pas depuis le centre. */
+            document.addEventListener('pointerenter', function(e){
+              var btn = e.target instanceof Element ? e.target.closest('.is-liquid') : null;
+              if (btn === null) return;
+              var r = btn.getBoundingClientRect();
+              btn.style.setProperty('--lx', ((e.clientX - r.left) / r.width * 100) + '%');
+              btn.style.setProperty('--ly', ((e.clientY - r.top) / r.height * 100) + '%');
+            }, true);
           })();`,
         }}
       />

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  getTemplate,
   SECTION_LABELS,
   scoreResume,
   TEMPLATE_LIST,
@@ -14,7 +15,11 @@ import {
 } from '@everyday/cv-core';
 import { ResumePreview } from '../ResumePreview';
 import { ScorePanel } from '../ScorePanel';
-import { Button, DateInput, Field, LineList, TagInput, TextArea, TextInput } from './fields';
+import { TemplateSketch } from '../TemplateSketch';
+import {
+  Button, ColorPicker, DateInput, Field, LineList, TagInput, TextArea, TextInput,
+} from './fields';
+import { PhotoField } from './PhotoField';
 import { loadDraft, saveDraft } from '../../lib/draft';
 import { saveResume } from '../../lib/resumes';
 
@@ -130,6 +135,22 @@ export function ResumeEditor({ signedIn, stored }: {
   const updateEducation = (id: string, patch: Partial<Education>): void =>
     update({ education: resume.education.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
 
+  /**
+   * Change de modèle en respectant la couleur choisie.
+   *
+   * Tant que l'utilisateur garde la couleur proposée par son modèle, changer de
+   * modèle adopte celle du nouveau — c'est ce qu'on attend en parcourant les
+   * quatre. Dès qu'il en a choisi une, elle le suit : sa couleur ne doit pas
+   * disparaître parce qu'il a voulu comparer deux mises en page.
+   */
+  const chooseTemplate = (templateId: TemplateId): void => {
+    const untouched = resume.accentColor === getTemplate(resume.templateId).defaultAccent;
+    update({
+      templateId,
+      accentColor: untouched ? getTemplate(templateId).defaultAccent : resume.accentColor,
+    });
+  };
+
   async function download(): Promise<void> {
     if (resume === null) return;
     setExporting(true);
@@ -244,6 +265,12 @@ export function ResumeEditor({ signedIn, stored }: {
                   placeholder="aya.koffi@exemple.ci"
                 />
               </Field>
+              <PhotoField
+                photo={resume.personal.photo}
+                showPhoto={resume.personal.showPhoto}
+                fullName={resume.personal.fullName}
+                onChange={(patch) => update({ personal: { ...resume.personal, ...patch } })}
+              />
             </>
           ) : null}
 
@@ -484,31 +511,50 @@ export function ResumeEditor({ signedIn, stored }: {
           ) : null}
         </section>
 
-        {/* Modèle de CV : le choix est réversible à tout moment, il ne change
-            que la mise en forme, jamais le contenu. */}
-        <section className="card flex flex-col gap-3 p-4">
-          <h2 className="text-base font-semibold">Modèle</h2>
-          <div className="flex flex-wrap gap-2">
-            {TEMPLATE_LIST.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => update({ templateId: t.id as TemplateId })}
-                className={`rounded-lg border px-3 py-2 text-left text-sm ${
-                  resume.templateId === t.id
-                    ? 'border-accent bg-accent-soft'
-                    : 'border-line bg-white'
-                }`}
-              >
-                <span className="block font-medium">{t.name}</span>
-                <span className="block text-xs text-muted">{t.bestFor}</span>
-              </button>
-            ))}
+        {/* Modèle et couleur : le choix est réversible à tout moment, il ne
+            change que la mise en forme, jamais le contenu. */}
+        <section className="card flex flex-col gap-4 p-4">
+          <div>
+            <h2 className="text-base font-semibold">Modèle</h2>
+            <p className="mt-1 text-xs text-muted">
+              Les quatre modèles sont gratuits et vérifiés lisibles par les
+              logiciels de tri automatique.
+            </p>
           </div>
-          <p className="text-xs text-muted">
-            Les quatre modèles sont gratuits et vérifiés lisibles par les logiciels
-            de tri automatique.
-          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {TEMPLATE_LIST.map((t) => {
+              const selected = resume.templateId === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => chooseTemplate(t.id)}
+                  className={`flex flex-col gap-2 rounded-lg border p-2 text-left ${
+                    selected ? 'border-accent bg-accent-soft' : 'border-line bg-white'
+                  }`}
+                >
+                  {/* Le croquis prend la couleur choisie : on voit le modèle
+                      dans ses couleurs, pas dans celles d'un autre CV. */}
+                  <TemplateSketch
+                    templateId={t.id}
+                    accent={resume.accentColor}
+                    className="w-full rounded border border-line"
+                  />
+                  <span className="text-sm font-medium">{t.name}</span>
+                  <span className="text-xs text-muted">{t.bestFor}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col gap-2 border-t border-line pt-4">
+            <h3 className="text-sm font-medium">Couleur principale</h3>
+            <ColorPicker
+              value={resume.accentColor}
+              onChange={(accentColor) => update({ accentColor })}
+            />
+          </div>
         </section>
 
         {syncError !== null ? (

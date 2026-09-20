@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { pdfFileName, renderResumePdf } from '@everyday/cv-pdf';
-import type { Resume } from '@everyday/cv-core';
+import { normalizeResume, type Resume } from '@everyday/cv-core';
 import { currentUser } from '../../../lib/supabase/server';
 
 /**
@@ -26,14 +26,18 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  let resume: Resume;
+  let payload: unknown;
   try {
-    resume = (await request.json()) as Resume;
+    payload = await request.json();
   } catch {
     return NextResponse.json({ error: 'Corps de requête illisible.' }, { status: 400 });
   }
 
-  if (typeof resume !== 'object' || resume === null || resume.schemaVersion !== 1) {
+  // Le corps vient du navigateur : il est remis en forme avant d'atteindre le
+  // renderer, photo et couleur comprises. Une photo qui n'est pas une image ou
+  // une couleur qui n'est pas un hexadécimal est écartée ici, pas plus loin.
+  const resume: Resume | null = normalizeResume(payload);
+  if (resume === null) {
     return NextResponse.json({ error: 'Format de CV non reconnu.' }, { status: 422 });
   }
 
