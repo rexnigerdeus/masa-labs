@@ -41,7 +41,16 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'Format de CV non reconnu.' }, { status: 422 });
   }
 
-  const pdf = await renderResumePdf(resume);
+  let pdf: Buffer;
+  try {
+    pdf = await renderResumePdf(resume);
+  } catch (error) {
+    console.error('[export] rendu PDF impossible', error);
+    return NextResponse.json(
+      { error: 'Rendu PDF impossible.', detail: String((error as Error)?.stack ?? error) },
+      { status: 500 },
+    );
+  }
   const filename = pdfFileName(resume);
 
   return new Response(new Uint8Array(pdf), {
