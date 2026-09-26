@@ -171,7 +171,8 @@ export function ResumeEditor({ signedIn, stored }: {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = response.headers.get('x-filename') ?? 'CV.pdf';
+      const encodedName = response.headers.get('x-filename');
+      link.download = encodedName === null ? 'CV.pdf' : decodeURIComponent(encodedName);
       // Le lien doit être dans le document pour que Firefox déclenche le
       // téléchargement, et l'URL survivre au clic : Safari la lit en différé.
       document.body.appendChild(link);

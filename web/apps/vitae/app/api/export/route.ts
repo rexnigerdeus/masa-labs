@@ -56,10 +56,12 @@ export async function POST(request: Request): Promise<Response> {
   return new Response(new Uint8Array(pdf), {
     headers: {
       'content-type': 'application/pdf',
-      'content-disposition': `attachment; filename="${filename}"`,
+      // Un en-tête HTTP n'admet que de l'ASCII : « Koné » y voyage encodé,
+      // comme le prévoit RFC 6266, et le client le décode.
+      'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
       // Le client lit le nom ici : `content-disposition` n'est pas exposé au
       // JavaScript sur une réponse lue en blob.
-      'x-filename': filename,
+      'x-filename': encodeURIComponent(filename),
       'access-control-expose-headers': 'x-filename',
       'cache-control': 'no-store',
     },
