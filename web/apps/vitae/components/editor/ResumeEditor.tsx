@@ -172,8 +172,14 @@ export function ResumeEditor({ signedIn, stored }: {
       const link = document.createElement('a');
       link.href = url;
       link.download = response.headers.get('x-filename') ?? 'CV.pdf';
+      // Le lien doit être dans le document pour que Firefox déclenche le
+      // téléchargement, et l'URL survivre au clic : Safari la lit en différé.
+      document.body.appendChild(link);
       link.click();
-      URL.revokeObjectURL(url);
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      window.alert('Le téléchargement a échoué. Vérifiez votre connexion et réessayez.');
     } finally {
       setExporting(false);
     }

@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Font } from '@react-pdf/renderer';
@@ -15,7 +16,25 @@ import { Font } from '@react-pdf/renderer';
 // Chemin composé plutôt que `new URL('../fonts/', import.meta.url)` : cette
 // forme-là, les bundlers la traitent comme une ressource à inliner, ce qui
 // casse le build. Ici le dossier reste un vrai dossier sur le disque.
-const FONT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'fonts');
+//
+// Mais une fois le package transpilé par Next, `import.meta.url` est figé au
+// build avec le chemin absolu de la machine de build (`/vercel/path0/…`), alors
+// que la fonction s'exécute sous `/var/task/…` : le dossier n'existe plus. On
+// essaie donc aussi les emplacements relatifs au répertoire courant de l'app
+// (`apps/vitae`), là où le traçage de fichiers dépose les polices.
+function resolveFontDir(): string {
+  const candidates = [
+    join(dirname(fileURLToPath(import.meta.url)), '..', 'fonts'),
+    join(process.cwd(), '..', '..', 'packages', 'cv-pdf', 'fonts'),
+    join(process.cwd(), 'packages', 'cv-pdf', 'fonts'),
+    join(process.cwd(), 'node_modules', '@everyday', 'cv-pdf', 'fonts'),
+  ];
+  const found = candidates.find((dir) => existsSync(join(dir, 'Roboto-Regular.ttf')));
+  if (found === undefined) {
+    throw new Error(`Polices du PDF introuvables. Chemins essayés : ${candidates.join(', ')}`);
+  }
+  return found;
+}
 
 export const FONT_FAMILY = 'Roboto';
 
@@ -24,6 +43,7 @@ let registered = false;
 /** Idempotent : react-pdf n'aime pas les enregistrements répétés. */
 export function registerFonts(): void {
   if (registered) return;
+  const FONT_DIR = resolveFontDir();
   Font.register({
     family: FONT_FAMILY,
     fonts: [
