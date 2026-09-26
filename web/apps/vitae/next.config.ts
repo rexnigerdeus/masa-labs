@@ -11,8 +11,16 @@ const config: NextConfig = {
 
   // Les .ttf embarquées dans le PDF sont lues sur le disque à l'exécution :
   // sans ça, elles ne suivent pas dans le bundle déployé sur Vercel.
+  // Même chose pour pdfkit : il charge ses polices standard (Helvetica…) et ses
+  // tables par un `require` dynamique que le traçage ne voit pas. Sans elles,
+  // la route plante sur Vercel (« Cannot find module …/Helvetica.cjs ») alors
+  // qu'elle fonctionne en local, où tout `node_modules` est présent.
   outputFileTracingIncludes: {
-    '/api/export': ['../../packages/cv-pdf/fonts/**'],
+    '/api/export': [
+      '../../packages/cv-pdf/fonts/**',
+      '../../node_modules/pdfkit/js/standard-fonts/**',
+      '../../node_modules/pdfkit/js/data/**',
+    ],
   },
 
   experimental: {

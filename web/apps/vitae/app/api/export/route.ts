@@ -47,7 +47,7 @@ export async function POST(request: Request): Promise<Response> {
   } catch (error) {
     console.error('[export] rendu PDF impossible', error);
     return NextResponse.json(
-      { error: 'Rendu PDF impossible.', detail: String((error as Error)?.stack ?? error) },
+      { error: 'Rendu PDF impossible.' },
       { status: 500 },
     );
   }
