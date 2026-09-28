@@ -140,7 +140,7 @@ const STEPS = [
  * lui-même : ils se vérifient en ouvrant l'éditeur.
  */
 const FACTS = [
-  { figure: '4', label: 'Modèles, tous vérifiés lisibles par les logiciels de tri' },
+  { figure: String(TEMPLATE_LIST.length), label: 'Modèles, tous vérifiés lisibles par les logiciels de tri' },
   { figure: '0 F', label: 'Pour créer, corriger et télécharger le PDF' },
   { figure: '0', label: 'Filigrane sur le document, jamais' },
   { figure: '/100', label: 'Un score recalculé à chaque mot que vous tapez' },
@@ -215,12 +215,13 @@ export default function AccueilPage() {
       {/* Les modèles. Croquis et non photos : voir le bloc d'en-tête. */}
       <section id="modeles" className="labs-section">
         <div className="labs-section-head labs-reveal">
-          <p className="labs-eyebrow">Les quatre modèles</p>
-          <h2 className="labs-h2">Une seule colonne. Aucune icône. Aucun tableau.</h2>
+          <p className="labs-eyebrow">Les {TEMPLATE_LIST.length} modèles</p>
+          <h2 className="labs-h2">Du caractère. Aucune icône. Aucun tableau.</h2>
           <p className="labs-sub">
-            C’est ce qui les rend relisibles par la machine. Chacun accepte
-            votre photo et la couleur de votre choix ; les croquis montrent la
-            mise en page réelle, pas un CV inventé.
+            Colonne colorée, frise, capitales espacées : de quoi se démarquer
+            sans perdre la machine. Chaque modèle est relu par un logiciel de
+            tri avant d’être proposé, accepte votre photo et la couleur de
+            votre choix ; les croquis montrent la mise en page réelle.
           </p>
         </div>
 
@@ -241,7 +242,7 @@ export default function AccueilPage() {
         <div className="labs-note labs-reveal">
           <h3>Ce que vous réglez vous-même</h3>
           <p>
-            Sur chacun des quatre modèles : votre photo, affichée ou masquée
+            Sur chacun des modèles : votre photo, affichée ou masquée
             d’un clic, et la couleur principale de votre choix. Le reste —
             marges, hiérarchie, ordre des sections — est fixé, parce que c’est
             précisément ce qui garde le fichier relisible par la machine.

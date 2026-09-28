@@ -9,23 +9,43 @@ Il existe **trois consommateurs du descripteur** — l'aperçu HTML, le document
 `@react-pdf/renderer` et le croquis SVG des vignettes — et ils ne peuvent rester
 alignés que s'ils lisent la même description. Un `TemplateSpec` décrit typographie,
 marges, espacements, ordre des sections, habillage de l'en-tête, forme des titres,
-place de la photo et couleur primaire par défaut ; les quatre templates
-(`classique`, `sobre`, `compact`, `stage`) n'en sont que des valeurs.
+place de la photo, disposition de page et couleur primaire par défaut ; les huit
+templates (`horizon`, `atelier`, `parcours`, `elegance`, `classique`, `sobre`,
+`compact`, `stage`) n'en sont que des valeurs.
 
 - Descripteurs et contraintes ATS communes — [templates.ts:1](../../packages/cv-core/src/templates.ts#L1)
 - `TemplateTypography` — [templates.ts:24](../../packages/cv-core/src/templates.ts#L24)
-- Habillages : `HeaderLayout` (`band` / `tint` / `underline` / `minimal`) et
-  `SectionStyle` (`rule` / `bar` / `chip` / `plain`) — [templates.ts:57](../../packages/cv-core/src/templates.ts#L57).
+- Habillages : `HeaderLayout` (`band` / `tint` / `underline` / `minimal` / `centered`),
+  `SectionStyle` (`rule` / `bar` / `chip` / `plain` / `banner` / `line`), `EntryStyle`
+  (`stacked` / `dated` / `timeline`), `TemplateLayout` (`single` / `sidebar`) et
+  `TemplateIdentity` (casse, interlettrage et couleur du nom) — [templates.ts](../../packages/cv-core/src/templates.ts).
   Ajouter une valeur oblige à la traiter dans les **trois** renderers ; le `switch`
   exhaustif de chacun le signale au typage.
+- Palette et géométrie partagées : `templatePalette` et `pageMetrics` —
+  [layout.ts](../../packages/cv-core/src/layout.ts). Les renderers ne calculent ni
+  teinte, ni marge, ni largeur de colonne eux-mêmes.
+- Nouveau modèle = nouvel identifiant dans `TemplateId` **et** dans la contrainte
+  CHECK de `vitae_resumes.template_id` (migration), sinon la synchronisation échoue.
 
 **Règle absolue** : aucune taille, marge, ordre de section ou libellé d'en-tête écrit
 en dur dans un renderer. Une valeur en dur dans l'aperçu est un bug — l'aperçu
 mentirait alors sur le PDF téléchargé.
 
-Contraintes ATS non négociables portées par tous les templates : une seule colonne
-sur toute la largeur utile, pas de tableau, pas d'icône, pas de texte en image,
-en-têtes de section en toutes lettres, ordre de lecture identique à l'ordre visuel.
+Contraintes ATS non négociables portées par tous les templates : pas de tableau,
+pas d'icône, pas de texte en image, en-têtes de section en toutes lettres, un seul
+flux de texte.
+
+**Colonne latérale** (Horizon, Atelier) : elle est positionnée en absolu et écrite
+*après* le corps dans le PDF. Visuellement à gauche, elle est lue en second : nom,
+résumé, expériences et formation d'abord, puis coordonnées, compétences, langues —
+deux blocs successifs, jamais des lignes alternées. Son aplat est un `View fixed`
+sans texte, répété sur chaque page ; son contenu reste en page 1.
+
+**Interlettrage plafonné** à 8 % du corps (`safeTracking`) : au-delà, l'extraction
+rendait « E X P É R I E N C E » et le mot-clé disparaissait. Mesuré, pas supposé.
+
+**Interligne des gros corps** fixé (`NAME_LINE_HEIGHT`, `TITLE_LINE_HEIGHT`) : hérité
+du corps de texte, il donnait au nom une ligne trop courte et le titre remontait dessus.
 
 **La couleur et la photo n'en font pas partie.** Un aplat de couleur ne gêne pas
 l'extraction du texte, et une photo est une image posée *à côté* du texte, jamais à
@@ -88,7 +108,12 @@ explique pourquoi les deux ont échoué.
 Un seul chemin de rendu, partagé par la route d'export et le harnais de test —
 c'est ce qui donne sa valeur au harnais : il vérifie le PDF réellement téléchargé.
 
-- `renderResumePdf` — [render.tsx:13](../../packages/cv-pdf/src/render.tsx#L13)
+- `renderResumePdf` — [render.tsx](../../packages/cv-pdf/src/render.tsx). Si le CV
+  déborde, il est re-rendu à densité 0,85 puis 0,7 (espacements verticaux et
+  interligne seulement, jamais la taille du texte) et la première version qui
+  économise une page est gardée. L'aperçu, qui ne montre que la page 1, reste à
+  densité 1.
+- Un titre de section porte `minPresenceAhead` : il ne finit jamais seul en bas de page.
 - Route POST `/api/export` — [route.ts:20](../../apps/vitae/app/api/export/route.ts#L20)
 
 Points à ne pas casser :
@@ -113,7 +138,13 @@ et vérifie que ce qu'un logiciel de tri lira correspond à ce qui a été saisi
 réel, complet, dans le bon ordre. Il ne juge pas l'esthétique : un template peut être
 laid et passer.
 
-**Deux passes** : sans photo, puis avec une photo fabriquée par le script lui-même.
+**Trois passes** : sans photo, avec une photo fabriquée par le script lui-même, puis
+un CV long ([long-resume.ts](../../packages/cv-pdf/scripts/long-resume.ts)) qui doit
+tenir sur une page dans chaque modèle. L'ordre des en-têtes attendu est celui du flux :
+corps, puis colonne latérale.
+
+`npm run pdf:preview --workspace packages/cv-pdf` rend chaque modèle dans
+`.ats-out/preview/` pour le regarder, sans rien vérifier.
 La seconde protège deux choses à la fois — l'extraction, et la pagination du modèle
 « Stage », qui promet une seule page et est le plus exposé à un bloc d'identité plus
 haut.

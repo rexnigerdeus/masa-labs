@@ -140,7 +140,7 @@ export function ResumeEditor({ signedIn, stored }: {
    *
    * Tant que l'utilisateur garde la couleur proposée par son modèle, changer de
    * modèle adopte celle du nouveau — c'est ce qu'on attend en parcourant les
-   * quatre. Dès qu'il en a choisi une, elle le suit : sa couleur ne doit pas
+   * modèles. Dès qu'il en a choisi une, elle le suit : sa couleur ne doit pas
    * disparaître parce qu'il a voulu comparer deux mises en page.
    */
   const chooseTemplate = (templateId: TemplateId): void => {
@@ -524,7 +524,7 @@ export function ResumeEditor({ signedIn, stored }: {
           <div>
             <h2 className="text-base font-semibold">Modèle</h2>
             <p className="mt-1 text-xs text-muted">
-              Les quatre modèles sont gratuits et vérifiés lisibles par les
+              Les {TEMPLATE_LIST.length} modèles sont gratuits et vérifiés lisibles par les
               logiciels de tri automatique.
             </p>
           </div>

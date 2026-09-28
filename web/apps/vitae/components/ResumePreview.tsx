@@ -1,16 +1,26 @@
+import type { CSSProperties, ReactNode } from 'react';
 import {
+  HEADLINE_TRACKING,
+  INK,
+  MUTED,
+  NAME_LINE_HEIGHT,
+  TITLE_LINE_HEIGHT,
   compareByRecency,
+  contactTitle,
   formatDate,
   formatRange,
-  accentSurface,
   getTemplate,
-  inkAccent,
-  mixColors,
+  mainSections,
   normalizeAccent,
+  pageMetrics,
+  safeTracking,
   sectionTitle,
-  tint,
+  sidebarSections,
+  templatePalette,
+  type PageMetrics,
   type Resume,
   type SectionId,
+  type TemplatePalette,
   type TemplateSpec,
 } from '@everyday/cv-core';
 
@@ -18,8 +28,9 @@ import {
  * Aperçu HTML d'un CV.
  *
  * Jumeau de `ResumeDocument` (@everyday/cv-pdf) : même ordre de sections, même
- * hiérarchie, mêmes habillages d'en-tête, mêmes teintes — parce que les deux
- * lisent le même `TemplateSpec` et dérivent leurs couleurs des mêmes fonctions.
+ * hiérarchie, mêmes habillages, mêmes teintes, même géométrie — parce que les
+ * deux lisent le même `TemplateSpec` et passent par les mêmes fonctions de
+ * `@everyday/cv-core` (`templatePalette`, `pageMetrics`, `safeTracking`).
  * Toute valeur de mise en page écrite en dur ici serait un bug : l'aperçu
  * mentirait sur le PDF téléchargé.
  *
@@ -39,9 +50,6 @@ const A4_WIDTH_PX = 794;
 
 /** Un point vaut 1/72 de pouce, un pixel CSS 1/96 : le rapport est 96/72. */
 const PX_PER_PT = 96 / 72;
-
-const INK = '#111111';
-const MUTED = '#444444';
 
 /**
  * Convertit une mesure du descripteur en longueur d'aperçu.
@@ -63,108 +71,148 @@ const MUTED = '#444444';
 const pt = (value: number): string =>
   `calc(var(--u) * ${(value * PX_PER_PT).toFixed(3)})`;
 
-/** Palette dérivée de la couleur choisie — l'exact pendant de `buildStyles`. */
-function palette(accent: string) {
-  const band = accentSurface(accent);
-  return {
-    accent,
-    ink: inkAccent(accent),
-    /** Fond du bandeau : la primaire, assombrie si elle ne portait pas son texte. */
-    band: band.background,
-    inverted: band.text,
-    invertedMuted: mixColors(band.text, band.background, 0.28),
-    soft: tint(accent, 0.12),
-    photoBorder: tint(accent, 0.35),
-  };
+interface Ctx {
+  spec: TemplateSpec;
+  resume: Resume;
+  c: TemplatePalette;
+  m: PageMetrics;
 }
-
-type Palette = ReturnType<typeof palette>;
 
 function clean(values: (string | undefined | null)[]): string[] {
   return values.filter((v): v is string => v != null && v.trim() !== '').map((v) => v.trim());
 }
 
+function contactLines(resume: Resume): string[] {
+  const p = resume.personal;
+  return clean([p.location, p.phone, p.email, ...p.links]);
+}
+
+function hasPhoto(resume: Resume): boolean {
+  return resume.personal.photo !== null && resume.personal.showPhoto;
+}
+
+function photoAlt(resume: Resume): string {
+  const name = resume.personal.fullName.trim();
+  return name === '' ? 'Photo du candidat' : `Photo de ${name}`;
+}
+
 /**
- * Photo du candidat.
+ * Photo du candidat, à côté de l'identité.
  *
  * `<img>` et non `next/image` : la source est une data URL portée par le CV
  * lui-même, il n'y a ni fichier distant à optimiser ni requête à épargner.
  */
-function CandidatePhoto({ spec, resume, colors }: {
-  spec: TemplateSpec; resume: Resume; colors: Palette;
-}) {
-  const { photo, showPhoto, fullName } = resume.personal;
-  if (photo === null || !showPhoto) return null;
-
+function HeaderPhoto({ spec, resume, c }: Ctx) {
+  if (!hasPhoto(resume) || spec.layout.kind === 'sidebar') return null;
   const border = spec.header === 'band'
-    ? colors.inverted
-    : spec.header === 'tint' ? '#ffffff' : colors.photoBorder;
+    ? c.inverted
+    : spec.header === 'tint' ? '#ffffff' : c.photoBorder;
+  const thin = spec.header !== 'band' && spec.header !== 'tint';
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={photo}
-      alt={fullName.trim() === '' ? 'Photo du candidat' : `Photo de ${fullName}`}
+      src={resume.personal.photo as string}
+      alt={photoAlt(resume)}
       style={{
         width: pt(spec.photo.size),
         height: pt(spec.photo.size),
         borderRadius: spec.photo.shape === 'circle' ? '50%' : pt(8),
         objectFit: 'cover',
         flexShrink: 0,
-        border: `${pt(spec.header === 'underline' || spec.header === 'minimal' ? 1 : 1.5)} solid ${border}`,
+        border: `${pt(thin ? 1 : 1.5)} solid ${border}`,
         marginLeft: spec.photo.align === 'right' ? pt(14) : undefined,
         marginRight: spec.photo.align === 'left' ? pt(14) : undefined,
+        marginBottom: spec.photo.align === 'center' ? pt(10) : undefined,
       }}
     />
   );
 }
 
-/** Bloc d'identité : quatre habillages, un seul et même contenu textuel. */
-function Header({ spec, resume, colors }: {
-  spec: TemplateSpec; resume: Resume; colors: Palette;
-}) {
-  const { typography: t, spacing: s } = spec;
-  const p = resume.personal;
-  const contact = clean([p.location, p.phone, p.email, ...p.links]);
+/** Bloc d'identité : nom, titre, coordonnées — dans cet ordre, quel que soit l'habillage. */
+function Header(ctx: Ctx) {
+  const { spec, resume, c, m } = ctx;
+  const { typography: t, spacing: s, identity: id } = spec;
   const inverted = spec.header === 'band';
-  const photo = <CandidatePhoto spec={spec} resume={resume} colors={colors} />;
+  const centered = spec.header === 'centered';
+  const withSidebar = spec.layout.kind === 'sidebar';
+  const contact = withSidebar ? [] : contactLines(resume);
+  const photo = <HeaderPhoto {...ctx} />;
+  const textAlign = centered ? 'center' : undefined;
+
+  const text = (
+    <div
+      style={{
+        flex: '1 1 auto',
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: centered ? 'center' : 'flex-start',
+      }}
+    >
+      <div
+        style={{
+          fontSize: pt(t.name),
+          fontWeight: 700,
+          lineHeight: NAME_LINE_HEIGHT,
+          letterSpacing: pt(safeTracking(t.name, id.tracking)),
+          textTransform: id.uppercase ? 'uppercase' : undefined,
+          marginBottom: pt(3),
+          color: inverted ? c.inverted : id.accentName ? c.ink : INK,
+          textAlign,
+        }}
+      >
+        {resume.personal.fullName || 'Votre nom'}
+      </div>
+      {resume.headline.trim() !== '' ? (
+        <div
+          style={{
+            fontSize: pt(t.headline),
+            lineHeight: TITLE_LINE_HEIGHT,
+            letterSpacing: id.headlineUppercase
+              ? pt(safeTracking(t.headline, HEADLINE_TRACKING))
+              : undefined,
+            textTransform: id.headlineUppercase ? 'uppercase' : undefined,
+            color: inverted ? c.inverted : c.ink,
+            marginBottom: pt(4),
+            textAlign,
+          }}
+        >
+          {resume.headline}
+        </div>
+      ) : null}
+      {contact.length > 0 ? (
+        <div style={{ fontSize: pt(t.meta), color: inverted ? c.invertedMuted : MUTED, textAlign }}>
+          {contact.join(' — ')}
+        </div>
+      ) : null}
+      {withSidebar ? (
+        <div style={{ width: pt(34), height: pt(2.5), background: c.accent, marginTop: pt(6) }} />
+      ) : null}
+    </div>
+  );
+
+  if (centered) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: pt(m.header),
+        }}
+      >
+        {photo}
+        {text}
+        <div style={{ alignSelf: 'stretch', height: pt(0.8), background: c.rule, marginTop: pt(10) }} />
+      </div>
+    );
+  }
 
   const identity = (
     <div style={{ display: 'flex', alignItems: 'center' }}>
       {spec.photo.align === 'left' ? photo : null}
-      <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: pt(t.name),
-            fontWeight: 700,
-            marginBottom: pt(2),
-            color: inverted ? colors.inverted : INK,
-          }}
-        >
-          {p.fullName || 'Votre nom'}
-        </div>
-        {resume.headline.trim() !== '' ? (
-          <div
-            style={{
-              fontSize: pt(t.headline),
-              color: inverted ? colors.inverted : colors.ink,
-              marginBottom: pt(4),
-            }}
-          >
-            {resume.headline}
-          </div>
-        ) : null}
-        {contact.length > 0 ? (
-          <div
-            style={{
-              fontSize: pt(t.meta),
-              color: inverted ? colors.invertedMuted : MUTED,
-            }}
-          >
-            {contact.join(' — ')}
-          </div>
-        ) : null}
-      </div>
+      {text}
       {spec.photo.align === 'right' ? photo : null}
     </div>
   );
@@ -176,12 +224,12 @@ function Header({ spec, resume, colors }: {
       return (
         <div
           style={{
-            background: colors.band,
-            marginTop: pt(-s.page),
-            marginLeft: pt(-s.page),
-            marginRight: pt(-s.page),
-            marginBottom: pt(s.header),
-            padding: `${pt(s.headerPad)} ${pt(s.page)}`,
+            background: c.band,
+            marginTop: pt(-m.padTop),
+            marginLeft: pt(-m.padLeft),
+            marginRight: pt(-m.padRight),
+            marginBottom: pt(m.header),
+            padding: `${pt(s.headerPad)} ${pt(m.padRight)} ${pt(s.headerPad)} ${pt(m.padLeft)}`,
           }}
         >
           {identity}
@@ -191,10 +239,10 @@ function Header({ spec, resume, colors }: {
       return (
         <div
           style={{
-            background: colors.soft,
+            background: c.soft,
             borderRadius: pt(10),
             padding: pt(s.headerPad),
-            marginBottom: pt(s.header),
+            marginBottom: pt(m.header),
           }}
         >
           {identity}
@@ -202,36 +250,33 @@ function Header({ spec, resume, colors }: {
       );
     case 'underline':
       return (
-        <div style={{ marginBottom: pt(s.header) }}>
+        <div style={{ marginBottom: pt(m.header) }}>
           {identity}
-          <div style={{ height: pt(2.5), background: colors.accent, marginTop: pt(9) }} />
+          <div style={{ height: pt(2.5), background: c.accent, marginTop: pt(9) }} />
         </div>
       );
     case 'minimal':
-      return <div style={{ marginBottom: pt(s.header) }}>{identity}</div>;
+      return <div style={{ marginBottom: pt(m.header) }}>{identity}</div>;
   }
 }
 
-function Heading({ spec, section, colors }: {
-  spec: TemplateSpec; section: SectionId; colors: Palette;
-}) {
-  const { typography: t, spacing: s } = spec;
+function Heading({ spec, section, c, m }: Ctx & { section: SectionId }) {
+  const { typography: t } = spec;
   const title = sectionTitle(spec, section);
-  const base = {
+  const base: CSSProperties = {
     fontSize: pt(t.sectionTitle),
     fontWeight: 700,
-    letterSpacing: pt(t.titleTracking),
+    lineHeight: TITLE_LINE_HEIGHT,
+    letterSpacing: pt(safeTracking(t.sectionTitle, t.titleTracking)),
     margin: 0,
-  } as const;
+  };
 
   switch (spec.sectionStyle) {
     case 'rule':
       return (
-        <div style={{ marginTop: pt(s.section), marginBottom: pt(6) }}>
+        <div style={{ marginTop: pt(m.section), marginBottom: pt(6) }}>
           <h2 style={{ ...base, color: INK }}>{title}</h2>
-          <div
-            style={{ borderBottom: `${pt(1)} solid ${colors.accent}`, marginTop: pt(3) }}
-          />
+          <div style={{ borderBottom: `${pt(1)} solid ${c.accent}`, marginTop: pt(3) }} />
         </div>
       );
     case 'bar':
@@ -240,7 +285,7 @@ function Heading({ spec, section, colors }: {
           style={{
             display: 'flex',
             alignItems: 'center',
-            marginTop: pt(s.section),
+            marginTop: pt(m.section),
             marginBottom: pt(5),
           }}
         >
@@ -250,48 +295,75 @@ function Heading({ spec, section, colors }: {
               width: pt(3),
               height: pt(t.sectionTitle),
               borderRadius: pt(1.5),
-              background: colors.accent,
+              background: c.accent,
               marginRight: pt(6),
               flexShrink: 0,
             }}
           />
-          <h2 style={{ ...base, color: colors.ink }}>{title}</h2>
+          <h2 style={{ ...base, color: c.ink }}>{title}</h2>
         </div>
       );
     case 'chip':
       return (
         <div
           style={{
-            alignSelf: 'flex-start',
             display: 'inline-block',
-            background: colors.soft,
+            background: c.soft,
             borderRadius: pt(4),
             padding: `${pt(3)} ${pt(7)}`,
-            marginTop: pt(s.section),
+            marginTop: pt(m.section),
             marginBottom: pt(6),
           }}
         >
-          <h2 style={{ ...base, color: colors.ink }}>{title}</h2>
+          <h2 style={{ ...base, color: c.ink }}>{title}</h2>
         </div>
       );
     case 'plain':
       return (
-        <div style={{ marginTop: pt(s.section), marginBottom: pt(5) }}>
-          <h2 style={{ ...base, color: colors.ink }}>{title}</h2>
+        <div style={{ marginTop: pt(m.section), marginBottom: pt(5) }}>
+          <h2 style={{ ...base, color: c.ink }}>{title}</h2>
+        </div>
+      );
+    case 'banner':
+      return (
+        <div
+          style={{
+            background: c.band,
+            padding: `${pt(3.5)} ${pt(8)}`,
+            marginTop: pt(m.section),
+            marginBottom: pt(8),
+          }}
+        >
+          <h2 style={{ ...base, color: c.inverted }}>{title}</h2>
+        </div>
+      );
+    case 'line':
+      return (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginTop: pt(m.section),
+            marginBottom: pt(6),
+          }}
+        >
+          <h2 style={{ ...base, color: c.ink, flexShrink: 0 }}>{title}</h2>
+          <span
+            aria-hidden
+            style={{ flex: '1 1 auto', height: pt(0.8), background: c.rule, marginLeft: pt(8) }}
+          />
         </div>
       );
   }
 }
 
-function Bullets({ spec, items, colors }: {
-  spec: TemplateSpec; items: string[]; colors: Palette;
-}) {
+function Bullets({ items, c, m }: { items: string[]; c: TemplatePalette; m: PageMetrics }) {
   if (items.length === 0) return null;
   return (
-    <ul style={{ margin: 0, paddingLeft: pt(10), listStyle: 'none' }}>
+    <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
       {items.map((text, i) => (
-        <li key={i} style={{ marginBottom: pt(spec.spacing.bullet), display: 'flex', gap: pt(6) }}>
-          <span aria-hidden style={{ color: colors.ink }}>•</span>
+        <li key={i} style={{ marginBottom: pt(m.bullet), display: 'flex' }}>
+          <span aria-hidden style={{ color: c.ink, width: pt(10), flexShrink: 0 }}>•</span>
           <span>{text}</span>
         </li>
       ))}
@@ -299,29 +371,108 @@ function Bullets({ spec, items, colors }: {
   );
 }
 
-function Entry({ spec, title, meta, bullets, colors }: {
-  spec: TemplateSpec; title: string; meta: string[]; bullets: string[]; colors: Palette;
+/** Une expérience ou une formation, sous les trois mises en forme du modèle. */
+function Entry({ spec, c, m, title, org, dates, bullets }: Ctx & {
+  title: string; org: string[]; dates: string; bullets: string[];
 }) {
   const { typography: t } = spec;
-  return (
-    <div style={{ marginBottom: pt(spec.spacing.entry) }}>
-      <div style={{ fontSize: pt(t.entryTitle), fontWeight: 700 }}>{title}</div>
-      {meta.length > 0 ? (
-        <div style={{ fontSize: pt(t.meta), color: MUTED, marginBottom: pt(2) }}>
-          {meta.join(' — ')}
+
+  if (spec.entryStyle === 'stacked') {
+    const meta = clean([...org, dates]);
+    return (
+      <div style={{ marginBottom: pt(m.entry) }}>
+        <div style={{ fontSize: pt(t.entryTitle), fontWeight: 700 }}>{title}</div>
+        {meta.length > 0 ? (
+          <div style={{ fontSize: pt(t.meta), color: MUTED, marginBottom: pt(2) }}>
+            {meta.join(' — ')}
+          </div>
+        ) : null}
+        <Bullets items={bullets} c={c} m={m} />
+      </div>
+    );
+  }
+
+  const body: ReactNode = (
+    <>
+      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 auto', minWidth: 0, fontSize: pt(t.entryTitle), fontWeight: 700 }}>
+          {title}
+        </div>
+        {dates !== '' ? (
+          <div
+            style={{
+              fontSize: pt(t.meta),
+              fontStyle: 'italic',
+              color: c.ink,
+              marginLeft: pt(10),
+              textAlign: 'right',
+              flexShrink: 0,
+            }}
+          >
+            {dates}
+          </div>
+        ) : null}
+      </div>
+      {org.length > 0 ? (
+        <div style={{ fontSize: pt(t.meta), fontStyle: 'italic', color: MUTED, marginBottom: pt(2) }}>
+          {org.join(' — ')}
         </div>
       ) : null}
-      <Bullets spec={spec} items={bullets} colors={colors} />
-    </div>
+      <Bullets items={bullets} c={c} m={m} />
+    </>
   );
+
+  if (spec.entryStyle === 'timeline') {
+    return (
+      <div
+        style={{
+          position: 'relative',
+          borderLeft: `${pt(1)} solid ${c.rule}`,
+          marginLeft: pt(4),
+          paddingLeft: pt(13),
+          paddingBottom: pt(m.entry),
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: pt(-4.5),
+            top: pt((t.entryTitle * m.lineHeight - 8) / 2),
+            width: pt(8),
+            height: pt(8),
+            borderRadius: '50%',
+            background: c.accent,
+            border: `${pt(1.5)} solid #ffffff`,
+            boxSizing: 'border-box',
+          }}
+        />
+        {body}
+      </div>
+    );
+  }
+  return <div style={{ marginBottom: pt(m.entry) }}>{body}</div>;
 }
 
-function Section({ spec, resume, section, colors }: {
-  spec: TemplateSpec; resume: Resume; section: SectionId; colors: Palette;
-}) {
+function languageLines(resume: Resume): string[] {
+  return resume.languages
+    .filter((l) => l.name.trim() !== '')
+    .map((l) => `${l.name.trim()} (${LEVEL_LABELS[l.level] ?? l.level})`);
+}
+
+function extraItems(resume: Resume): string[] {
+  const certifications = resume.certifications.map(
+    (x) => clean([x.name, x.issuer, formatDate(x.date)]).join(' — '),
+  );
+  const projects = resume.projects.map((p) => clean([p.name, p.description, p.url]).join(' — '));
+  return clean([...certifications, ...projects]);
+}
+
+function Section(ctx: Ctx & { section: SectionId }) {
+  const { resume, section, c, m } = ctx;
   switch (section) {
     case 'personal':
-      return <Header spec={spec} resume={resume} colors={colors} />;
+      return <Header {...ctx} />;
 
     case 'headline':
       return null;
@@ -330,7 +481,7 @@ function Section({ spec, resume, section, colors }: {
       if (resume.summary.trim() === '') return null;
       return (
         <section>
-          <Heading spec={spec} section={section} colors={colors} />
+          <Heading {...ctx} />
           <p style={{ margin: 0 }}>{resume.summary}</p>
         </section>
       );
@@ -340,14 +491,14 @@ function Section({ spec, resume, section, colors }: {
       if (items.length === 0) return null;
       return (
         <section>
-          <Heading spec={spec} section={section} colors={colors} />
+          <Heading {...ctx} />
           {items.map((item) => (
             <Entry
               key={item.id}
-              spec={spec}
-              colors={colors}
+              {...ctx}
               title={item.role}
-              meta={clean([item.company, item.location, formatRange(item.start, item.end, item.current)])}
+              org={clean([item.company, item.location])}
+              dates={formatRange(item.start, item.end, item.current)}
               bullets={clean(item.bullets)}
             />
           ))}
@@ -360,14 +511,14 @@ function Section({ spec, resume, section, colors }: {
       if (items.length === 0) return null;
       return (
         <section>
-          <Heading spec={spec} section={section} colors={colors} />
+          <Heading {...ctx} />
           {items.map((item) => (
             <Entry
               key={item.id}
-              spec={spec}
-              colors={colors}
+              {...ctx}
               title={item.degree}
-              meta={clean([item.school, item.location, formatRange(item.start, item.end, false)])}
+              org={clean([item.school, item.location])}
+              dates={formatRange(item.start, item.end, false)}
               bullets={clean(item.details)}
             />
           ))}
@@ -380,40 +531,167 @@ function Section({ spec, resume, section, colors }: {
       if (skills.length === 0) return null;
       return (
         <section>
-          <Heading spec={spec} section={section} colors={colors} />
+          <Heading {...ctx} />
           <p style={{ margin: 0 }}>{skills.join(', ')}</p>
         </section>
       );
     }
 
     case 'extras': {
-      const languages = resume.languages.map(
-        (l) => `${l.name} (${LEVEL_LABELS[l.level] ?? l.level})`,
-      );
-      const certifications = resume.certifications.map(
-        (c) => clean([c.name, c.issuer, formatDate(c.date)]).join(' — '),
-      );
-      const projects = resume.projects.map(
-        (p) => clean([p.name, p.description, p.url]).join(' — '),
-      );
-      if (languages.length + certifications.length + projects.length === 0) return null;
+      const languages = languageLines(resume);
+      const items = extraItems(resume);
+      if (languages.length + items.length === 0) return null;
       return (
         <section>
-          <Heading spec={spec} section={section} colors={colors} />
+          <Heading {...ctx} />
           {languages.length > 0 ? (
             <p style={{ margin: 0 }}>{`Langues : ${languages.join(', ')}`}</p>
           ) : null}
-          <Bullets spec={spec} items={[...certifications, ...projects]} colors={colors} />
+          <Bullets items={items} c={c} m={m} />
         </section>
       );
     }
   }
 }
 
+function SidebarBlock({ spec, c, m, title, lines, muted = [] }: {
+  spec: TemplateSpec;
+  c: TemplatePalette;
+  m: PageMetrics;
+  title: string;
+  lines: string[];
+  muted?: string[];
+}) {
+  const { typography: t } = spec;
+  if (lines.length + muted.length === 0) return null;
+  return (
+    <section style={{ marginBottom: pt(m.section) }}>
+      <h2
+        style={{
+          fontSize: pt(t.sectionTitle),
+          fontWeight: 700,
+          lineHeight: TITLE_LINE_HEIGHT,
+          letterSpacing: pt(safeTracking(t.sectionTitle, t.titleTracking)),
+          color: c.sidebar.title,
+          paddingBottom: pt(3),
+          borderBottom: `${pt(0.8)} solid ${c.sidebar.rule}`,
+          margin: `0 0 ${pt(6)}`,
+        }}
+      >
+        {title}
+      </h2>
+      {lines.map((line, i) => (
+        <div key={i} style={{ fontSize: pt(t.meta + 0.5), marginBottom: pt(3) }}>{line}</div>
+      ))}
+      {muted.map((line, i) => (
+        <div
+          key={`m${i}`}
+          style={{ fontSize: pt(t.meta), color: c.sidebar.muted, marginBottom: pt(3) }}
+        >
+          {line}
+        </div>
+      ))}
+    </section>
+  );
+}
+
+/** Colonne latérale : photo, coordonnées, puis les sections que le modèle y range. */
+function Sidebar(ctx: Ctx) {
+  const { spec, resume, c, m } = ctx;
+  if (m.sidebar === null) return null;
+  const bleed = spec.photo.align === 'bleed';
+  const { width, pad, side, top } = m.sidebar;
+
+  return (
+    <aside
+      style={{
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: side === 'left' ? 0 : undefined,
+        right: side === 'right' ? 0 : undefined,
+        width: pt(width),
+        background: c.sidebar.background,
+        color: c.sidebar.text,
+        padding: `${pt(top)} ${pt(pad)} 0`,
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {hasPhoto(resume) ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={resume.personal.photo as string}
+          alt={photoAlt(resume)}
+          style={bleed
+            ? {
+              width: pt(width),
+              height: pt(width),
+              maxWidth: 'none',
+              objectFit: 'cover',
+              marginLeft: pt(-pad),
+              marginBottom: pt(m.section + 4),
+            }
+            : {
+              width: pt(spec.photo.size),
+              height: pt(spec.photo.size),
+              borderRadius: spec.photo.shape === 'circle' ? '50%' : pt(8),
+              objectFit: 'cover',
+              alignSelf: 'center',
+              border: `${pt(2)} solid ${c.sidebar.text === INK ? '#ffffff' : c.sidebar.rule}`,
+              marginBottom: pt(m.section + 4),
+            }}
+        />
+      ) : null}
+      <SidebarBlock
+        spec={spec}
+        c={c}
+        m={m}
+        title={contactTitle(spec)}
+        lines={contactLines(resume)}
+      />
+      {sidebarSections(spec).map((section) => {
+        switch (section) {
+          case 'skills':
+            return (
+              <SidebarBlock
+                key={section}
+                spec={spec}
+                c={c}
+                m={m}
+                title={sectionTitle(spec, section)}
+                lines={clean(resume.skills)}
+              />
+            );
+          case 'extras':
+            return (
+              <SidebarBlock
+                key={section}
+                spec={spec}
+                c={c}
+                m={m}
+                title={sectionTitle(spec, section)}
+                lines={languageLines(resume)}
+                muted={extraItems(resume)}
+              />
+            );
+          default:
+            return null;
+        }
+      })}
+    </aside>
+  );
+}
+
 export function ResumePreview({ resume }: { resume: Resume }) {
   const spec = getTemplate(resume.templateId);
-  const colors = palette(normalizeAccent(resume.accentColor, spec.defaultAccent));
-  const { typography: t, spacing: s } = spec;
+  const c = templatePalette(spec, normalizeAccent(resume.accentColor, spec.defaultAccent));
+  // Densité 1 : l'aperçu montre le modèle tel qu'il est dessiné. Le
+  // resserrement de l'export ne touche que les CV qui débordent, et
+  // l'aperçu ne montre que la première page.
+  const m = pageMetrics(spec, hasPhoto(resume));
+  const ctx: Ctx = { spec, resume, c, m };
 
   return (
     // Deux éléments et non un seul : `cqw` employé sur l'élément qui déclare
@@ -435,14 +713,17 @@ export function ResumePreview({ resume }: { resume: Resume }) {
         className="h-full text-ink"
         style={{
           ['--u' as string]: `calc(100cqw / ${A4_WIDTH_PX})`,
-          padding: pt(s.page),
-          fontSize: pt(t.body),
-          lineHeight: t.lineHeight,
+          position: 'relative',
+          boxSizing: 'border-box',
+          padding: `${pt(m.padTop)} ${pt(m.padRight)} ${pt(m.padBottom)} ${pt(m.padLeft)}`,
+          fontSize: pt(spec.typography.body),
+          lineHeight: m.lineHeight,
         }}
       >
-        {spec.sectionOrder.map((section) => (
-          <Section key={section} spec={spec} resume={resume} section={section} colors={colors} />
+        {mainSections(spec).map((section) => (
+          <Section key={section} {...ctx} section={section} />
         ))}
+        <Sidebar {...ctx} />
       </article>
     </div>
   );

@@ -10,9 +10,16 @@ import type { SectionId, TemplateId } from './types.ts';
  * une marge ou un ordre de section.
  *
  * Contraintes ATS communes à tous les templates, non négociables :
- * une seule colonne sur toute la largeur utile, pas de tableau, pas d'icône,
- * pas de texte en image, en-têtes de section en toutes lettres et en langage
- * standard, ordre de lecture identique à l'ordre visuel.
+ * pas de tableau, pas d'icône, pas de texte en image, en-têtes de section en
+ * toutes lettres et en langage standard, un seul flux de texte.
+ *
+ * Les modèles à colonne latérale (`layout.kind === 'sidebar'`) ne dérogent pas
+ * à ce dernier point : la colonne n'est pas une seconde colonne de texte
+ * entremêlée à la première. Le document écrit d'abord tout le corps (identité,
+ * résumé, expériences, formation), puis la colonne (coordonnées, compétences,
+ * langues). Un logiciel de tri lit donc deux blocs successifs, jamais des
+ * lignes alternées — c'est ce que `ats:check` vérifie en contrôlant l'ordre
+ * des en-têtes réextraits.
  *
  * La couleur et la photo ne relèvent pas de ce registre : un aplat de couleur
  * ne gêne pas l'extraction du texte, et une photo est une image posée *à côté*
@@ -63,7 +70,7 @@ export interface TemplateSpacing {
  * - `underline` : fond blanc, filet épais en primaire sous l'identité.
  * - `minimal` : fond blanc, aucun aplat, la primaire n'apparaît qu'en texte.
  */
-export type HeaderLayout = 'band' | 'tint' | 'underline' | 'minimal';
+export type HeaderLayout = 'band' | 'tint' | 'underline' | 'minimal' | 'centered';
 
 /**
  * Habillage des en-têtes de section.
@@ -72,16 +79,72 @@ export type HeaderLayout = 'band' | 'tint' | 'underline' | 'minimal';
  * - `bar` : court trait vertical en primaire devant le titre.
  * - `chip` : titre en primaire sur une pastille teintée.
  * - `plain` : titre en primaire, rien d'autre.
+ * - `banner` : titre inversé sur une barre pleine en primaire.
+ * - `line` : titre suivi d'un filet qui court jusqu'au bord droit.
  */
-export type SectionStyle = 'rule' | 'bar' | 'chip' | 'plain';
+export type SectionStyle = 'rule' | 'bar' | 'chip' | 'plain' | 'banner' | 'line';
+
+/**
+ * Mise en forme d'une expérience ou d'une formation.
+ *
+ * - `stacked` : intitulé, puis une ligne « entreprise — lieu — dates ».
+ * - `dated` : intitulé à gauche, dates alignées à droite sur la même ligne,
+ *   entreprise et lieu en dessous.
+ * - `timeline` : comme `dated`, posé sur une frise verticale ponctuée.
+ *
+ * Dans les trois cas le texte est écrit dans le même ordre — intitulé,
+ * dates, entreprise — seul l'emplacement change.
+ */
+export type EntryStyle = 'stacked' | 'dated' | 'timeline';
 
 export interface TemplatePhoto {
   /** Ronde ou carrée à coins adoucis : la découpe fait partie du modèle. */
   shape: 'circle' | 'rounded';
-  /** Côté de la photo, en points. */
+  /** Côté de la photo, en points. Ignoré par `bleed`, qui prend la largeur. */
   size: number;
-  /** Côté du bloc d'identité où la photo se place. */
-  align: 'left' | 'right';
+  /**
+   * Place de la photo.
+   *
+   * `left` / `right` : à côté de l'identité. `center` : au-dessus, centrée
+   * (en-tête centré, colonne latérale). `bleed` : en haut de la colonne
+   * latérale, sur toute sa largeur, sans marge.
+   */
+  align: 'left' | 'right' | 'center' | 'bleed';
+}
+
+/**
+ * Disposition de la page.
+ *
+ * - `single` : un seul bloc sur toute la largeur utile.
+ * - `sidebar` : une colonne colorée sur toute la hauteur, qui reçoit la photo,
+ *   les coordonnées et les sections listées dans `sections`. Elle est écrite
+ *   *après* le corps dans le flux du PDF : voir l'en-tête de ce fichier.
+ */
+export type TemplateLayout =
+  | { kind: 'single' }
+  | {
+    kind: 'sidebar';
+    side: 'left' | 'right';
+    /** Largeur de la colonne, en points, fond compris. */
+    width: number;
+    /** Marge intérieure de la colonne. */
+    pad: number;
+    /** `solid` : aplat en primaire, texte inversé. `tint` : teinte claire. */
+    tone: 'solid' | 'tint';
+    /** Sections déplacées dans la colonne, dans cet ordre. */
+    sections: SectionId[];
+  };
+
+/** Traitement du nom et du titre professionnel dans le bloc d'identité. */
+export interface TemplateIdentity {
+  /** Nom en capitales. */
+  uppercase: boolean;
+  /** Interlettrage du nom, en points. */
+  tracking: number;
+  /** Nom en primaire plutôt qu'en encre. */
+  accentName: boolean;
+  /** Titre professionnel en capitales espacées. */
+  headlineUppercase: boolean;
 }
 
 export interface TemplateSpec {
@@ -103,6 +166,9 @@ export interface TemplateSpec {
   uppercaseSectionTitles: boolean;
   header: HeaderLayout;
   sectionStyle: SectionStyle;
+  entryStyle: EntryStyle;
+  identity: TemplateIdentity;
+  layout: TemplateLayout;
   photo: TemplatePhoto;
   /** Nombre de pages recommandé ; le template « Stage » force une page. */
   maxPages: number;
@@ -121,6 +187,15 @@ const STANDARD_ORDER: SectionId[] = [
   'personal', 'headline', 'summary', 'experience', 'education', 'skills', 'extras',
 ];
 
+/** Libellé du bloc de coordonnées, quand il a sa propre section (colonne latérale). */
+export const CONTACT_TITLE = 'Coordonnées';
+
+const SINGLE: TemplateLayout = { kind: 'single' };
+
+const PLAIN_IDENTITY: TemplateIdentity = {
+  uppercase: false, tracking: 0, accentName: false, headlineUppercase: false,
+};
+
 export const TEMPLATES: Record<TemplateId, TemplateSpec> = {
   classique: {
     id: 'classique',
@@ -132,12 +207,15 @@ export const TEMPLATES: Record<TemplateId, TemplateSpec> = {
       body: 10.5, name: 23, headline: 12, sectionTitle: 10.5, entryTitle: 11,
       meta: 9.5, lineHeight: 1.4, titleTracking: 0.9,
     },
-    spacing: { page: 40, section: 16, entry: 10, bullet: 3, header: 14, headerPad: 0 },
+    spacing: { page: 38, section: 14, entry: 9, bullet: 2.5, header: 12, headerPad: 0 },
     sectionOrder: STANDARD_ORDER,
     sectionTitles: STANDARD_TITLES,
     uppercaseSectionTitles: true,
     header: 'underline',
     sectionStyle: 'rule',
+    entryStyle: 'stacked',
+    identity: PLAIN_IDENTITY,
+    layout: SINGLE,
     photo: { shape: 'rounded', size: 74, align: 'right' },
     maxPages: 2,
   },
@@ -152,12 +230,15 @@ export const TEMPLATES: Record<TemplateId, TemplateSpec> = {
       body: 10.5, name: 25, headline: 12.5, sectionTitle: 11.5, entryTitle: 11,
       meta: 9.5, lineHeight: 1.5, titleTracking: 0,
     },
-    spacing: { page: 46, section: 19, entry: 12, bullet: 4, header: 16, headerPad: 0 },
+    spacing: { page: 44, section: 16, entry: 10, bullet: 3, header: 14, headerPad: 0 },
     sectionOrder: STANDARD_ORDER,
     sectionTitles: STANDARD_TITLES,
     uppercaseSectionTitles: false,
     header: 'minimal',
     sectionStyle: 'plain',
+    entryStyle: 'stacked',
+    identity: PLAIN_IDENTITY,
+    layout: SINGLE,
     photo: { shape: 'circle', size: 72, align: 'left' },
     maxPages: 2,
   },
@@ -178,6 +259,9 @@ export const TEMPLATES: Record<TemplateId, TemplateSpec> = {
     uppercaseSectionTitles: true,
     header: 'band',
     sectionStyle: 'bar',
+    entryStyle: 'stacked',
+    identity: PLAIN_IDENTITY,
+    layout: SINGLE,
     photo: { shape: 'circle', size: 58, align: 'right' },
     maxPages: 2,
   },
@@ -200,17 +284,128 @@ export const TEMPLATES: Record<TemplateId, TemplateSpec> = {
     uppercaseSectionTitles: true,
     header: 'tint',
     sectionStyle: 'chip',
+    entryStyle: 'stacked',
+    identity: PLAIN_IDENTITY,
+    layout: SINGLE,
     photo: { shape: 'circle', size: 66, align: 'left' },
     maxPages: 1,
+  },
+  horizon: {
+    id: 'horizon',
+    name: 'Horizon',
+    description: 'Colonne sombre à gauche avec photo ronde, corps aéré, dates alignées à droite.',
+    bestFor: 'Commerce, immobilier, marketing, management',
+    defaultAccent: '#1e2a44',
+    typography: {
+      body: 9.5, name: 26, headline: 10.5, sectionTitle: 10.5, entryTitle: 10.5,
+      meta: 9, lineHeight: 1.35, titleTracking: 1.4,
+    },
+    spacing: { page: 30, section: 14, entry: 9, bullet: 2, header: 10, headerPad: 0 },
+    sectionOrder: STANDARD_ORDER,
+    sectionTitles: STANDARD_TITLES,
+    uppercaseSectionTitles: true,
+    header: 'minimal',
+    sectionStyle: 'line',
+    entryStyle: 'dated',
+    identity: { uppercase: false, tracking: 0.2, accentName: false, headlineUppercase: true },
+    layout: { kind: 'sidebar', side: 'left', width: 188, pad: 20, tone: 'solid', sections: ['skills', 'extras'] },
+    photo: { shape: 'circle', size: 104, align: 'center' },
+    maxPages: 2,
+  },
+
+  atelier: {
+    id: 'atelier',
+    name: 'Atelier',
+    description: 'Colonne claire, grande photo en tête, nom en capitales de couleur.',
+    bestFor: 'Gestion de projet, RH, administration, créatifs',
+    defaultAccent: '#8a5a44',
+    typography: {
+      body: 9.5, name: 30, headline: 10.5, sectionTitle: 10.5, entryTitle: 10.5,
+      meta: 9, lineHeight: 1.35, titleTracking: 1.2,
+    },
+    spacing: { page: 30, section: 14, entry: 9, bullet: 2, header: 12, headerPad: 0 },
+    sectionOrder: STANDARD_ORDER,
+    sectionTitles: STANDARD_TITLES,
+    uppercaseSectionTitles: true,
+    header: 'minimal',
+    sectionStyle: 'line',
+    entryStyle: 'dated',
+    identity: { uppercase: true, tracking: 1.5, accentName: true, headlineUppercase: true },
+    layout: { kind: 'sidebar', side: 'left', width: 176, pad: 18, tone: 'tint', sections: ['skills', 'extras'] },
+    photo: { shape: 'rounded', size: 176, align: 'bleed' },
+    maxPages: 2,
+  },
+
+  parcours: {
+    id: 'parcours',
+    name: 'Parcours',
+    description: 'Titres sur barre pleine, expériences posées sur une frise chronologique.',
+    bestFor: 'Communication, événementiel, parcours riches',
+    defaultAccent: '#23395d',
+    typography: {
+      body: 9.5, name: 24, headline: 11, sectionTitle: 9.5, entryTitle: 10.5,
+      meta: 9, lineHeight: 1.35, titleTracking: 1.6,
+    },
+    spacing: { page: 34, section: 14, entry: 9, bullet: 2, header: 12, headerPad: 0 },
+    sectionOrder: STANDARD_ORDER,
+    sectionTitles: STANDARD_TITLES,
+    uppercaseSectionTitles: true,
+    header: 'minimal',
+    sectionStyle: 'banner',
+    entryStyle: 'timeline',
+    identity: { uppercase: true, tracking: 1, accentName: true, headlineUppercase: false },
+    layout: SINGLE,
+    photo: { shape: 'rounded', size: 86, align: 'left' },
+    maxPages: 2,
+  },
+
+  elegance: {
+    id: 'elegance',
+    name: 'Élégance',
+    description: 'Nom centré en capitales espacées, filets fins, dates à droite.',
+    bestFor: 'Direction, conseil, juridique, luxe',
+    defaultAccent: '#2f3e46',
+    typography: {
+      body: 9.5, name: 26, headline: 10.5, sectionTitle: 10, entryTitle: 10.5,
+      meta: 9, lineHeight: 1.35, titleTracking: 2,
+    },
+    spacing: { page: 38, section: 14, entry: 9, bullet: 2, header: 12, headerPad: 0 },
+    sectionOrder: STANDARD_ORDER,
+    sectionTitles: STANDARD_TITLES,
+    uppercaseSectionTitles: true,
+    header: 'centered',
+    sectionStyle: 'line',
+    entryStyle: 'dated',
+    identity: { uppercase: true, tracking: 5, accentName: false, headlineUppercase: true },
+    layout: SINGLE,
+    photo: { shape: 'circle', size: 70, align: 'center' },
+    maxPages: 2,
   },
 };
 
 export const TEMPLATE_LIST: TemplateSpec[] = [
+  TEMPLATES.horizon, TEMPLATES.atelier, TEMPLATES.parcours, TEMPLATES.elegance,
   TEMPLATES.classique, TEMPLATES.sobre, TEMPLATES.compact, TEMPLATES.stage,
 ];
 
 export function getTemplate(id: TemplateId): TemplateSpec {
   return TEMPLATES[id];
+}
+
+/** Sections écrites dans la colonne latérale — aucune pour un modèle à un bloc. */
+export function sidebarSections(spec: TemplateSpec): SectionId[] {
+  return spec.layout.kind === 'sidebar' ? spec.layout.sections : [];
+}
+
+/** Sections du corps, dans l'ordre du modèle, colonne latérale exclue. */
+export function mainSections(spec: TemplateSpec): SectionId[] {
+  const aside = sidebarSections(spec);
+  return spec.sectionOrder.filter((s) => !aside.includes(s));
+}
+
+/** Libellé du bloc de coordonnées, casse comprise. */
+export function contactTitle(spec: TemplateSpec): string {
+  return spec.uppercaseSectionTitles ? CONTACT_TITLE.toUpperCase() : CONTACT_TITLE;
 }
 
 /** Titre d'en-tête tel qu'il doit être rendu, casse comprise. */
