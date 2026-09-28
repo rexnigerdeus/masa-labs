@@ -1,94 +1,183 @@
 import { StyleSheet } from '@react-pdf/renderer';
-import { accentSurface, inkAccent, mixColors, tint, type TemplateSpec } from '@everyday/cv-core';
+import {
+  INK,
+  MUTED,
+  HEADLINE_TRACKING,
+  NAME_LINE_HEIGHT,
+  TITLE_LINE_HEIGHT,
+  WHITE,
+  safeTracking,
+  type PageMetrics,
+  type TemplatePalette,
+  type TemplateSpec,
+} from '@everyday/cv-core';
 import { FONT_FAMILY } from './fonts.ts';
 
 /**
- * Feuille de style dérivée du descripteur de template et de la couleur choisie.
+ * Feuille de style dérivée du descripteur de template, de la palette et de la
+ * géométrie de page.
  *
- * Rien n'est codé en dur ici : toutes les tailles, marges et casses viennent de
- * `TemplateSpec`, et toutes les teintes se déduisent de la primaire du CV par
- * les fonctions de `@everyday/cv-core`. C'est ce qui permet à l'aperçu HTML de
- * l'éditeur et à ce document PDF de rester alignés sans se copier l'un l'autre.
+ * Rien n'est codé en dur ici : tailles et casses viennent de `TemplateSpec`,
+ * teintes de `templatePalette`, marges et espacements de `pageMetrics` — les
+ * mêmes fonctions que lit l'aperçu HTML de l'éditeur. C'est ce qui garde les
+ * deux alignés sans qu'ils se copient.
  */
-
-/** Noir pur pour le texte : le gris clair ressort mal une fois imprimé. */
-const INK = '#111111';
-const MUTED = '#444444';
-const WHITE = '#ffffff';
-
-export function buildStyles(spec: TemplateSpec, accent: string) {
-  const { typography: t, spacing: s } = spec;
-
-  // L'utilisateur choisit librement sa primaire : les dérivations garantissent
-  // qu'un jaune vif reste lisible en titre comme sur un bandeau. Le bandeau a
-  // sa propre couleur de fond — parfois un cran plus sombre que la primaire,
-  // le seul moyen de tenir le contraste sur toute la palette.
-  const ink = inkAccent(accent);
-  const band = accentSurface(accent);
-  const inverted = band.text;
-  const invertedMuted = mixColors(band.text, band.background, 0.28);
-  const soft = tint(accent, 0.12);
-
+export function buildStyles(spec: TemplateSpec, c: TemplatePalette, m: PageMetrics) {
+  const { typography: t, identity: id } = spec;
   const photoRadius = spec.photo.shape === 'circle' ? spec.photo.size / 2 : 8;
+  const bleed = m.sidebar !== null && spec.photo.align === 'bleed';
+  const sidebarWidth = m.sidebar?.width ?? 0;
 
   return StyleSheet.create({
     page: {
       fontFamily: FONT_FAMILY,
       fontSize: t.body,
-      lineHeight: t.lineHeight,
+      lineHeight: m.lineHeight,
       color: INK,
-      paddingTop: s.page,
-      paddingBottom: s.page,
-      paddingLeft: s.page,
-      paddingRight: s.page,
-      // Une seule colonne, sur toute la largeur utile : c'est la règle ATS
-      // fondamentale. Aucun template n'a le droit d'y déroger.
+      paddingTop: m.padTop,
+      paddingBottom: m.padBottom,
+      paddingLeft: m.padLeft,
+      paddingRight: m.padRight,
       flexDirection: 'column',
     },
 
+    // --- Colonne latérale --------------------------------------------------
+    /** Aplat de la colonne, répété sur chaque page (`fixed`) : aucun texte. */
+    sidebarBackdrop: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: m.sidebar?.side === 'left' ? 0 : undefined,
+      right: m.sidebar?.side === 'right' ? 0 : undefined,
+      width: sidebarWidth,
+      backgroundColor: c.sidebar.background,
+    },
+    sidebarColumn: {
+      position: 'absolute',
+      top: m.sidebar?.top ?? 0,
+      left: m.sidebar?.side === 'left' ? 0 : undefined,
+      right: m.sidebar?.side === 'right' ? 0 : undefined,
+      width: sidebarWidth,
+      paddingLeft: m.sidebar?.pad ?? 0,
+      paddingRight: m.sidebar?.pad ?? 0,
+      color: c.sidebar.text,
+    },
+    sidebarBlock: { marginBottom: m.section },
+    sidebarTitle: {
+      fontSize: t.sectionTitle,
+      fontWeight: 700,
+      lineHeight: TITLE_LINE_HEIGHT,
+      letterSpacing: safeTracking(t.sectionTitle, t.titleTracking),
+      color: c.sidebar.title,
+      paddingBottom: 3,
+      borderBottomWidth: 0.8,
+      borderBottomColor: c.sidebar.rule,
+      marginBottom: 6,
+    },
+    sidebarLine: { fontSize: t.meta + 0.5, marginBottom: 3 },
+    sidebarMuted: { fontSize: t.meta, color: c.sidebar.muted, marginBottom: 3 },
+    sidebarPhoto: bleed
+      ? {
+        width: sidebarWidth,
+        height: sidebarWidth,
+        objectFit: 'cover',
+        marginLeft: -(m.sidebar?.pad ?? 0),
+        marginBottom: m.section + 4,
+      }
+      : {
+        width: spec.photo.size,
+        height: spec.photo.size,
+        borderRadius: photoRadius,
+        objectFit: 'cover',
+        alignSelf: 'center',
+        borderWidth: 2,
+        borderColor: c.sidebar.text === INK ? WHITE : c.sidebar.rule,
+        marginBottom: m.section + 4,
+      },
+
     // --- Bloc d'identité -------------------------------------------------
-    header: { marginBottom: s.header },
+    header: { marginBottom: m.header },
     /**
      * Bandeau de bord à bord.
      *
      * Les marges négatives annulent le rembourrage de page : sans elles le
-     * bandeau s'arrêterait à 32 pt des bords et ressemblerait à un encadré
-     * posé au milieu du papier, pas à un en-tête.
+     * bandeau s'arrêterait aux marges et ressemblerait à un encadré posé au
+     * milieu du papier, pas à un en-tête.
      */
     headerBand: {
-      backgroundColor: band.background,
-      marginTop: -s.page,
-      marginLeft: -s.page,
-      marginRight: -s.page,
-      paddingTop: s.headerPad,
-      paddingBottom: s.headerPad,
-      paddingLeft: s.page,
-      paddingRight: s.page,
-      marginBottom: s.header,
+      backgroundColor: c.band,
+      marginTop: -m.padTop,
+      marginLeft: -m.padLeft,
+      marginRight: -m.padRight,
+      paddingTop: spec.spacing.headerPad,
+      paddingBottom: spec.spacing.headerPad,
+      paddingLeft: m.padLeft,
+      paddingRight: m.padRight,
+      marginBottom: m.header,
     },
     headerTint: {
-      backgroundColor: soft,
+      backgroundColor: c.soft,
       borderRadius: 10,
-      padding: s.headerPad,
-      marginBottom: s.header,
+      padding: spec.spacing.headerPad,
+      marginBottom: m.header,
     },
+    headerCentered: { marginBottom: m.header, alignItems: 'center' },
     headerRow: { flexDirection: 'row', alignItems: 'center' },
     identity: { flexGrow: 1, flexShrink: 1 },
+    identityCentered: { alignItems: 'center' },
     /** Filet épais sous l'identité : la signature visuelle du modèle Classique. */
-    headerUnderline: {
-      height: 2.5,
-      backgroundColor: accent,
-      marginTop: 9,
+    headerUnderline: { height: 2.5, backgroundColor: c.accent, marginTop: 9 },
+    /** Filet fin pleine largeur sous un en-tête centré. */
+    headerHairline: {
+      alignSelf: 'stretch',
+      height: 0.8,
+      backgroundColor: c.rule,
+      marginTop: 10,
     },
+    /** Court trait sous le titre d'un modèle à colonne. */
+    headerAccentBar: { width: 34, height: 2.5, backgroundColor: c.accent, marginTop: 6 },
 
-    name: { fontSize: t.name, fontWeight: 700, marginBottom: 2 },
-    nameInverted: { fontSize: t.name, fontWeight: 700, marginBottom: 2, color: inverted },
-    headline: { fontSize: t.headline, color: ink, marginBottom: 4 },
-    headlineInverted: { fontSize: t.headline, color: inverted, marginBottom: 4 },
+    // Interligne propre au nom : hérité du corps (10 pt × 1,4), il donnait au
+    // nom de 23 pt une ligne de 14 pt, et le titre remontait dessus.
+    name: {
+      fontSize: t.name,
+      fontWeight: 700,
+      lineHeight: NAME_LINE_HEIGHT,
+      letterSpacing: safeTracking(t.name, id.tracking),
+      textTransform: id.uppercase ? 'uppercase' : 'none',
+      color: id.accentName ? c.ink : INK,
+      marginBottom: 3,
+    },
+    nameInverted: {
+      fontSize: t.name,
+      fontWeight: 700,
+      lineHeight: NAME_LINE_HEIGHT,
+      letterSpacing: safeTracking(t.name, id.tracking),
+      textTransform: id.uppercase ? 'uppercase' : 'none',
+      color: c.inverted,
+      marginBottom: 3,
+    },
+    headline: {
+      fontSize: t.headline,
+      lineHeight: TITLE_LINE_HEIGHT,
+      letterSpacing: id.headlineUppercase ? safeTracking(t.headline, HEADLINE_TRACKING) : 0,
+      textTransform: id.headlineUppercase ? 'uppercase' : 'none',
+      color: c.ink,
+      marginBottom: 4,
+    },
+    headlineInverted: {
+      fontSize: t.headline,
+      lineHeight: TITLE_LINE_HEIGHT,
+      letterSpacing: id.headlineUppercase ? safeTracking(t.headline, HEADLINE_TRACKING) : 0,
+      textTransform: id.headlineUppercase ? 'uppercase' : 'none',
+      color: c.inverted,
+      marginBottom: 4,
+    },
     // Les coordonnées sont une simple ligne de texte séparée par des tirets :
     // pas de tableau, pas d'icône — les deux cassent l'extraction.
     contact: { fontSize: t.meta, color: MUTED },
-    contactInverted: { fontSize: t.meta, color: invertedMuted },
+    contactInverted: { fontSize: t.meta, color: c.invertedMuted },
+    textCenter: { textAlign: 'center' },
 
     photo: {
       width: spec.photo.size,
@@ -97,72 +186,119 @@ export function buildStyles(spec: TemplateSpec, accent: string) {
       objectFit: 'cover',
       marginLeft: spec.photo.align === 'right' ? 14 : 0,
       marginRight: spec.photo.align === 'left' ? 14 : 0,
+      marginBottom: spec.photo.align === 'center' ? 10 : 0,
     },
-    photoOnBand: { borderWidth: 1.5, borderColor: inverted },
-    photoOnPaper: { borderWidth: 1, borderColor: tint(accent, 0.35) },
+    photoOnBand: { borderWidth: 1.5, borderColor: c.inverted },
+    photoOnPaper: { borderWidth: 1, borderColor: c.photoBorder },
+    photoOnTint: { borderWidth: 1.5, borderColor: WHITE },
 
     // --- En-têtes de section ---------------------------------------------
     sectionTitle: {
       fontSize: t.sectionTitle,
       fontWeight: 700,
-      letterSpacing: t.titleTracking,
-      // Le titre ne doit jamais rester seul en bas de page, sinon la section
-      // suivante démarre orpheline et l'ordre de lecture devient trompeur.
-      ...({ orphans: 2 } as Record<string, number>),
+      lineHeight: TITLE_LINE_HEIGHT,
+      letterSpacing: safeTracking(t.sectionTitle, t.titleTracking),
     },
     sectionTitleInk: { color: INK },
-    sectionTitleAccent: { color: ink },
+    sectionTitleAccent: { color: c.ink },
+    sectionTitleInverted: { color: c.inverted },
 
-    sectionRuleWrap: { marginTop: s.section, marginBottom: 6 },
-    sectionRule: {
-      borderBottomWidth: 1,
-      borderBottomColor: accent,
-      marginTop: 3,
-    },
+    sectionRuleWrap: { marginTop: m.section, marginBottom: 6 },
+    sectionRule: { borderBottomWidth: 1, borderBottomColor: c.accent, marginTop: 3 },
 
     sectionBarWrap: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: s.section,
+      marginTop: m.section,
       marginBottom: 5,
     },
     sectionBar: {
       width: 3,
       height: t.sectionTitle,
       borderRadius: 1.5,
-      backgroundColor: accent,
+      backgroundColor: c.accent,
       marginRight: 6,
     },
 
     sectionChipWrap: {
       alignSelf: 'flex-start',
-      backgroundColor: soft,
+      backgroundColor: c.soft,
       borderRadius: 4,
       paddingLeft: 7,
       paddingRight: 7,
       paddingTop: 3,
       paddingBottom: 3,
-      marginTop: s.section,
+      marginTop: m.section,
       marginBottom: 6,
     },
 
-    sectionPlainWrap: { marginTop: s.section, marginBottom: 5 },
+    sectionPlainWrap: { marginTop: m.section, marginBottom: 5 },
+
+    sectionBannerWrap: {
+      backgroundColor: c.band,
+      paddingTop: 3.5,
+      paddingBottom: 3.5,
+      paddingLeft: 8,
+      paddingRight: 8,
+      marginTop: m.section,
+      marginBottom: 8,
+    },
+
+    sectionLineWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: m.section,
+      marginBottom: 6,
+    },
+    sectionLine: { flexGrow: 1, height: 0.8, backgroundColor: c.rule, marginLeft: 8 },
 
     // --- Corps -------------------------------------------------------------
-    entry: { marginBottom: s.entry },
+    entry: { marginBottom: m.entry },
     entryTitle: { fontSize: t.entryTitle, fontWeight: 700 },
     entryMeta: { fontSize: t.meta, color: MUTED, marginBottom: 2 },
 
-    bulletRow: { flexDirection: 'row', marginBottom: s.bullet },
-    bulletMark: { width: 10, color: ink },
+    /** `dated` / `timeline` : intitulé à gauche, dates à droite. */
+    entryHead: { flexDirection: 'row', alignItems: 'flex-start' },
+    entryHeadTitle: { flexGrow: 1, flexShrink: 1, fontSize: t.entryTitle, fontWeight: 700 },
+    entryDates: {
+      fontSize: t.meta,
+      fontStyle: 'italic',
+      color: c.ink,
+      marginLeft: 10,
+      textAlign: 'right',
+    },
+    entryOrg: { fontSize: t.meta, fontStyle: 'italic', color: MUTED, marginBottom: 2 },
+
+    /**
+     * Frise : chaque entrée porte son tronçon de trait, sans marge entre deux
+     * entrées — l'espacement est un rembourrage, pour que le trait reste
+     * continu d'une entrée à l'autre.
+     */
+    timelineEntry: {
+      borderLeftWidth: 1,
+      borderLeftColor: c.rule,
+      marginLeft: 4,
+      paddingLeft: 13,
+      paddingBottom: m.entry,
+    },
+    timelineDot: {
+      position: 'absolute',
+      left: -4.5,
+      top: (t.entryTitle * m.lineHeight - 8) / 2,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: c.accent,
+      borderWidth: 1.5,
+      borderColor: WHITE,
+    },
+
+    bulletRow: { flexDirection: 'row', marginBottom: m.bullet },
+    bulletMark: { width: 10, color: c.ink },
     bulletText: { flex: 1 },
 
     paragraph: { marginBottom: 2 },
     inlineList: { marginBottom: 2 },
-
-    // Réservé aux aplats : garde une référence au blanc pur pour les modèles
-    // qui posent la photo sur une teinte claire.
-    photoOnTint: { borderWidth: 1.5, borderColor: WHITE },
   });
 }
 

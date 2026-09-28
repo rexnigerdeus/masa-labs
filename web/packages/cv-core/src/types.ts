@@ -129,7 +129,9 @@ export interface Resume {
   projects: Project[];
 }
 
-export type TemplateId = 'classique' | 'sobre' | 'compact' | 'stage';
+export type TemplateId =
+  | 'classique' | 'sobre' | 'compact' | 'stage'
+  | 'horizon' | 'atelier' | 'parcours' | 'elegance';
 
 /** Identifiants des sections notées séparément (brief §5.1). */
 export type SectionId =

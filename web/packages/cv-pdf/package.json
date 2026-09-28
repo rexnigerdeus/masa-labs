@@ -11,7 +11,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "ats:check": "tsx scripts/ats-check.ts"
+    "ats:check": "tsx scripts/ats-check.ts",
+    "pdf:preview": "tsx scripts/preview.ts"
   },
   "dependencies": {
     "@everyday/cv-core": "*",

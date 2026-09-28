@@ -50,7 +50,7 @@ Depuis `web/` (Node >= 20) :
 npm install                       # installe tout le workspace
 npm test                          # tests de tous les packages (cv-core aujourd'hui)
 npm run typecheck                 # tsc --noEmit sur chaque app et package
-npm run ats:check                 # rend les 4 templates en PDF, réextrait le texte, valide
+npm run ats:check                 # rend chaque template en PDF, réextrait le texte, valide
 npm run dev --workspace apps/vitae        # Vitae sur :3000
 npm run dev --workspace apps/everyday-co  # vitrine (utiliser -p 3001 si Vitae tourne)
 npm run dev --workspace apps/hive -- -p 3002   # Hive
