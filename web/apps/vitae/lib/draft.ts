@@ -45,7 +45,35 @@ export function clearDraft(): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.removeItem(KEY);
+    window.localStorage.removeItem(ID_KEY);
   } catch {
     // Rien à faire : l'appelant n'a pas de recours utile.
+  }
+}
+
+/* ---------- À quel CV en ligne le brouillon correspond ----------
+   Un compte peut avoir plusieurs CV. Le brouillon local n'en est qu'un à la
+   fois, et il doit savoir lequel : sinon ouvrir un CV depuis l'espace compte
+   l'écraserait avec le contenu d'un autre. `null` = pas encore en ligne
+   (visiteur anonyme, ou CV neuf pas encore enregistré). */
+
+const ID_KEY = 'vitae.draft.id.v1';
+
+export function loadDraftId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveDraftId(id: string | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (id === null) window.localStorage.removeItem(ID_KEY);
+    else window.localStorage.setItem(ID_KEY, id);
+  } catch {
+    // Stockage refusé : au pire, le prochain enregistrement crée une ligne.
   }
 }

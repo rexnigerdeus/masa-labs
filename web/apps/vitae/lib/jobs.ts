@@ -33,6 +33,10 @@ export interface JobFilters {
   city?: string;
   /** Nombre de jours de fraîcheur maximum. */
   days?: number;
+  /** Mots cherchés dans l'intitulé ou le nom de l'entreprise. */
+  query?: string;
+  /** Nombre d'offres à renvoyer ; `PAGE_SIZE` par défaut. */
+  limit?: number;
 }
 
 export interface JobResults {
@@ -45,10 +49,27 @@ export interface JobResults {
   cities: string[];
 }
 
-const PAGE_SIZE = 40;
+export const PAGE_SIZE = 20;
+const MAX_LIMIT = 200;
+
+/**
+ * Nettoie une recherche libre avant de l'insérer dans un filtre PostgREST.
+ *
+ * La valeur est posée dans une expression `or=(…)` : une virgule, une
+ * parenthèse ou un joker y changeraient le sens de la requête. On ne garde
+ * que des lettres, des chiffres, des espaces et quelques signes inoffensifs.
+ */
+export function cleanQuery(raw: string | undefined): string {
+  return (raw ?? '')
+    .replace(/[^\p{L}\p{N}\s'’-]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
+}
 
 export async function fetchJobs(filters: JobFilters): Promise<JobResults> {
   const supabase = publicClient();
+  const limit = Math.min(Math.max(filters.limit ?? PAGE_SIZE, 1), MAX_LIMIT);
 
   let query = supabase
     .from('vitae_job_offers')
@@ -57,7 +78,12 @@ export async function fetchJobs(filters: JobFilters): Promise<JobResults> {
       { count: 'exact' },
     )
     .order('posted_at', { ascending: false })
-    .limit(PAGE_SIZE);
+    .limit(limit);
+
+  const words = cleanQuery(filters.query);
+  if (words !== '') {
+    query = query.or(`title.ilike.*${words}*,company.ilike.*${words}*`);
+  }
 
   if (filters.type === 'emploi' || filters.type === 'stage') {
     query = query.eq('type', filters.type);

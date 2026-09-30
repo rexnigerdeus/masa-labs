@@ -7,12 +7,12 @@ import { createClient, currentUser } from './supabase/server';
 /**
  * Persistance des CV.
  *
- * Un CV par compte pour ce MVP : la table en accepte plusieurs, mais rien dans
- * l'interface ne les expose encore (le brief range « plusieurs CV sauvegardés »
- * dans les pistes freemium). `saveResume` écrase donc la ligne existante.
+ * Plusieurs CV par compte : l'espace « Compte » les liste, chacun s'ouvre
+ * dans le parcours par son identifiant (`/cv?id=…`). `saveResume` met à jour
+ * la ligne dont l'éditeur connaît l'identifiant, ou en crée une.
  *
  * Le brouillon local reste la source de vérité pendant la saisie ; la base sert
- * à retrouver son CV depuis un autre appareil.
+ * à retrouver ses CV depuis un autre appareil.
  */
 
 export interface StoredResume {
@@ -28,10 +28,53 @@ export interface SaveOutcome {
   error?: string;
 }
 
-/** CV enregistré du compte connecté, ou `null`. */
-export async function loadResume(): Promise<StoredResume | null> {
+/**
+ * Ligne de base → CV exploitable, ou `null`.
+ *
+ * La colonne est du `jsonb` : ce qui en sort n'est un `Resume` que par
+ * convention. Une ligne écrite avant la photo ou la couleur primaire est
+ * remontée ici, une ligne illisible est traitée comme une absence.
+ */
+function toStored(row: Record<string, unknown>): StoredResume | null {
+  const resume = normalizeResume(row.data);
+  if (resume === null) return null;
+  return { id: row.id as string, data: resume, updatedAt: row.updated_at as string };
+}
+
+/**
+ * Un CV du compte connecté : celui demandé, ou à défaut le dernier modifié.
+ * `null` si rien ne correspond — y compris un identifiant d'un autre compte,
+ * que la RLS rend invisible.
+ */
+export async function loadResume(id?: string): Promise<StoredResume | null> {
   const user = await currentUser();
   if (user === null) return null;
+
+  const supabase = await createClient();
+  let query = supabase
+    .from('vitae_resumes')
+    .select('id, data, updated_at')
+    .eq('user_id', user.id);
+  // Un identifiant mal formé ferait échouer la requête côté Postgres : on ne
+  // l'envoie pas, et la page retombe sur « introuvable ».
+  if (id !== undefined) {
+    if (!UUID.test(id)) return null;
+    query = query.eq('id', id);
+  }
+  const { data, error } = await query
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return error !== null || data === null ? null : toStored(data);
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Tous les CV du compte connecté, le plus récemment modifié d'abord. */
+export async function listResumes(): Promise<StoredResume[]> {
+  const user = await currentUser();
+  if (user === null) return [];
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -39,22 +82,29 @@ export async function loadResume(): Promise<StoredResume | null> {
     .select('id, data, updated_at')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    // Garde-fou : l'espace compte n'a pas de pagination.
+    .limit(50);
 
-  if (error !== null || data === null) return null;
+  if (error !== null || data === null) return [];
+  return data.map(toStored).filter((r): r is StoredResume => r !== null);
+}
 
-  // La colonne est du `jsonb` : ce qui en sort n'est un `Resume` que par
-  // convention. Une ligne écrite avant la photo ou la couleur primaire est
-  // remontée ici, une ligne illisible est traitée comme une absence.
-  const resume = normalizeResume(data.data);
-  if (resume === null) return null;
+/** Supprime un CV du compte connecté. La RLS interdit de toucher celui d'un autre. */
+export async function deleteResume(id: string): Promise<SaveOutcome> {
+  const user = await currentUser();
+  if (user === null) return { ok: false, error: 'Session expirée. Reconnectez-vous.' };
+  if (!UUID.test(id)) return { ok: false, error: 'CV introuvable.' };
 
-  return {
-    id: data.id as string,
-    data: resume,
-    updatedAt: data.updated_at as string,
-  };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('vitae_resumes')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  return error === null
+    ? { ok: true, id }
+    : { ok: false, error: 'Suppression impossible pour le moment. Réessayez.' };
 }
 
 /**

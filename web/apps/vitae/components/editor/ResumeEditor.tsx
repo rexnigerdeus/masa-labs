@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  emptyResume,
   getTemplate,
   scoreResume,
   type Education,
@@ -20,7 +21,7 @@ import { FinalStep } from './FinalStep';
 import {
   DownloadDialog, detectPlatform, saveToDownloads, type DownloadedCv,
 } from './DownloadDialog';
-import { loadDraft, saveDraft } from '../../lib/draft';
+import { loadDraft, loadDraftId, saveDraft, saveDraftId } from '../../lib/draft';
 import { saveResume } from '../../lib/resumes';
 import {
   STEPS,
@@ -98,9 +99,20 @@ function revealFirstError(): void {
   });
 }
 
-export function ResumeEditor({ signedIn, stored, initialTemplate, justSignedIn }: {
+export function ResumeEditor({
+  signedIn, stored, target, initialStep, initialTemplate, justSignedIn,
+}: {
   signedIn: boolean;
+  /** CV en ligne : celui demandé (`target: 'open'`) ou le dernier modifié. */
   stored: { id: string; data: Resume } | null;
+  /**
+   * Ce que la personne est venue faire : reprendre là où elle en était
+   * (`latest`), ouvrir un CV précis depuis son compte (`open`), ou en
+   * commencer un nouveau (`new`).
+   */
+  target: 'latest' | 'open' | 'new';
+  /** Étape demandée dans l'URL (`?etape=…`). */
+  initialStep: StepId | null;
   /** Modèle choisi sur la page d'accueil (`/cv?modele=…`). */
   initialTemplate: TemplateId | null;
   /** Retour de la connexion demandée au premier téléchargement. */
@@ -116,38 +128,102 @@ export function ResumeEditor({ signedIn, stored, initialTemplate, justSignedIn }
   const [exportError, setExportError] = useState<string | null>(null);
   const [downloaded, setDownloaded] = useState<DownloadedCv | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const resumeId = useRef<string | null>(stored?.id ?? null);
+  const resumeId = useRef<string | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const booted = useRef(false);
 
-  // Le brouillon et l'étape sont lus après le montage : le rendu serveur ne
-  // connaît pas le localStorage, et rendre un CV vide puis le remplacer
-  // provoquerait une désynchronisation d'hydratation.
+  /**
+   * Choix du CV à ouvrir, au montage.
+   *
+   * Le brouillon et l'étape sont lus après le montage : le rendu serveur ne
+   * connaît pas le localStorage, et rendre un CV vide puis le remplacer
+   * provoquerait une désynchronisation d'hydratation.
+   *
+   * Règle d'or : le brouillon local n'est jamais perdu. Avant de le remplacer
+   * par un autre CV (ouvert depuis le compte, ou neuf), il est mis à l'abri en
+   * ligne — créé s'il n'y était pas encore, mis à jour sinon, pour les
+   * dernières frappes que l'écriture différée n'aurait pas encore envoyées.
+   * Un visiteur anonyme n'a pas d'abri en ligne : pour lui, on reprend
+   * simplement son brouillon.
+   */
   useEffect(() => {
-    const draft = loadDraft();
-    let initial = hasContent(draft) || stored === null ? draft : stored.data;
-    let first: StepId;
-    if (justSignedIn) {
-      first = 'final';
-      // Le paramètre a servi : un rechargement ne doit pas ramener ici.
-      window.history.replaceState(null, '', '/cv');
-    } else if (initialTemplate !== null && !hasContent(initial)) {
-      // Venu de la page d'accueil en touchant un modèle : il est déjà choisi,
-      // il reste à le confirmer.
-      initial = {
-        ...initial,
-        templateId: initialTemplate,
-        accentColor: getTemplate(initialTemplate).defaultAccent,
+    // Une seule fois, y compris sous le double montage du mode strict : la
+    // mise à l'abri créerait sinon deux lignes.
+    if (booted.current) return;
+    booted.current = true;
+
+    void (async () => {
+      const draft = loadDraft();
+      const draftId = loadDraftId();
+      const draftFull = hasContent(draft);
+      const shelter = async (): Promise<void> => {
+        if (signedIn && draftFull) await saveResume(draft, draftId);
       };
-      first = 'modele';
-    } else {
-      first = loadStep() ?? (hasContent(initial) ? 'identite' : 'modele');
-    }
-    setResume(initial);
-    setStep(first);
-  }, [stored, initialTemplate, justSignedIn]);
+      const mode = !signedIn && draftFull ? 'latest' : target;
+
+      let initial: Resume;
+      let id: string | null;
+      let first: StepId;
+
+      if (mode === 'new') {
+        await shelter();
+        initial = emptyResume(initialTemplate ?? undefined);
+        id = null;
+        first = 'modele';
+      } else if (mode === 'open' && stored !== null) {
+        if (draftFull && draftId === stored.id) {
+          initial = draft;
+        } else {
+          await shelter();
+          initial = stored.data;
+        }
+        id = stored.id;
+        // Depuis le compte, on arrive sur la vue d'ensemble : le CV, son
+        // score, et de quoi modifier la partie voulue sans tout reparcourir.
+        first = initialStep ?? 'final';
+      } else {
+        if (draftFull || stored === null) {
+          initial = draft;
+          id = draftFull ? draftId : null;
+        } else {
+          initial = stored.data;
+          id = stored.id;
+        }
+        if (justSignedIn) {
+          first = 'final';
+        } else if (initialTemplate !== null && !hasContent(initial)) {
+          // Venu de la page d'accueil en touchant un modèle : il est déjà
+          // choisi, il reste à le confirmer.
+          initial = {
+            ...initial,
+            templateId: initialTemplate,
+            accentColor: getTemplate(initialTemplate).defaultAccent,
+          };
+          first = 'modele';
+        } else {
+          first = initialStep ?? loadStep() ?? (hasContent(initial) ? 'identite' : 'modele');
+        }
+      }
+
+      // Le paramètre a servi : un rechargement repart du brouillon.
+      if (window.location.search !== '') window.history.replaceState(null, '', '/cv');
+      // Contenu et identifiant écrits ensemble : un brouillon ne doit jamais
+      // porter l'identifiant d'un autre CV que le sien.
+      saveDraft(initial);
+      saveDraftId(id);
+      resumeId.current = id;
+      setResume(initial);
+      setStep(first);
+    })();
+  }, [signedIn, stored, target, initialStep, initialTemplate, justSignedIn]);
 
   // Sauvegarde différée : inutile d'écrire à chaque frappe.
+  //
+  // Les envois en ligne sont mis en file : sans cela, deux envois partis avant
+  // le retour du premier créeraient deux lignes — le second ne connaîtrait
+  // pas encore l'identifiant attribué au premier.
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
   useEffect(() => {
     if (resume === null) return;
     if (saveTimer.current !== null) clearTimeout(saveTimer.current);
@@ -156,9 +232,11 @@ export function ResumeEditor({ signedIn, stored, initialTemplate, justSignedIn }
       // Le local est écrit d'abord, et sans condition : la copie en ligne est
       // un confort, elle ne doit jamais être le seul exemplaire.
       if (!signedIn || !hasContent(resume)) return;
-      void saveResume(resume, resumeId.current).then((outcome) => {
+      saveQueue.current = saveQueue.current.then(async () => {
+        const outcome = await saveResume(resume, resumeId.current);
         if (outcome.ok) {
           resumeId.current = outcome.id ?? resumeId.current;
+          saveDraftId(resumeId.current);
           setSyncError(null);
         } else {
           setSyncError(outcome.error ?? null);
@@ -534,6 +612,7 @@ export function ResumeEditor({ signedIn, stored, initialTemplate, justSignedIn }
           score={score}
           signedIn={signedIn}
           justSignedIn={justSignedIn}
+          reviewing={target === 'open'}
           onGoTo={(target) => goTo(target, true)}
         />
       ) : null}

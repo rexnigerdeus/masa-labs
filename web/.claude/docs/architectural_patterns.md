@@ -79,6 +79,7 @@ Le brouillon `localStorage` est la source de vérité pendant la saisie ; la lig
 base sert à retrouver son CV depuis un autre appareil. Le brouillon local gagne
 l'arbitrage dès qu'il contient quelque chose.
 
+- Le brouillon sait à quel CV en ligne il appartient ; il est mis à l'abri en ligne avant d'être remplacé par un autre CV, et les envois en ligne sont mis en file pour ne jamais créer deux lignes — [ResumeEditor.tsx:136](../../apps/vitae/components/editor/ResumeEditor.tsx#L136)
 - API de brouillon tolérante aux pannes — [lib/draft.ts:18](../../apps/vitae/lib/draft.ts#L18)
 - Arbitrage local/serveur au montage — [ResumeEditor.tsx:126](../../apps/vitae/components/editor/ResumeEditor.tsx#L126)
 - Écriture différée de 800 ms, local d'abord et sans condition — [ResumeEditor.tsx:154](../../apps/vitae/components/editor/ResumeEditor.tsx#L154)

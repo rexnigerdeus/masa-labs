@@ -13,7 +13,8 @@ export default async function ConnexionPage({
 }) {
   const { suite } = await searchParams;
   const user = await currentUser();
-  if (user !== null) redirect('/cv');
+  // Connecté : le téléchargement reprend dans l'éditeur, le reste va au compte.
+  if (user !== null) redirect(suite === 'telechargement' ? '/cv' : '/compte');
 
   const googleEnabled = await isGoogleEnabled();
   const fromDownload = suite === 'telechargement';

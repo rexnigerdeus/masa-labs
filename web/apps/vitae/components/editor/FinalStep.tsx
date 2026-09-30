@@ -23,12 +23,14 @@ const GRADE_SENTENCE = {
   moyen: 'Vous pouvez déjà le télécharger, mais quelques ajouts le rendront bien plus convaincant.',
 } as const;
 
-export function FinalStep({ resume, score, signedIn, justSignedIn, onGoTo }: {
+export function FinalStep({ resume, score, signedIn, justSignedIn, reviewing, onGoTo }: {
   resume: Resume;
   score: ScoreResult;
   signedIn: boolean;
   /** Retour de la page de connexion, lancée par un premier essai de téléchargement. */
   justSignedIn: boolean;
+  /** Ouvert depuis l'espace compte : la liste des parties à modifier est dépliée. */
+  reviewing: boolean;
   onGoTo: (step: StepId) => void;
 }) {
   const template = getTemplate(resume.templateId);
@@ -127,7 +129,7 @@ export function FinalStep({ resume, score, signedIn, justSignedIn, onGoTo }: {
             </details>
           </section>
 
-          <details className="card p-4">
+          <details className="card p-4" open={reviewing}>
             <summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold">
               Modifier une partie de mon CV
             </summary>
