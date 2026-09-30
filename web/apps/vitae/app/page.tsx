@@ -116,7 +116,7 @@ const STEPS = [
     title: 'Créer',
     body: 'Un formulaire guidé, un score en direct, un PDF propre en quelques minutes.',
     href: '/cv',
-    link: 'Ouvrir l’éditeur',
+    link: 'Créer mon CV',
   },
   {
     title: 'Postuler',
@@ -225,13 +225,18 @@ export default function AccueilPage() {
           </p>
         </div>
 
+        {/* Chaque croquis ouvre le parcours avec ce modèle déjà choisi : on
+            a vu celui qui plaît, on ne doit pas avoir à le rechercher. */}
         <ul className="labs-templates">
           {TEMPLATE_LIST.map((t, i) => (
             <li key={t.id} className="labs-reveal" style={{ ['--i' as string]: i }}>
-              <TemplateSketch templateId={t.id} className="labs-template__sketch" />
-              <h3>{t.name}</h3>
-              <p>{t.description}</p>
-              <p className="labs-template__for">Idéal pour : {t.bestFor}</p>
+              <Link href={`/cv?modele=${t.id}`} className="labs-template__link">
+                <TemplateSketch templateId={t.id} className="labs-template__sketch" />
+                <h3>{t.name}</h3>
+                <p>{t.description}</p>
+                <p className="labs-template__for">Idéal pour : {t.bestFor}</p>
+                <span className="labs-template__cta">Utiliser ce modèle →</span>
+              </Link>
             </li>
           ))}
         </ul>

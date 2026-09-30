@@ -68,7 +68,7 @@ dictionnaire — [lib/catalog.ts:10](../../apps/vitae/lib/catalog.ts#L10).
 L'éditeur ne maintient qu'un `Resume` en état. Score et aperçu sont recalculés par
 `useMemo` à chaque rendu : rien à synchroniser, donc aucune dérive possible entre ce
 que l'utilisateur voit et ce qu'il télécharge —
-[ResumeEditor.tsx:21](../../apps/vitae/components/editor/ResumeEditor.tsx#L21).
+[ResumeEditor.tsx:49](../../apps/vitae/components/editor/ResumeEditor.tsx#L49). Même règle pour les erreurs de saisie du parcours : `stepErrors` est recalculé à chaque rendu, jamais stocké — [lib/wizard.ts:1](../../apps/vitae/lib/wizard.ts#L1).
 
 Corollaire : ne jamais stocker un score, un aperçu ou un autre dérivé du CV dans un
 state séparé.
@@ -80,8 +80,8 @@ base sert à retrouver son CV depuis un autre appareil. Le brouillon local gagne
 l'arbitrage dès qu'il contient quelque chose.
 
 - API de brouillon tolérante aux pannes — [lib/draft.ts:18](../../apps/vitae/lib/draft.ts#L18)
-- Arbitrage local/serveur au montage — [ResumeEditor.tsx:86](../../apps/vitae/components/editor/ResumeEditor.tsx#L86)
-- Écriture différée de 800 ms, local d'abord et sans condition — [ResumeEditor.tsx:94](../../apps/vitae/components/editor/ResumeEditor.tsx#L94)
+- Arbitrage local/serveur au montage — [ResumeEditor.tsx:126](../../apps/vitae/components/editor/ResumeEditor.tsx#L126)
+- Écriture différée de 800 ms, local d'abord et sans condition — [ResumeEditor.tsx:154](../../apps/vitae/components/editor/ResumeEditor.tsx#L154)
 - Garde-fou de forme au chargement, pas une validation champ par champ — [lib/draft.ts:55](../../apps/vitae/lib/draft.ts#L55)
 
 Un échec de sauvegarde en ligne ne bloque jamais la saisie : il devient un message

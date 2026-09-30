@@ -11,7 +11,7 @@
  * un cache agressif, deux choses qui vont contre la contrainte de poids.
  */
 
-const VERSION = 'vitae-v1';
+const VERSION = 'vitae-v2';
 const SHELL = ['/', '/cv', '/hors-ligne'];
 
 self.addEventListener('install', (event) => {

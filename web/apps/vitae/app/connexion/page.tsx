@@ -30,7 +30,12 @@ export default async function ConnexionPage({
           étiez.
         </p>
       ) : null}
-      <AuthForm googleEnabled={googleEnabled} next="/cv" />
+      {/* Venu du téléchargement : le retour ramène sur l'écran final du
+          parcours, qui annonce que le téléchargement est désormais possible. */}
+      <AuthForm
+        googleEnabled={googleEnabled}
+        next={fromDownload ? '/cv?suite=telechargement' : '/cv'}
+      />
     </div>
   );
 }

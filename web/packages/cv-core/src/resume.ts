@@ -38,7 +38,8 @@ export function emptyResume(templateId: TemplateId = 'classique'): Resume {
   };
 }
 
-function isTemplateId(value: unknown): value is TemplateId {
+/** Identifiant de modèle existant — sert aussi à valider `?modele=` dans l'URL. */
+export function isTemplateId(value: unknown): value is TemplateId {
   return typeof value === 'string' && Object.hasOwn(TEMPLATES, value);
 }
 

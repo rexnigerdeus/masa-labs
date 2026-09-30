@@ -102,12 +102,12 @@ export function PhotoField({ photo, showPhoto, fullName, onChange }: {
 
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-medium">Photo</legend>
+      <legend className="sr-only">Photo</legend>
       <div className="flex items-center gap-3">
         {photo === null ? (
           <div
             aria-hidden
-            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-dashed border-line bg-canvas text-2xl text-muted"
+            className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-line bg-canvas text-2xl text-muted"
           >
             ☺
           </div>
@@ -116,7 +116,7 @@ export function PhotoField({ photo, showPhoto, fullName, onChange }: {
           <img
             src={photo}
             alt={fullName.trim() === '' ? 'Votre photo' : `Photo de ${fullName}`}
-            className={`h-20 w-20 shrink-0 rounded-full border border-line object-cover ${
+            className={`h-28 w-28 shrink-0 rounded-full border border-line object-cover ${
               showPhoto ? '' : 'opacity-40'
             }`}
           />
@@ -142,7 +142,7 @@ export function PhotoField({ photo, showPhoto, fullName, onChange }: {
             onChange={(e) => void pick(e.target.files?.[0])}
           />
           {photo === null ? null : (
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex min-h-11 items-center gap-3 text-base">
               <input
                 type="checkbox"
                 checked={showPhoto}
