@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '../../lib/supabase/client';
 import { phoneToEmail } from '../../lib/phone';
 import { Button, Field, Input, Notice } from '../ui';
+import { PasswordInput } from './PasswordInput';
 
 /**
  * Connexion et inscription par numéro de téléphone.
@@ -106,11 +107,10 @@ export function AuthForm({ next }: { next: string }) {
         label="Mot de passe"
         hint={mode === 'inscription' ? '6 caractères minimum.' : undefined}
       >
-        <Input
-          type="password"
+        <PasswordInput
           value={password}
           autoComplete={mode === 'inscription' ? 'new-password' : 'current-password'}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={setPassword}
         />
       </Field>
 
