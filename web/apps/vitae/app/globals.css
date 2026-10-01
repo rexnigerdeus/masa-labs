@@ -19,6 +19,8 @@
   --color-accent-glow: #9ede56;
   --color-accent-soft: #dff3d0;
   --color-warn-soft: #ffdbb7;
+  /* Erreurs de saisie : 6,1:1 sur blanc, lisible en petit texte. */
+  --color-danger: #b42318;
   --color-header: #17210c;
   --color-canvas: #f1f1ef;
   --color-card: #ffffff;

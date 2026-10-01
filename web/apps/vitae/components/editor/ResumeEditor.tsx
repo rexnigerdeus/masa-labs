@@ -1,34 +1,56 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  emptyResume,
   getTemplate,
-  SECTION_LABELS,
   scoreResume,
-  TEMPLATE_LIST,
   type Education,
   type Experience,
-  type LanguageLevel,
   type Resume,
-  type SectionId,
   type TemplateId,
 } from '@everyday/cv-core';
 import { ResumePreview } from '../ResumePreview';
-import { ScorePanel } from '../ScorePanel';
-import { TemplateSketch } from '../TemplateSketch';
+import { Button } from './fields';
+import { TemplateStep } from './TemplateStep';
+import { EducationForm, EducationList, ExperienceForm, ExperienceList } from './EntrySteps';
 import {
-  Button, ColorPicker, DateInput, Field, LineList, TagInput, TextArea, TextInput,
-} from './fields';
-import { PhotoField } from './PhotoField';
-import { loadDraft, saveDraft } from '../../lib/draft';
+  ContactStep, IdentityStep, LanguagesStep, PhotoStep, SkillsStep, SummaryStep,
+} from './StepForms';
+import { FinalStep } from './FinalStep';
+import {
+  DownloadDialog, detectPlatform, saveToDownloads, type DownloadedCv,
+} from './DownloadDialog';
+import { loadDraft, loadDraftId, saveDraft, saveDraftId } from '../../lib/draft';
 import { saveResume } from '../../lib/resumes';
+import {
+  STEPS,
+  STEP_IDS,
+  educationErrors,
+  experienceErrors,
+  getStep,
+  hasContent,
+  isStepEmpty,
+  loadStep,
+  saveStep,
+  stepErrors,
+  stepIndex,
+  type StepId,
+} from '../../lib/wizard';
 
 /**
- * Éditeur de CV.
+ * Parcours de création du CV.
  *
- * Un seul état : le `Resume`. Le score et l'aperçu en sont dérivés à chaque
- * rendu — pas de synchronisation à maintenir, donc pas de dérive possible entre
- * ce que l'utilisateur voit et ce qu'il télécharge.
+ * Un écran par question, un seul bouton principal, toujours au même endroit
+ * (la barre du bas), et on n'avance que sur un écran valide — voir
+ * `lib/wizard.ts` pour le pourquoi. Le modèle se choisit avant tout, sur de
+ * vrais CV ; l'aperçu du CV, dans ce modèle, est à un toucher à chaque étape ;
+ * le dernier écran réunit aperçu, score et téléchargement.
+ *
+ * Un seul état de données : le `Resume`. Le score, l'aperçu et les erreurs de
+ * saisie en sont dérivés à chaque rendu — pas de synchronisation à maintenir,
+ * donc pas de dérive possible entre ce que l'utilisateur voit et ce qu'il
+ * télécharge. Le reste de l'état ne décrit que la navigation.
  *
  * Deux lieux de stockage, une règle d'arbitrage simple : le brouillon local
  * gagne dès qu'il contient quelque chose. Quelqu'un qui vient de remplir son CV
@@ -42,63 +64,166 @@ const newId = (): string => crypto.randomUUID();
 
 const EMPTY_EXPERIENCE = (): Experience => ({
   id: newId(), role: '', company: '', location: '',
-  start: null, end: null, current: false, bullets: [''],
+  start: null, end: null, current: false, bullets: [],
 });
 
 const EMPTY_EDUCATION = (): Education => ({
   id: newId(), degree: '', school: '', location: '', start: null, end: null, details: [],
 });
 
-const LEVELS: { value: LanguageLevel; label: string }[] = [
-  { value: 'natif', label: 'Langue maternelle' },
-  { value: 'courant', label: 'Courant' },
-  { value: 'intermediaire', label: 'Intermédiaire' },
-  { value: 'debutant', label: 'Notions' },
-];
-
-/** Ordre de saisie. « headline » est fusionné avec l'identité : c'est un seul écran mental. */
-const STEPS: { id: SectionId; label: string }[] = [
-  { id: 'personal', label: 'Vous' },
-  { id: 'summary', label: 'Résumé' },
-  { id: 'experience', label: 'Expérience' },
-  { id: 'education', label: 'Formation' },
-  { id: 'skills', label: 'Compétences' },
-  { id: 'extras', label: 'Autres' },
-];
-
-/** true si l'utilisateur a réellement saisi quelque chose. */
-function hasContent(resume: Resume): boolean {
-  return (
-    resume.personal.fullName.trim() !== ''
-    || resume.headline.trim() !== ''
-    || resume.summary.trim() !== ''
-    || resume.experiences.length > 0
-    || resume.education.length > 0
-    || resume.skills.length > 0
-  );
+/** Fiche d'expérience ou de formation ouverte en édition. */
+interface Editing {
+  kind: 'experience' | 'education';
+  id: string;
+  /** État avant édition, pour « Annuler » ; `null` pour une fiche neuve. */
+  snapshot: Experience | Education | null;
 }
 
-export function ResumeEditor({ signedIn, stored }: {
+/** Nombre d'écrans à remplir : l'écran final n'est pas une question. */
+const QUESTIONS = STEPS.length - 1;
+
+function scrollToTop(): void {
+  window.scrollTo({ top: 0 });
+}
+
+/** Amène le premier champ en erreur sous les yeux, clavier ouvert si c'est un champ. */
+function revealFirstError(): void {
+  requestAnimationFrame(() => {
+    const target = document.querySelector<HTMLElement>('[aria-invalid="true"]')
+      ?? document.querySelector<HTMLElement>('main [role="alert"]');
+    if (target === null) return;
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+      target.focus({ preventScroll: true });
+    }
+  });
+}
+
+export function ResumeEditor({
+  signedIn, stored, target, initialStep, initialTemplate, justSignedIn,
+}: {
   signedIn: boolean;
+  /** CV en ligne : celui demandé (`target: 'open'`) ou le dernier modifié. */
   stored: { id: string; data: Resume } | null;
+  /**
+   * Ce que la personne est venue faire : reprendre là où elle en était
+   * (`latest`), ouvrir un CV précis depuis son compte (`open`), ou en
+   * commencer un nouveau (`new`).
+   */
+  target: 'latest' | 'open' | 'new';
+  /** Étape demandée dans l'URL (`?etape=…`). */
+  initialStep: StepId | null;
+  /** Modèle choisi sur la page d'accueil (`/cv?modele=…`). */
+  initialTemplate: TemplateId | null;
+  /** Retour de la connexion demandée au premier téléchargement. */
+  justSignedIn: boolean;
 }) {
   const [resume, setResume] = useState<Resume | null>(null);
-  const [step, setStep] = useState<SectionId>('personal');
+  const [step, setStep] = useState<StepId>('modele');
+  const [returnToFinal, setReturnToFinal] = useState(false);
+  const [attempted, setAttempted] = useState(false);
+  const [editing, setEditing] = useState<Editing | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [downloaded, setDownloaded] = useState<DownloadedCv | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const resumeId = useRef<string | null>(stored?.id ?? null);
+  const resumeId = useRef<string | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const booted = useRef(false);
 
-  // Le brouillon est lu après le montage : le rendu serveur ne connaît pas
-  // le localStorage, et rendre un CV vide puis le remplacer provoquerait une
-  // désynchronisation d'hydratation.
+  /**
+   * Choix du CV à ouvrir, au montage.
+   *
+   * Le brouillon et l'étape sont lus après le montage : le rendu serveur ne
+   * connaît pas le localStorage, et rendre un CV vide puis le remplacer
+   * provoquerait une désynchronisation d'hydratation.
+   *
+   * Règle d'or : le brouillon local n'est jamais perdu. Avant de le remplacer
+   * par un autre CV (ouvert depuis le compte, ou neuf), il est mis à l'abri en
+   * ligne — créé s'il n'y était pas encore, mis à jour sinon, pour les
+   * dernières frappes que l'écriture différée n'aurait pas encore envoyées.
+   * Un visiteur anonyme n'a pas d'abri en ligne : pour lui, on reprend
+   * simplement son brouillon.
+   */
   useEffect(() => {
-    const draft = loadDraft();
-    setResume(hasContent(draft) || stored === null ? draft : stored.data);
-  }, [stored]);
+    // Une seule fois, y compris sous le double montage du mode strict : la
+    // mise à l'abri créerait sinon deux lignes.
+    if (booted.current) return;
+    booted.current = true;
+
+    void (async () => {
+      const draft = loadDraft();
+      const draftId = loadDraftId();
+      const draftFull = hasContent(draft);
+      const shelter = async (): Promise<void> => {
+        if (signedIn && draftFull) await saveResume(draft, draftId);
+      };
+      const mode = !signedIn && draftFull ? 'latest' : target;
+
+      let initial: Resume;
+      let id: string | null;
+      let first: StepId;
+
+      if (mode === 'new') {
+        await shelter();
+        initial = emptyResume(initialTemplate ?? undefined);
+        id = null;
+        first = 'modele';
+      } else if (mode === 'open' && stored !== null) {
+        if (draftFull && draftId === stored.id) {
+          initial = draft;
+        } else {
+          await shelter();
+          initial = stored.data;
+        }
+        id = stored.id;
+        // Depuis le compte, on arrive sur la vue d'ensemble : le CV, son
+        // score, et de quoi modifier la partie voulue sans tout reparcourir.
+        first = initialStep ?? 'final';
+      } else {
+        if (draftFull || stored === null) {
+          initial = draft;
+          id = draftFull ? draftId : null;
+        } else {
+          initial = stored.data;
+          id = stored.id;
+        }
+        if (justSignedIn) {
+          first = 'final';
+        } else if (initialTemplate !== null && !hasContent(initial)) {
+          // Venu de la page d'accueil en touchant un modèle : il est déjà
+          // choisi, il reste à le confirmer.
+          initial = {
+            ...initial,
+            templateId: initialTemplate,
+            accentColor: getTemplate(initialTemplate).defaultAccent,
+          };
+          first = 'modele';
+        } else {
+          first = initialStep ?? loadStep() ?? (hasContent(initial) ? 'identite' : 'modele');
+        }
+      }
+
+      // Le paramètre a servi : un rechargement repart du brouillon.
+      if (window.location.search !== '') window.history.replaceState(null, '', '/cv');
+      // Contenu et identifiant écrits ensemble : un brouillon ne doit jamais
+      // porter l'identifiant d'un autre CV que le sien.
+      saveDraft(initial);
+      saveDraftId(id);
+      resumeId.current = id;
+      setResume(initial);
+      setStep(first);
+    })();
+  }, [signedIn, stored, target, initialStep, initialTemplate, justSignedIn]);
 
   // Sauvegarde différée : inutile d'écrire à chaque frappe.
+  //
+  // Les envois en ligne sont mis en file : sans cela, deux envois partis avant
+  // le retour du premier créeraient deux lignes — le second ne connaîtrait
+  // pas encore l'identifiant attribué au premier.
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
   useEffect(() => {
     if (resume === null) return;
     if (saveTimer.current !== null) clearTimeout(saveTimer.current);
@@ -107,9 +232,11 @@ export function ResumeEditor({ signedIn, stored }: {
       // Le local est écrit d'abord, et sans condition : la copie en ligne est
       // un confort, elle ne doit jamais être le seul exemplaire.
       if (!signedIn || !hasContent(resume)) return;
-      void saveResume(resume, resumeId.current).then((outcome) => {
+      saveQueue.current = saveQueue.current.then(async () => {
+        const outcome = await saveResume(resume, resumeId.current);
         if (outcome.ok) {
           resumeId.current = outcome.id ?? resumeId.current;
+          saveDraftId(resumeId.current);
           setSyncError(null);
         } else {
           setSyncError(outcome.error ?? null);
@@ -121,19 +248,46 @@ export function ResumeEditor({ signedIn, stored }: {
     };
   }, [resume, signedIn]);
 
+  useEffect(() => {
+    if (resume !== null) saveStep(step);
+    // Seul le changement d'étape compte : réécrire à chaque frappe n'apporte rien.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  // L'URL `blob:` survit un moment à la fermeture : la feuille de partage ou
+  // l'onglet du PDF peuvent encore la lire.
+  useEffect(() => {
+    if (downloaded === null) return;
+    const { url } = downloaded;
+    return () => {
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    };
+  }, [downloaded]);
+
+  const closeDialog = useCallback(() => setDownloaded(null), []);
+
   const score = useMemo(() => (resume === null ? null : scoreResume(resume)), [resume]);
 
   if (resume === null || score === null) {
     return <p className="p-8 text-sm text-muted">Chargement de votre CV…</p>;
   }
 
-  const update = (patch: Partial<Resume>): void => setResume({ ...resume, ...patch });
+  const def = getStep(step);
+  const index = stepIndex(step);
+  const nextStep = STEP_IDS[index + 1] ?? 'final';
+
+  const update = (patch: Partial<Resume>): void =>
+    setResume((r) => (r === null ? r : { ...r, ...patch }));
 
   const updateExperience = (id: string, patch: Partial<Experience>): void =>
-    update({ experiences: resume.experiences.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
+    setResume((r) => (r === null ? r : {
+      ...r, experiences: r.experiences.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    }));
 
   const updateEducation = (id: string, patch: Partial<Education>): void =>
-    update({ education: resume.education.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
+    setResume((r) => (r === null ? r : {
+      ...r, education: r.education.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    }));
 
   /**
    * Change de modèle en respectant la couleur choisie.
@@ -151,9 +305,115 @@ export function ResumeEditor({ signedIn, stored }: {
     });
   };
 
+  /** Change d'écran : haut de page, titre annoncé, erreurs remises à zéro. */
+  const goTo = (target: StepId, fromFinal = false): void => {
+    setStep(target);
+    setReturnToFinal(fromFinal);
+    setAttempted(false);
+    setEditing(null);
+    setShowPreview(false);
+    setExportError(null);
+    scrollToTop();
+    requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
+  };
+
+  /* ---------- Fiches d'expérience et de formation ---------- */
+
+  const openEntry = (next: Editing): void => {
+    setEditing(next);
+    setAttempted(false);
+    setShowPreview(false);
+    scrollToTop();
+    requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
+  };
+
+  const addEntry = (kind: Editing['kind']): void => {
+    if (kind === 'experience') {
+      const entry = EMPTY_EXPERIENCE();
+      update({ experiences: [...resume.experiences, entry] });
+      openEntry({ kind, id: entry.id, snapshot: null });
+    } else {
+      const entry = EMPTY_EDUCATION();
+      update({ education: [...resume.education, entry] });
+      openEntry({ kind, id: entry.id, snapshot: null });
+    }
+  };
+
+  const editEntry = (kind: Editing['kind'], id: string): void => {
+    const list: (Experience | Education)[] = kind === 'experience' ? resume.experiences : resume.education;
+    const found = list.find((e) => e.id === id);
+    if (found !== undefined) openEntry({ kind, id, snapshot: found });
+  };
+
+  const removeEntry = (kind: Editing['kind'], id: string): void => {
+    if (kind === 'experience') update({ experiences: resume.experiences.filter((e) => e.id !== id) });
+    else update({ education: resume.education.filter((e) => e.id !== id) });
+  };
+
+  const closeEntry = (): void => {
+    setEditing(null);
+    setAttempted(false);
+    scrollToTop();
+    requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
+  };
+
+  const saveEntry = (current: Editing): void => {
+    const errors = current.kind === 'experience'
+      ? experienceErrors(resume.experiences.find((e) => e.id === current.id) ?? EMPTY_EXPERIENCE())
+      : educationErrors(resume.education.find((e) => e.id === current.id) ?? EMPTY_EDUCATION());
+    if (Object.keys(errors).length > 0) {
+      setAttempted(true);
+      revealFirstError();
+      return;
+    }
+    closeEntry();
+  };
+
+  /** « Annuler » : une fiche neuve disparaît, une fiche existante reprend son état d'avant. */
+  const cancelEntry = (current: Editing): void => {
+    const { snapshot, id, kind } = current;
+    if (snapshot === null) {
+      removeEntry(kind, id);
+    } else if (kind === 'experience') {
+      update({ experiences: resume.experiences.map((e) => (e.id === id ? snapshot as Experience : e)) });
+    } else {
+      update({ education: resume.education.map((e) => (e.id === id ? snapshot as Education : e)) });
+    }
+    closeEntry();
+  };
+
+  /* ---------- Navigation ---------- */
+
+  const next = (): void => {
+    if (editing !== null) {
+      saveEntry(editing);
+      return;
+    }
+    if (step === 'final') {
+      void download();
+      return;
+    }
+    if (Object.keys(stepErrors(step, resume)).length > 0) {
+      setAttempted(true);
+      revealFirstError();
+      return;
+    }
+    goTo(returnToFinal ? 'final' : nextStep);
+  };
+
+  const back = (): void => {
+    if (editing !== null) cancelEntry(editing);
+    else if (showPreview) setShowPreview(false);
+    else if (returnToFinal) goTo('final');
+    else if (index > 0) goTo(STEP_IDS[index - 1] as StepId);
+  };
+
+  /* ---------- Téléchargement ---------- */
+
   async function download(): Promise<void> {
-    if (resume === null) return;
+    if (exporting || resume === null) return;
     setExporting(true);
+    setExportError(null);
     try {
       const response = await fetch('/api/export', {
         method: 'POST',
@@ -161,443 +421,291 @@ export function ResumeEditor({ signedIn, stored }: {
         body: JSON.stringify(resume),
       });
       if (response.status === 401) {
-        // Le compte n'est exigé qu'ici : le brouillon est déjà en local, on
-        // renvoie vers l'inscription et l'utilisateur reprend où il en était.
+        // Le compte n'est exigé qu'ici : le brouillon et l'étape sont déjà en
+        // local, on renvoie vers l'inscription et l'utilisateur revient sur
+        // cet écran, prêt à télécharger.
         window.location.href = '/connexion?suite=telechargement';
         return;
       }
       if (!response.ok) throw new Error(`export ${response.status}`);
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
       const encodedName = response.headers.get('x-filename');
-      link.download = encodedName === null ? 'CV.pdf' : decodeURIComponent(encodedName);
-      // Le lien doit être dans le document pour que Firefox déclenche le
-      // téléchargement, et l'URL survivre au clic : Safari la lit en différé.
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      const name = encodedName === null ? 'CV.pdf' : decodeURIComponent(encodedName);
+      const file = new File([blob], name, { type: 'application/pdf' });
+      const url = URL.createObjectURL(file);
+      const platform = detectPlatform();
+      // Sur iPhone, le fichier ne part pas tout seul : voir `DownloadDialog`.
+      const saved = platform !== 'ios';
+      if (saved) saveToDownloads(url, name);
+      setDownloaded({ file, url, platform, saved });
     } catch {
-      window.alert('Le téléchargement a échoué. Vérifiez votre connexion et réessayez.');
+      setExportError(
+        navigator.onLine
+          ? 'Le téléchargement a échoué. Réessayez dans un instant.'
+          : 'Vous êtes hors connexion. Votre CV est bien enregistré : réessayez une fois connecté.',
+      );
     } finally {
       setExporting(false);
     }
   }
 
-  return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start">
-      <div className="flex flex-col gap-4">
-        {/* Navigation par section : la barre de progression du remplissage. */}
-        <nav className="flex flex-wrap gap-2" aria-label="Sections du CV">
-          {STEPS.map((s) => {
-            const sectionScore = score.sections.find((x) => x.id === s.id);
-            const active = s.id === step;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setStep(s.id)}
-                aria-current={active ? 'step' : undefined}
-                className={`rounded-full px-3 py-1.5 text-sm ${
-                  active ? 'bg-header text-white' : 'border border-line bg-white'
-                }`}
-              >
-                {s.label}
-                {sectionScore !== undefined && !sectionScore.empty ? (
-                  <span className="ml-1.5 text-xs opacity-70">{sectionScore.score}</span>
-                ) : null}
-              </button>
-            );
-          })}
-        </nav>
+  /* ---------- Rendu ---------- */
 
-        {/* En dessous de `lg`, la colonne de droite passe sous le formulaire :
-            l'aperçu serait hors de vue pendant la saisie. On le replie donc, et
-            on le montre ici, juste sous la navigation, quand l'utilisateur le
-            demande. Au-delà de `lg`, il est visible en permanence à droite. */}
-        <div className="lg:hidden">
-          <Button onClick={() => setShowPreview(!showPreview)}>
-            {showPreview ? 'Masquer l’aperçu' : 'Voir l’aperçu du CV'}
-          </Button>
-          {showPreview ? (
-            <div className="mt-3">
+  const fieldErrors = attempted && editing === null ? stepErrors(step, resume) : {};
+  const editedExperience = editing?.kind === 'experience'
+    ? resume.experiences.find((e) => e.id === editing.id) ?? null
+    : null;
+  const editedEducation = editing?.kind === 'education'
+    ? resume.education.find((e) => e.id === editing.id) ?? null
+    : null;
+
+  let title = def.title;
+  let lead = def.lead;
+  if (editing !== null) {
+    const fresh = editing.snapshot === null;
+    title = editing.kind === 'experience'
+      ? (fresh ? 'Nouvelle expérience' : 'Modifier cette expérience')
+      : (fresh ? 'Nouveau diplôme' : 'Modifier ce diplôme');
+    lead = 'Remplissez les champs, puis touchez « Enregistrer » en bas de l’écran.';
+  }
+
+  let primaryLabel: string;
+  if (editing !== null) {
+    // Le titre de l'écran dit déjà quoi : le bouton tient sur une ligne.
+    primaryLabel = 'Enregistrer';
+  } else if (step === 'final') {
+    primaryLabel = exporting ? 'Préparation du PDF…' : 'Télécharger mon CV';
+  } else if (step === 'modele') {
+    primaryLabel = returnToFinal ? 'Garder ce modèle' : 'Commencer avec ce modèle';
+  } else if (returnToFinal) {
+    primaryLabel = 'Valider et revoir mon CV';
+  } else if (def.optional && isStepEmpty(step, resume)) {
+    primaryLabel = 'Passer cette étape';
+  } else if (nextStep === 'final') {
+    primaryLabel = 'Terminer mon CV';
+  } else {
+    primaryLabel = 'Continuer';
+  }
+
+  const fullWidth = step === 'modele' || step === 'final';
+  const canGoBack = editing !== null || returnToFinal || index > 0;
+
+  let form: React.ReactNode = null;
+  switch (step) {
+    case 'identite':
+      form = <IdentityStep resume={resume} update={update} errors={fieldErrors} />;
+      break;
+    case 'coordonnees':
+      form = <ContactStep resume={resume} update={update} errors={fieldErrors} />;
+      break;
+    case 'photo':
+      form = <PhotoStep resume={resume} update={update} />;
+      break;
+    case 'profil':
+      form = <SummaryStep resume={resume} update={update} />;
+      break;
+    case 'experience':
+      form = editedExperience !== null ? (
+        <ExperienceForm
+          entry={editedExperience}
+          errors={attempted ? experienceErrors(editedExperience) : {}}
+          onChange={(patch) => updateExperience(editedExperience.id, patch)}
+        />
+      ) : (
+        <ExperienceList
+          items={resume.experiences}
+          isIncomplete={(e) => Object.keys(experienceErrors(e)).length > 0}
+          listError={fieldErrors.list}
+          onAdd={() => addEntry('experience')}
+          onEdit={(id) => editEntry('experience', id)}
+          onRemove={(id) => removeEntry('experience', id)}
+        />
+      );
+      break;
+    case 'formation':
+      form = editedEducation !== null ? (
+        <EducationForm
+          entry={editedEducation}
+          errors={attempted ? educationErrors(editedEducation) : {}}
+          onChange={(patch) => updateEducation(editedEducation.id, patch)}
+        />
+      ) : (
+        <EducationList
+          items={resume.education}
+          isIncomplete={(e) => Object.keys(educationErrors(e)).length > 0}
+          listError={fieldErrors.list}
+          onAdd={() => addEntry('education')}
+          onEdit={(id) => editEntry('education', id)}
+          onRemove={(id) => removeEntry('education', id)}
+        />
+      );
+      break;
+    case 'competences':
+      form = <SkillsStep resume={resume} update={update} />;
+      break;
+    case 'langues':
+      form = <LanguagesStep resume={resume} update={update} errors={fieldErrors} />;
+      break;
+    default:
+      break;
+  }
+
+  return (
+    // Réserve sous le contenu : la barre d'action fixe ne doit rien masquer.
+    <div className="pb-36">
+      <header className="mb-6 flex flex-col gap-3">
+        <div className="flex min-h-11 items-center justify-between gap-3">
+          {canGoBack ? (
+            <button
+              type="button"
+              onClick={back}
+              className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-muted hover:text-ink"
+            >
+              <svg aria-hidden viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10 3L5 8l5 5" />
+              </svg>
+              {editing !== null ? 'Annuler' : returnToFinal ? 'Revenir à mon CV' : 'Retour'}
+            </button>
+          ) : <span />}
+          <span className="text-sm font-medium text-muted">
+            {step === 'final' ? 'Terminé' : `Étape ${index + 1} sur ${QUESTIONS}`}
+          </span>
+        </div>
+
+        {/* Un segment par écran : on voit d'un coup d'œil où l'on est et ce
+            qu'il reste, sans avoir à lire. */}
+        <ol className="flex gap-1" aria-label="Progression">
+          {STEPS.filter((s) => s.id !== 'final').map((s, i) => (
+            <li
+              key={s.id}
+              aria-current={s.id === step ? 'step' : undefined}
+              className={`h-1.5 flex-1 rounded-full ${
+                i < index || step === 'final' ? 'bg-accent' : i === index ? 'bg-header' : 'bg-line'
+              }`}
+            >
+              <span className="sr-only">
+                {s.label}{i < index ? ' (fait)' : s.id === step ? ' (en cours)' : ''}
+              </span>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-1">
+          <h1 ref={heading} tabIndex={-1} className="text-2xl font-bold leading-tight outline-none sm:text-3xl">
+            {title}
+          </h1>
+          <p className="mt-1.5 text-base text-muted">{lead}</p>
+        </div>
+      </header>
+
+      {step === 'modele' ? (
+        <TemplateStep
+          resume={resume}
+          onChoose={chooseTemplate}
+          onAccent={(accentColor) => update({ accentColor })}
+        />
+      ) : null}
+
+      {step === 'final' ? (
+        <FinalStep
+          resume={resume}
+          score={score}
+          signedIn={signedIn}
+          justSignedIn={justSignedIn}
+          reviewing={target === 'open'}
+          onGoTo={(target) => goTo(target, true)}
+        />
+      ) : null}
+
+      {fullWidth ? null : (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:items-start">
+          <section className={`card min-w-0 flex-col gap-5 p-4 sm:p-6 ${showPreview ? 'hidden lg:flex' : 'flex'}`}>
+            {form}
+          </section>
+
+          {/* L'aperçu : en colonne fixe sur grand écran, à la demande sur
+              téléphone — où il remplace le formulaire plutôt que de s'empiler
+              dessous, hors de vue. */}
+          <aside
+            aria-label="Aperçu de votre CV"
+            className={`${showPreview ? 'flex' : 'hidden'} min-w-0 flex-col gap-2 lg:sticky lg:top-4 lg:flex`}
+          >
+            <p className="text-sm text-muted">
+              Votre CV en ce moment — modèle {getTemplate(resume.templateId).name}
+            </p>
+            <div className="overflow-hidden rounded-lg border border-line shadow-[0_18px_40px_-20px_rgba(23,33,12,0.45)]">
               <ResumePreview resume={resume} />
             </div>
-          ) : null}
+          </aside>
         </div>
+      )}
 
-        <section className="card flex flex-col gap-4 p-4">
-          <h2 className="text-base font-semibold">{SECTION_LABELS[step]}</h2>
+      {syncError !== null ? (
+        <p role="status" className="mt-4 rounded-lg bg-warn-soft px-3 py-2 text-sm">
+          {syncError}
+        </p>
+      ) : null}
 
-          {step === 'personal' ? (
-            <>
-              <Field label="Nom complet">
-                <TextInput
-                  value={resume.personal.fullName}
-                  onChange={(v) => update({ personal: { ...resume.personal, fullName: v } })}
-                  placeholder="Aya Koffi"
-                />
-              </Field>
-              <Field label="Titre professionnel" hint="Le poste que vous visez, en quelques mots.">
-                <TextInput
-                  value={resume.headline}
-                  onChange={(v) => update({ headline: v })}
-                  placeholder="Comptable junior spécialisée en comptabilité fournisseurs"
-                />
-              </Field>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Ville">
-                  <TextInput
-                    value={resume.personal.location}
-                    onChange={(v) => update({ personal: { ...resume.personal, location: v } })}
-                    placeholder="Abidjan, Côte d’Ivoire"
-                  />
-                </Field>
-                <Field label="Téléphone">
-                  <TextInput
-                    type="tel"
-                    value={resume.personal.phone}
-                    onChange={(v) => update({ personal: { ...resume.personal, phone: v } })}
-                    placeholder="+225 07 00 00 00 00"
-                  />
-                </Field>
-              </div>
-              <Field label="Email">
-                <TextInput
-                  type="email"
-                  value={resume.personal.email}
-                  onChange={(v) => update({ personal: { ...resume.personal, email: v } })}
-                  placeholder="aya.koffi@exemple.ci"
-                />
-              </Field>
-              <PhotoField
-                photo={resume.personal.photo}
-                showPhoto={resume.personal.showPhoto}
-                fullName={resume.personal.fullName}
-                onChange={(patch) => update({ personal: { ...resume.personal, ...patch } })}
-              />
-            </>
+      {/* Barre d'action : le bouton principal ne bouge jamais d'une étape à
+          l'autre, et l'aperçu est à côté, sous le même pouce. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          {exportError !== null ? (
+            <p role="alert" className="text-sm font-medium text-danger">{exportError}</p>
           ) : null}
-
-          {step === 'summary' ? (
-            <Field
-              label="Résumé professionnel"
-              hint="2 à 4 phrases : votre profil, votre expérience, ce que vous cherchez."
-            >
-              <TextArea
-                rows={6}
-                value={resume.summary}
-                onChange={(v) => update({ summary: v })}
-                placeholder="Comptable junior avec trois ans de pratique en cabinet…"
-              />
-            </Field>
-          ) : null}
-
-          {step === 'experience' ? (
-            <>
-              {resume.experiences.map((exp) => (
-                <div key={exp.id} className="flex flex-col gap-3 border-t border-line pt-4">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Intitulé du poste">
-                      <TextInput
-                        value={exp.role}
-                        onChange={(v) => updateExperience(exp.id, { role: v })}
-                        placeholder="Assistante comptable"
-                      />
-                    </Field>
-                    <Field label="Entreprise">
-                      <TextInput
-                        value={exp.company}
-                        onChange={(v) => updateExperience(exp.id, { company: v })}
-                        placeholder="Cabinet Diarra"
-                      />
-                    </Field>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <DateInput
-                      label="Début"
-                      value={exp.start}
-                      onChange={(v) => updateExperience(exp.id, { start: v })}
-                    />
-                    {exp.current ? null : (
-                      <DateInput
-                        label="Fin"
-                        value={exp.end}
-                        onChange={(v) => updateExperience(exp.id, { end: v })}
-                      />
-                    )}
-                  </div>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={exp.current}
-                      onChange={(e) =>
-                        updateExperience(exp.id, { current: e.target.checked, end: null })}
-                    />
-                    Poste occupé actuellement
-                  </label>
-                  <Field
-                    label="Réalisations"
-                    hint="Une puce par réalisation, commencée par un verbe d’action et chiffrée si possible."
-                  >
-                    <LineList
-                      items={exp.bullets}
-                      onChange={(bullets) => updateExperience(exp.id, { bullets })}
-                      placeholder="Traité 350 factures fournisseurs par mois en réduisant les retards de 40 %"
-                      addLabel="Ajouter une réalisation"
-                    />
-                  </Field>
-                  <div>
-                    <Button
-                      variant="ghost"
-                      onClick={() =>
-                        update({ experiences: resume.experiences.filter((e) => e.id !== exp.id) })}
-                    >
-                      Supprimer cette expérience
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <div>
-                <Button
-                  onClick={() => update({ experiences: [...resume.experiences, EMPTY_EXPERIENCE()] })}
-                >
-                  Ajouter une expérience
-                </Button>
-              </div>
-            </>
-          ) : null}
-
-          {step === 'education' ? (
-            <>
-              {resume.education.map((edu) => (
-                <div key={edu.id} className="flex flex-col gap-3 border-t border-line pt-4">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Diplôme">
-                      <TextInput
-                        value={edu.degree}
-                        onChange={(v) => updateEducation(edu.id, { degree: v })}
-                        placeholder="Licence en comptabilité et gestion"
-                      />
-                    </Field>
-                    <Field label="Établissement">
-                      <TextInput
-                        value={edu.school}
-                        onChange={(v) => updateEducation(edu.id, { school: v })}
-                        placeholder="Université Félix Houphouët-Boigny"
-                      />
-                    </Field>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <DateInput
-                      label="Début"
-                      value={edu.start}
-                      onChange={(v) => updateEducation(edu.id, { start: v })}
-                    />
-                    <DateInput
-                      label="Obtention"
-                      value={edu.end}
-                      onChange={(v) => updateEducation(edu.id, { end: v })}
-                    />
-                  </div>
-                  <Field label="Précisions" hint="Mention, spécialisation, travaux notables.">
-                    <LineList
-                      items={edu.details}
-                      onChange={(details) => updateEducation(edu.id, { details })}
-                      placeholder="Mention bien"
-                      addLabel="Ajouter une précision"
-                    />
-                  </Field>
-                  <div>
-                    <Button
-                      variant="ghost"
-                      onClick={() =>
-                        update({ education: resume.education.filter((e) => e.id !== edu.id) })}
-                    >
-                      Supprimer cette formation
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <div>
-                <Button onClick={() => update({ education: [...resume.education, EMPTY_EDUCATION()] })}>
-                  Ajouter une formation
-                </Button>
-              </div>
-            </>
-          ) : null}
-
-          {step === 'skills' ? (
-            <Field
-              label="Compétences"
-              hint="Séparées par des virgules. Mélangez outils, savoir-faire métier et qualités."
-            >
-              <TagInput
-                items={resume.skills}
-                onChange={(skills) => update({ skills })}
-                placeholder="Sage 100, Excel avancé, SYSCOHADA, Rigueur, Travail en équipe"
-              />
-            </Field>
-          ) : null}
-
-          {step === 'extras' ? (
-            <>
-              <Field label="Langues">
-                <div className="flex flex-col gap-2">
-                  {resume.languages.map((lang) => (
-                    <div key={lang.id} className="flex gap-2">
-                      <TextInput
-                        value={lang.name}
-                        onChange={(v) =>
-                          update({
-                            languages: resume.languages.map((l) =>
-                              (l.id === lang.id ? { ...l, name: v } : l)),
-                          })}
-                        placeholder="Anglais"
-                      />
-                      <select
-                        className="rounded-lg border border-line bg-white px-3 py-2 text-sm"
-                        value={lang.level}
-                        aria-label={`Niveau de ${lang.name || 'la langue'}`}
-                        onChange={(e) =>
-                          update({
-                            languages: resume.languages.map((l) =>
-                              (l.id === lang.id
-                                ? { ...l, level: e.target.value as LanguageLevel }
-                                : l)),
-                          })}
-                      >
-                        {LEVELS.map((l) => (
-                          <option key={l.value} value={l.value}>{l.label}</option>
-                        ))}
-                      </select>
-                      <Button
-                        variant="ghost"
-                        onClick={() =>
-                          update({ languages: resume.languages.filter((l) => l.id !== lang.id) })}
-                      >
-                        Retirer
-                      </Button>
-                    </div>
-                  ))}
-                  <div>
-                    <Button
-                      onClick={() =>
-                        update({
-                          languages: [
-                            ...resume.languages,
-                            { id: newId(), name: '', level: 'courant' },
-                          ],
-                        })}
-                    >
-                      Ajouter une langue
-                    </Button>
-                  </div>
-                </div>
-              </Field>
-
-              <Field label="Certifications">
-                <LineList
-                  items={resume.certifications.map((c) => c.name)}
-                  onChange={(names) =>
-                    update({
-                      certifications: names.map((name, i) => ({
-                        id: resume.certifications[i]?.id ?? newId(),
-                        name,
-                        issuer: resume.certifications[i]?.issuer ?? '',
-                        date: resume.certifications[i]?.date ?? null,
-                      })),
-                    })}
-                  placeholder="Certificat Sage 100 Comptabilité"
-                  addLabel="Ajouter une certification"
-                />
-              </Field>
-            </>
-          ) : null}
-        </section>
-
-        {/* Modèle et couleur : le choix est réversible à tout moment, il ne
-            change que la mise en forme, jamais le contenu. */}
-        <section className="card flex flex-col gap-4 p-4">
-          <div>
-            <h2 className="text-base font-semibold">Modèle</h2>
-            <p className="mt-1 text-xs text-muted">
-              Les {TEMPLATE_LIST.length} modèles sont gratuits et vérifiés lisibles par les
-              logiciels de tri automatique.
-            </p>
+          <div className="flex items-center gap-3">
+            {fullWidth ? null : (
+              <button
+                type="button"
+                aria-pressed={showPreview}
+                onClick={() => {
+                  setShowPreview(!showPreview);
+                  scrollToTop();
+                }}
+                className={`inline-flex min-h-13 shrink-0 items-center justify-center gap-2 rounded-full border-2 px-4 text-base font-semibold lg:hidden ${
+                  showPreview
+                    ? 'flex-1 border-header bg-header text-white'
+                    : 'border-header text-header'
+                }`}
+              >
+                {showPreview ? (
+                  <>
+                    <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+                      <path d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5z" />
+                    </svg>
+                    Revenir à la saisie
+                  </>
+                ) : (
+                  <>
+                    <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6-8.5-6-8.5-6z" />
+                      <circle cx="10" cy="10" r="2.5" />
+                    </svg>
+                    Voir mon CV
+                  </>
+                )}
+              </button>
+            )}
+            <div className={`flex-1 lg:ml-auto lg:w-96 lg:flex-none ${showPreview ? 'hidden lg:block' : ''}`}>
+              <Button variant="solid" size="lg" full onClick={next} disabled={exporting}>
+                {step === 'final' && editing === null ? (
+                  <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 3v10M5.5 8.5L10 13l4.5-4.5M4 17h12" />
+                  </svg>
+                ) : null}
+                {primaryLabel}
+                {step !== 'final' && editing === null ? (
+                  <svg aria-hidden viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 8h10M9 4l4 4-4 4" />
+                  </svg>
+                ) : null}
+              </Button>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {TEMPLATE_LIST.map((t) => {
-              const selected = resume.templateId === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => chooseTemplate(t.id)}
-                  className={`flex flex-col gap-2 rounded-lg border p-2 text-left ${
-                    selected ? 'border-accent bg-accent-soft' : 'border-line bg-white'
-                  }`}
-                >
-                  {/* Le croquis prend la couleur choisie : on voit le modèle
-                      dans ses couleurs, pas dans celles d'un autre CV. */}
-                  <TemplateSketch
-                    templateId={t.id}
-                    accent={resume.accentColor}
-                    className="w-full rounded border border-line"
-                  />
-                  <span className="text-sm font-medium">{t.name}</span>
-                  <span className="text-xs text-muted">{t.bestFor}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-col gap-2 border-t border-line pt-4">
-            <h3 className="text-sm font-medium">Couleur principale</h3>
-            <ColorPicker
-              value={resume.accentColor}
-              onChange={(accentColor) => update({ accentColor })}
-            />
-          </div>
-        </section>
-
-        {syncError !== null ? (
-          <p role="status" className="rounded-lg bg-warn-soft px-3 py-2 text-sm">
-            {syncError}
-          </p>
-        ) : null}
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Button variant="solid" onClick={() => void download()}>
-            {exporting ? 'Génération…' : 'Télécharger mon CV en PDF'}
-          </Button>
-          {signedIn ? null : (
-            <span className="text-xs text-muted">
-              Un compte gratuit est demandé au téléchargement.
-            </span>
-          )}
         </div>
-
       </div>
 
-      {/* Colonne collante : l'aperçu doit rester sous les yeux pendant qu'on
-          tape. Sans `sticky`, il défilait hors de l'écran dès la deuxième
-          expérience saisie — un aperçu en direct qu'il faut aller chercher
-          n'est pas un aperçu en direct. */}
-      <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:pr-1">
-        <div className="hidden lg:block">
-          <ResumePreview resume={resume} />
-        </div>
-        <ScorePanel
-          score={score}
-          // « headline » n'a pas d'étape propre : le titre professionnel se
-          // saisit avec l'identité, une recommandation qui le vise doit y mener.
-          onFocusSection={(section) => setStep(section === 'headline' ? 'personal' : section)}
-        />
-      </div>
+      {downloaded !== null ? <DownloadDialog cv={downloaded} onClose={closeDialog} /> : null}
     </div>
   );
 }

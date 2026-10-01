@@ -61,8 +61,8 @@ const NAV = [
 
 // L'état de connexion n'est volontairement pas lu ici : le layout resterait
 // dynamique et la page d'accueil perdrait son rendu statique, qui est ce qui la
-// rend rapide sur une connexion lente. Le lien mène à /connexion, qui redirige
-// vers /cv quand la session existe déjà.
+// rend rapide sur une connexion lente. Le lien mène à /compte, qui affiche la
+// connexion, ou la liste des CV quand la session existe déjà.
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -83,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </li>
               ))}
             </ul>
-            <Link href="/connexion" className="text-sm hover:text-accent">
+            <Link href="/compte" className="text-sm hover:text-accent">
               Compte
             </Link>
           </nav>

@@ -13,7 +13,8 @@ export default async function ConnexionPage({
 }) {
   const { suite } = await searchParams;
   const user = await currentUser();
-  if (user !== null) redirect('/cv');
+  // Connecté : le téléchargement reprend dans l'éditeur, le reste va au compte.
+  if (user !== null) redirect(suite === 'telechargement' ? '/cv' : '/compte');
 
   const googleEnabled = await isGoogleEnabled();
   const fromDownload = suite === 'telechargement';
@@ -30,7 +31,12 @@ export default async function ConnexionPage({
           étiez.
         </p>
       ) : null}
-      <AuthForm googleEnabled={googleEnabled} next="/cv" />
+      {/* Venu du téléchargement : le retour ramène sur l'écran final du
+          parcours, qui annonce que le téléchargement est désormais possible. */}
+      <AuthForm
+        googleEnabled={googleEnabled}
+        next={fromDownload ? '/cv?suite=telechargement' : '/cv'}
+      />
     </div>
   );
 }

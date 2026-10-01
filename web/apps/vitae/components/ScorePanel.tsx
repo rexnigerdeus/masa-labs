@@ -7,7 +7,7 @@ import type { Grade, ScoreResult, SectionId } from '@everyday/cv-core';
  * Aucun état, aucun effet : le composant est purement dérivé du `ScoreResult`.
  */
 
-const GRADE_LABEL: Record<Grade, string> = {
+export const GRADE_LABEL: Record<Grade, string> = {
   excellent: 'Excellent',
   bon: 'Bon',
   moyen: 'Moyen',
@@ -20,7 +20,7 @@ const GRADE_CLASS: Record<Grade, string> = {
   moyen: 'bg-warn-soft text-header',
 };
 
-function ScoreRing({ score }: { score: number }) {
+export function ScoreRing({ score, className = 'h-32 w-32' }: { score: number; className?: string }) {
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   const filled = (Math.max(0, Math.min(100, score)) / 100) * circumference;
@@ -28,7 +28,7 @@ function ScoreRing({ score }: { score: number }) {
   return (
     <svg
       viewBox="0 0 120 120"
-      className="h-32 w-32"
+      className={className}
       role="img"
       aria-label={`Score du CV : ${score} sur 100`}
     >

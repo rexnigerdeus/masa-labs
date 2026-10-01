@@ -684,7 +684,14 @@ function Sidebar(ctx: Ctx) {
   );
 }
 
-export function ResumePreview({ resume }: { resume: Resume }) {
+export function ResumePreview({ resume, decorative = false }: {
+  resume: Resume;
+  /**
+   * Vignette d'illustration (choix du modèle) : masquée aux lecteurs d'écran,
+   * qui liraient sinon huit fois le même CV d'exemple.
+   */
+  decorative?: boolean;
+}) {
   const spec = getTemplate(resume.templateId);
   const c = templatePalette(spec, normalizeAccent(resume.accentColor, spec.defaultAccent));
   // Densité 1 : l'aperçu montre le modèle tel qu'il est dessiné. Le
@@ -699,6 +706,7 @@ export function ResumePreview({ resume }: { resume: Resume }) {
     // la fenêtre. Le conteneur ne porte donc aucune mesure, et la page, qui
     // est sa descendante, les porte toutes.
     <div
+      aria-hidden={decorative || undefined}
       style={{
         containerType: 'inline-size',
         aspectRatio: '210 / 297',
