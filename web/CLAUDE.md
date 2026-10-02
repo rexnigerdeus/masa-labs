@@ -118,6 +118,13 @@ Copier `.env.example` en `.env.local` dans chaque app.
 - Sowly charge deux polices (General Sans sous-ensemblée + Inter via `next/font`), seule
   exception à la règle « aucune police téléchargée », décidée pour le brief Sowly §6.
   Le brief Sowly vit hors du dépôt (`Graines_dHabitudes_Sowly_Brief_v2.md`).
+- **Le téléphone ne se lit jamais dans `profiles`** : son propre numéro se relit dans le
+  pseudo-email (`phoneFromEmail`), celui d'une contrepartie passe par une fonction qui
+  vérifie le droit de le voir (`hive_telephones_commandes`, `rondo_telephones`) —
+  [apps/hive/lib/db/orders.ts:20](apps/hive/lib/db/orders.ts#L20),
+  [../supabase/migrations/README.md](../supabase/migrations/README.md).
+- Les quatre apps posent les mêmes en-têtes de sécurité (anti-iframe, nosniff, referrer,
+  permissions) dans leur `next.config.ts` ; pas de CSP sur les scripts, volontairement.
 - Le code renvoie au brief par des références « brief §N » : voir [../masa-labs-mvp-specs.md](../masa-labs-mvp-specs.md).
 
 ## Adding New Features or Fixing Bugs

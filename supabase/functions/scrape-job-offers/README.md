@@ -105,10 +105,17 @@ supabase link --project-ref fhaulxauhaoofimkyrqb
 supabase functions deploy scrape-job-offers
 ```
 
-> ⚠️ **Pas de secret requis.** L'Edge Function est déployée avec
-> `verify_jwt = false` (config.toml) et n'exige plus de `SCRAPER_SECRET`.
-> Le stockage du secret côté PostgreSQL (`app.scraper_secret`) exigeait des
-> droits superuser non disponibles → le secret a été retiré pour simplifier.
+> 🔒 **Secret requis.** La fonction reste déployée avec `verify_jwt = false`
+> (pg_net n'a pas de jeton utilisateur), mais elle refuse (401) tout appel
+> sans l'en-tête `x-scraper-secret`. Le secret est généré dans la base et
+> rangé dans **Supabase Vault** (`scraper_secret`) : le cron le lit et
+> l'envoie, la fonction le fait confirmer par `vitae_scraper_secret_valid`.
+> Il n'est écrit nulle part ailleurs — ni dans le dépôt, ni dans les
+> variables de la fonction. Migration : `20261002150000_durcissement_securite.sql`.
+>
+> **Ordre de mise en place** : appliquer la migration *avant* de déployer
+> cette version de la fonction, sinon le cron (qui n'envoie pas encore le
+> secret) serait refusé.
 
 ### 2. Exécuter la migration SQL
 
@@ -138,13 +145,9 @@ Cela va :
 select public.vitae_scrape_jobs();
 ```
 
-Ou via HTTP (pas d'authentification requise) :
-```bash
-curl -X POST \
-  https://fhaulxauhaoofimkyrqb.supabase.co/functions/v1/scrape-job-offers \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
+Un appel HTTP direct sans le secret est refusé (401) — c'est voulu :
+`select public.vitae_scrape_jobs();` (SQL Editor, rôle postgres) est la
+seule manière de déclencher un scraping à la main.
 
 ### 4. Vérifier le résultat
 

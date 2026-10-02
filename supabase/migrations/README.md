@@ -50,3 +50,28 @@ Toutes les migrations d'ici sont idempotentes : `create table if not exists`,
 Attention en revanche à `cron.schedule` : l'appeler deux fois crée deux jobs.
 Voir `20260827060000_scrape_job_offers_scheduler.sql`, qui déprogramme avant de
 programmer.
+
+## Fonctions : droits d'exécution
+
+Depuis `20261002150000_durcissement_securite.sql`, une fonction créée dans
+`public` **n'est plus exécutable par `anon`** sans un `grant` explicite
+(`alter default privileges … revoke execute on functions from public, anon`).
+`authenticated` garde le droit que Supabase lui accorde par défaut.
+
+Pour toute nouvelle fonction `security definer` :
+
+- contrôler l'appelant avec `is distinct from auth.uid()`, jamais `!=` — avec
+  un appelant anonyme, `!=` donne NULL et le contrôle ne se déclenche pas
+  (c'est le trou qu'avaient `vitae_get_full_cv` et `vitae_duplicate_cv`) ;
+- `revoke execute … from public, anon` puis `grant execute … to authenticated`
+  si une app l'appelle ; rien du tout si c'est une fonction de trigger ;
+- `set search_path` fixé.
+
+## `profiles.phone` n'est pas lisible depuis les apps
+
+Le numéro de téléphone est l'identifiant des comptes (pseudo-email) : le
+laisser lisible permettait à n'importe quel compte de moissonner ceux des
+autres. On le lit par des fonctions qui vérifient le droit de le voir
+(`rondo_telephones`, `hive_telephones_commandes`), et son propre numéro se
+relit dans le pseudo-email. La fermeture de la colonne elle-même attend la
+mise en ligne des apps : voir [../en-attente/README.md](../en-attente/README.md).

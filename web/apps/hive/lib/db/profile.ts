@@ -29,15 +29,19 @@ export async function hiveProfile(userId: string): Promise<HiveProfile> {
     ?? { user_id: userId, commune: null, bio: null, accepts_cash: true, accepts_online: false };
 }
 
-/** Nom et téléphone communs, partagés avec les autres applications de la base. */
-export async function baseProfile(
-  userId: string,
-): Promise<{ full_name: string | null; phone: string | null } | null> {
+/**
+ * Nom commun, partagé avec les autres applications de la base.
+ *
+ * Le téléphone n'est pas lu ici : la colonne `profiles.phone` est fermée aux
+ * apps, et le numéro de l'utilisateur se relit dans son pseudo-email
+ * (`phoneFromEmail`).
+ */
+export async function baseProfile(userId: string): Promise<{ full_name: string | null } | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from('profiles')
-    .select('full_name, phone')
+    .select('full_name')
     .eq('id', userId)
     .maybeSingle();
-  return (data as { full_name: string | null; phone: string | null } | null) ?? null;
+  return (data as { full_name: string | null } | null) ?? null;
 }

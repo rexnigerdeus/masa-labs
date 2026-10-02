@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatPhone, normalizePhone, phoneToEmail } from '../lib/phone.ts';
+import { formatPhone, normalizePhone, phoneFromEmail, phoneToEmail } from '../lib/phone.ts';
 
 test('les trois écritures d’un même numéro mènent au même compte', () => {
   for (const written of ['0700000000', '07 00 00 00 00', '+225 07 00 00 00 00', '002250700000000']) {
@@ -22,4 +22,11 @@ test('un numéro qui n’est pas ivoirien est refusé plutôt que corrigé', () 
 
 test('le numéro se relit deux chiffres par deux chiffres', () => {
   assert.equal(formatPhone('0700000000'), '07 00 00 00 00');
+});
+
+test('le numéro d’un compte se relit dans son pseudo-email', () => {
+  assert.equal(phoneFromEmail('0700000000@everyday.co'), '0700000000');
+  assert.equal(phoneFromEmail('quelqu.un@gmail.com'), null);
+  assert.equal(phoneFromEmail('0700000000@autre.co'), null);
+  assert.equal(phoneFromEmail(undefined), null);
 });

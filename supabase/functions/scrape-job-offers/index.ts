@@ -33,8 +33,8 @@
 //     URL générique de listing → rejet.
 //   - Source en échec → 0 offre de cette source (pas de fake).
 //
-// Sécurité: appelée via service_role (clé serveur), pas par
-// les clients. Vérifie un secret partagé pour les appels HTTP.
+// Sécurité : n'accepte que les appels portant le secret partagé du cron
+// (en-tête x-scraper-secret, vérifié contre Supabase Vault) — voir Deno.serve.
 // ============================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -148,17 +148,32 @@ const GENERIC_URL_PATTERNS = [
 // --- Main ---
 
 Deno.serve(async (req: Request) => {
-  // ⚠️ Pas de vérification de secret : l'Edge Function est déployée avec
-  // `verify_jwt = false` (config.toml) et est appelée par le cron via
-  // pg_net. Le secret SCRAPER_SECRET a été retiré car son stockage côté
-  // PostgreSQL (app.scraper_secret) exige des droits superuser non
-  // disponibles. Le coût d'un appel non autorisé est négligeable
-  // (quelques requêtes HTTP vers LinkedIn/Novojob).
-
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  // Seul le cron a le droit de lancer un scraping. La fonction est déployée
+  // avec `verify_jwt = false` (pg_net n'a pas de jeton utilisateur) : sans
+  // cette vérification, n'importe qui sur Internet pouvait la déclencher en
+  // boucle — elle écrit en base avec la clé service_role, et des rafales de
+  // requêtes vers LinkedIn feraient bannir nos adresses.
+  //
+  // Le secret vit dans Supabase Vault (`scraper_secret`) ; le cron l'envoie
+  // dans `x-scraper-secret` (public.vitae_scrape_jobs). Ici, on ne le
+  // connaît pas : on le fait confirmer par la base, ce qui évite d'avoir à
+  // le recopier dans les variables de la fonction.
+  // Migration : 20261002150000_durcissement_securite.sql.
+  const secret = req.headers.get("x-scraper-secret") ?? "";
+  const { data: secretOk } = secret === ""
+    ? { data: false }
+    : await supabase.rpc("vitae_scraper_secret_valid", { p_secret: secret });
+  if (secretOk !== true) {
+    return new Response(JSON.stringify({ error: "Non autorisé" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   console.log("[scrape-job-offers] Démarrage du scraping...");
 

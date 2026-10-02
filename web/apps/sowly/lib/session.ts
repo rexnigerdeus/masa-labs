@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getSupabaseClient } from './supabase/client.ts';
-import { formatPhone } from './phone.ts';
+import { formatPhone, phoneFromEmail } from './phone.ts';
 
 export interface Account {
   userId: string;
@@ -23,7 +23,7 @@ export function useAccount(): Account | null | undefined {
     const toAccount = (user: { id: string; email?: string } | null | undefined): Account | null =>
       user === null || user === undefined
         ? null
-        : { userId: user.id, phone: formatPhone((user.email ?? '').split('@')[0] ?? '') };
+        : { userId: user.id, phone: formatPhone(phoneFromEmail(user.email) ?? '') };
 
     void supabase.auth.getSession().then(({ data }) => setAccount(toAccount(data.session?.user)));
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {

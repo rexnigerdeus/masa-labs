@@ -122,13 +122,14 @@ class TontineService {
     final userIds = membresList.map((m) => m['user_id'] as String).toList();
     final profiles = await _client
         .from('profiles')
-        .select('id, full_name, phone, avatar_url')
+        .select('id, full_name, avatar_url')
         .inFilter('id', userIds);
 
     final profilesList = (profiles as List).cast<Map<String, dynamic>>();
     final profilesById = {
       for (final p in profilesList) p['id'] as String: p,
     };
+    final phones = await _telephones(tontineId);
 
     // 3. Joindre les deux
     return membresList.map((m) {
@@ -136,7 +137,7 @@ class TontineService {
       return {
         ...m,
         'full_name': profile?['full_name'] as String?,
-        'phone': profile?['phone'] as String?,
+        'phone': phones[m['user_id']],
         'avatar_url': profile?['avatar_url'] as String?,
       };
     }).toList();
@@ -198,20 +199,21 @@ class TontineService {
       if (userIds.isNotEmpty) {
         final profiles = await _client
             .from('profiles')
-            .select('id, full_name, phone, avatar_url')
+            .select('id, full_name, avatar_url')
             .inFilter('id', userIds);
 
         final profilesList = (profiles as List).cast<Map<String, dynamic>>();
         final profilesById = {
           for (final p in profilesList) p['id'] as String: p,
         };
+        final phones = await _telephones(tontineId);
 
         for (final m in membresList) {
           final profile = profilesById[m['user_id']];
           beneficiairesById[m['id'] as String] = {
             ...m,
             'full_name': profile?['full_name'] as String?,
-            'phone': profile?['phone'] as String?,
+            'phone': phones[m['user_id']],
             'avatar_url': profile?['avatar_url'] as String?,
           };
         }
@@ -319,11 +321,31 @@ class TontineService {
         .eq('id', notifId);
   }
 
-  /// Récupère le profil de l'utilisateur connecté
+  /// Numéros des membres d'une tontine, par `user_id`.
+  ///
+  /// La colonne `profiles.phone` n'est plus lisible directement : n'importe
+  /// quel compte pouvait y lire le numéro de n'importe quel utilisateur.
+  /// `rondo_telephones` ne les donne qu'aux membres et à l'administrateur de
+  /// la tontine (migration 20261002150000_durcissement_securite.sql).
+  Future<Map<String, String?>> _telephones(String tontineId) async {
+    final rows = await _client.rpc('rondo_telephones', params: {
+      'p_tontine_id': tontineId,
+    });
+    return {
+      for (final r in (rows as List).cast<Map<String, dynamic>>())
+        r['user_id'] as String: r['phone'] as String?,
+    };
+  }
+
+  /// Récupère le profil de l'utilisateur connecté.
+  ///
+  /// Colonnes nommées : `phone` n'est plus lisible depuis l'app (voir
+  /// `_telephones`) ; le numéro de l'utilisateur se relit dans son
+  /// pseudo-email, ce que fait déjà l'écran Réglages.
   Future<Map<String, dynamic>> getMyProfile() async {
     return await _client
         .from('profiles')
-        .select()
+        .select('id, full_name, avatar_url, created_at, updated_at')
         .eq('id', _client.auth.currentUser!.id)
         .single();
   }

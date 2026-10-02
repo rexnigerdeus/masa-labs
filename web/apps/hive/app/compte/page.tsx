@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AccountForm } from '../../components/AccountForm';
 import { baseProfile, hiveProfile } from '../../lib/db/profile';
-import { formatPhone } from '../../lib/phone';
+import { formatPhone, phoneFromEmail } from '../../lib/phone';
 import { currentUser } from '../../lib/supabase/server';
 
 export const metadata: Metadata = { title: 'Mon compte', robots: { index: false } };
@@ -13,13 +13,14 @@ export default async function ComptePage() {
   if (user === null) redirect('/connexion?suite=/compte');
 
   const [base, hive] = await Promise.all([baseProfile(user.id), hiveProfile(user.id)]);
+  const phone = phoneFromEmail(user.email);
 
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold">Mon compte</h1>
 
       <p className="text-muted">
-        Connecté avec le {base?.phone != null ? formatPhone(base.phone) : 'votre numéro'}.
+        Connecté avec le {phone !== null ? formatPhone(phone) : 'votre numéro'}.
       </p>
 
       <AccountForm

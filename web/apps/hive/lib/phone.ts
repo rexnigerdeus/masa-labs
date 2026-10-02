@@ -34,6 +34,19 @@ export function phoneToEmail(input: string): string | null {
   return phone === null ? null : `${phone}@${DOMAIN}`;
 }
 
+/**
+ * Numéro d'un compte, relu dans son pseudo-email, ou `null` si l'adresse
+ * n'est pas un pseudo-email de numéro.
+ *
+ * C'est ainsi qu'on affiche à quelqu'un son propre numéro : la colonne
+ * `profiles.phone` n'est plus lisible depuis les apps
+ * (supabase/en-attente/20261002150100_profiles_telephone_prive.sql).
+ */
+export function phoneFromEmail(email: string | null | undefined): string | null {
+  const [local, domain] = (email ?? '').split('@');
+  return domain === DOMAIN && local !== undefined ? normalizePhone(local) : null;
+}
+
 /** Affichage groupé par deux, comme on dicte un numéro. */
 export function formatPhone(phone: string): string {
   return phone.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
