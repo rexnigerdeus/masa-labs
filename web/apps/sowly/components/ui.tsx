@@ -9,6 +9,7 @@
  */
 
 import type React from 'react';
+import { ThemeToggle } from './ThemeToggle';
 
 const inputClass =
   'w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-[15px] text-ink '
@@ -108,14 +109,20 @@ export function SectionTitle({ children, action }: {
   );
 }
 
-/** Titre d'écran : même taille et même rythme partout. */
+/**
+ * Titre d'écran : même taille et même rythme partout, avec le bouton
+ * clair / sombre à portée de pouce sur chaque onglet.
+ */
 export function ScreenTitle({ kicker, children }: { kicker?: string; children: React.ReactNode }) {
   return (
-    <header className="flex flex-col gap-0.5 px-1 pt-6">
-      {kicker !== undefined ? (
-        <p className="text-sm font-medium text-muted first-letter:uppercase">{kicker}</p>
-      ) : null}
-      <h1 className="font-display text-[2rem] leading-tight font-semibold tracking-tight">{children}</h1>
+    <header className="flex items-end justify-between gap-3 px-1 pt-6">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        {kicker !== undefined ? (
+          <p className="text-sm font-medium text-muted first-letter:uppercase">{kicker}</p>
+        ) : null}
+        <h1 className="font-display text-[2rem] leading-tight font-semibold tracking-tight">{children}</h1>
+      </div>
+      <ThemeToggle className="mb-1" />
     </header>
   );
 }

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useGate } from '../../lib/gate';
 import { ChevronLeftIcon } from '../icons';
+import { ThemeToggle } from '../ThemeToggle';
 import { AuthForm } from './AuthForm';
 
 /**
@@ -29,12 +30,15 @@ export function ConnexionScreen() {
 
   return (
     <div className="flex min-h-dvh flex-col gap-6 pt-[max(1rem,env(safe-area-inset-top))] pb-8">
-      <Link
-        href={reconnect ? '/reglages' : '/bienvenue'}
-        className="-ml-2 inline-flex items-center gap-1 self-start rounded-full py-1.5 pr-3 pl-1.5 text-sm font-medium text-muted hover:text-ink"
-      >
-        <ChevronLeftIcon className="h-5 w-5" /> Retour
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href={reconnect ? '/reglages' : '/bienvenue'}
+          className="-ml-2 inline-flex items-center gap-1 rounded-full py-1.5 pr-3 pl-1.5 text-sm font-medium text-muted hover:text-ink"
+        >
+          <ChevronLeftIcon className="h-5 w-5" /> Retour
+        </Link>
+        <ThemeToggle />
+      </div>
       <header className="flex flex-col gap-2">
         <h1 className="font-display text-[1.75rem] leading-tight font-semibold tracking-tight">
           {reconnect ? 'Reconnecte-toi' : mode === 'inscription' ? 'Crée ton compte' : 'Content de te revoir'}

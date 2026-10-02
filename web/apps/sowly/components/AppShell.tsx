@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MotionConfig } from 'motion/react';
 import { startSync } from '../lib/sync';
-import { applyTheme, readThemeChoice } from '../lib/theme';
+import { applyTheme, readThemeChoice, syncThemeColor } from '../lib/theme';
 import { ListIcon, PlusIcon, SettingsIcon, SproutIcon } from './icons';
 import { QuickAdd, type QuickAddHandle } from './tasks/QuickAdd';
 
@@ -31,9 +31,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const quickAdd = useRef<QuickAddHandle>(null);
   const bare = BARE.includes(pathname);
+  // La page d'entrée est une grille bento : elle prend la largeur d'un écran
+  // d'ordinateur, là où l'app reste une colonne de téléphone.
+  const wide = pathname === '/bienvenue';
 
   useEffect(() => {
     startSync();
+    syncThemeColor();
     // Thème « système » : suivre le système s'il change pendant la session.
     const media = matchMedia('(prefers-color-scheme: dark)');
     const onChange = (): void => { if (readThemeChoice() === 'system') applyTheme('system'); };
@@ -53,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <MotionConfig reducedMotion="user">
-      <main className={`mx-auto w-full max-w-xl px-4 ${bare ? '' : 'pb-shell'}`}>{children}</main>
+      <main className={`mx-auto w-full px-4 ${wide ? 'max-w-6xl sm:px-6' : 'max-w-xl'} ${bare ? '' : 'pb-shell'}`}>{children}</main>
 
       {bare ? null : (
         <>

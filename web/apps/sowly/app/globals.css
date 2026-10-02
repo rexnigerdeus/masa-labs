@@ -184,6 +184,41 @@ body {
   }
 }
 
+/* Bascule de thème : `ThemeToggle` ouvre le nouveau thème en cercle depuis
+   le bouton ; on coupe le fondu croisé par défaut du navigateur. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Tuiles de la page d'entrée : un halo suit le pointeur (variables posées
+   par `Tile`), invisible au doigt où il n'y a pas de survol. */
+@utility bento-spot {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    background: radial-gradient(
+      320px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      color-mix(in srgb, var(--done) 16%, transparent),
+      transparent 70%
+    );
+  }
+  @media (hover: hover) {
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+}
+
 @utility card {
   background: var(--card);
   border: 1px solid var(--line);
