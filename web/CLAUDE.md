@@ -2,7 +2,8 @@
 
 Monorepo npm workspaces hébergeant **Vitae** (PWA de création de CV compatibles ATS,
 avec offres d'emploi et articles conseils, ciblant la Côte d'Ivoire), **Hive** (PWA de
-location et de vente de matériel audiovisuel à Abidjan) et le **site
+location et de vente de matériel audiovisuel à Abidjan), **Sowly / Graines d'Habitudes**
+(PWA offline-first de suivi d'habitudes et de tâches) et le **site
 vitrine** The Everyday Co qui y renvoie. Produit et interface entièrement en français ;
 les commentaires et messages d'erreur du code le sont aussi.
 
@@ -33,6 +34,8 @@ candidat est posée *à côté* du texte, jamais à sa place).
 | [apps/vitae/components/](apps/vitae/components/) | UI ; `editor/` est la seule zone majoritairement cliente |
 | [apps/hive/](apps/hive/) | PWA Hive : annonces, recherche, commandes, messagerie, compte |
 | [apps/hive/lib/](apps/hive/lib/) | Logique pure testée (`pricing`, `orders`, `dates`, `phone`), `db/` en lecture et `actions/` en écriture |
+| [apps/sowly/](apps/sowly/) | PWA Sowly : tracker d'habitudes + tâches, local d'abord, synchronisée avec Supabase |
+| [apps/sowly/lib/](apps/sowly/lib/) | Logique pure testée (`streak`, `mutations`, `selectors`, `merge`, `rows`), puis `store` (localStorage) et `sync` (file d'envoi) côté navigateur |
 | [apps/everyday-co/](apps/everyday-co/) | Site vitrine statique, sans base ni session |
 | [packages/labs-ui/](packages/labs-ui/) | Langage visuel partagé (préfixe `labs-`) : feuille de styles, hero, script de page. Sans couleur en dur — chaque app branche sa palette |
 | [packages/cv-core/](packages/cv-core/) | Modèle `Resume`, descripteurs de templates, scoring déterministe. Aucune dépendance runtime |
@@ -54,6 +57,8 @@ npm run ats:check                 # rend chaque template en PDF, réextrait le t
 npm run dev --workspace apps/vitae        # Vitae sur :3000
 npm run dev --workspace apps/everyday-co  # vitrine (utiliser -p 3001 si Vitae tourne)
 npm run dev --workspace apps/hive -- -p 3002   # Hive
+npm run dev --workspace apps/sowly        # Sowly sur :3003 (port fixé dans son package.json)
+npm test --workspace apps/sowly           # séries, mutations, fusion de synchro
 npm run build --workspace apps/vitae
 ```
 
@@ -71,6 +76,9 @@ Copier `.env.example` en `.env.local` dans chaque app.
 - Vitae : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (requises,
   échec explicite si absentes — [apps/vitae/lib/supabase/server.ts:49](apps/vitae/lib/supabase/server.ts#L49)) ;
   `NEXT_PUBLIC_APP_URL` et `NEXT_PUBLIC_SITE_URL` facultatives.
+- Sowly : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — copier le
+  fichier de Hive plutôt que retaper la clé (une clé anon fausse d'un caractère casse
+  l'inscription sans message clair).
 - Vitrine : `NEXT_PUBLIC_VITAE_URL` **obligatoire en production**, le build échoue
   sans elle — [apps/everyday-co/lib/config.ts:26](apps/everyday-co/lib/config.ts#L26).
 
@@ -91,6 +99,21 @@ Copier `.env.example` en `.env.local` dans chaque app.
 - Hive s'authentifie par téléphone converti en pseudo-email : aucun SMS, donc aucun coût par inscription — [apps/hive/lib/phone.ts:1](apps/hive/lib/phone.ts#L1).
 - Le total d'une commande Hive est recalculé côté serveur avant écriture, jamais accepté du client — [apps/hive/lib/actions/orders.ts:20](apps/hive/lib/actions/orders.ts#L20).
 - La messagerie de Hive interroge une route toutes les dix secondes plutôt que d'ouvrir un websocket Realtime — [apps/hive/components/Thread.tsx:8](apps/hive/components/Thread.tsx#L8).
+- **Sowly n'a aucune page dynamique** : chaque écran est une coquille statique, les
+  données vivent dans `localStorage` (`sowly.state.v1`) et partent vers Supabase par une
+  file d'envoi. Un seul client Supabase (navigateur), pas de middleware —
+  [apps/sowly/lib/store.ts:1](apps/sowly/lib/store.ts#L1), [apps/sowly/lib/sync.ts:1](apps/sowly/lib/sync.ts#L1).
+- Sowly s'utilise **sans compte** ; à l'inscription, les données locales deviennent celles
+  du compte, et se connecter avec un autre compte efface d'abord l'appareil —
+  [apps/sowly/lib/sync.ts:109](apps/sowly/lib/sync.ts#L109).
+- Les tables `sowly_` ont des identifiants générés côté client et des suppressions
+  logiques (`deleted_at`) : tout est `upsert`, rien n'est `delete`. Les séries ne sont
+  jamais stockées, elles se recalculent — [apps/sowly/lib/streak.ts:1](apps/sowly/lib/streak.ts#L1).
+- Le détail d'une habitude est `/habitude?id=…` et non une route dynamique : c'est ce
+  qui lui permet de s'ouvrir hors-ligne — [apps/sowly/components/habits/HabitDetail.tsx:1](apps/sowly/components/habits/HabitDetail.tsx#L1).
+- Sowly charge deux polices (General Sans sous-ensemblée + Inter via `next/font`), seule
+  exception à la règle « aucune police téléchargée », décidée pour le brief Sowly §6.
+  Le brief Sowly vit hors du dépôt (`Graines_dHabitudes_Sowly_Brief_v2.md`).
 - Le code renvoie au brief par des références « brief §N » : voir [../masa-labs-mvp-specs.md](../masa-labs-mvp-specs.md).
 
 ## Adding New Features or Fixing Bugs

@@ -1,0 +1,197 @@
+@import 'tailwindcss';
+
+/*
+ * Clair / sombre piloté par `data-theme` sur <html> (posé avant React par
+ * le script du layout) plutôt que par la seule media query : le choix fait
+ * dans Réglages doit pouvoir contredire celui du système.
+ */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/**
+ * Design system Sowly — brief §5.
+ *
+ * Trois échelles générées façon uicolors.app (50 → 950), utilisables telles
+ * quelles (`bg-sprout-100`, `text-amber-800`), plus des rôles sémantiques
+ * (`bg-canvas`, `text-ink`, `bg-primary`…) qui basculent en mode sombre.
+ * Les écrans n'emploient que les rôles ; les échelles servent aux rares
+ * cas où la nuance exacte compte (halo de fin de journée).
+ *
+ * Contrastes mesurés (WCAG) qui ont dicté les rôles :
+ *   - `sprout-500` sur fond clair : 3,7:1 — assez pour une pastille validée
+ *     (élément graphique, seuil 3:1), pas pour du texte. Le bouton principal
+ *     est donc en `sprout-600` (texte blanc à 5,9:1).
+ *   - L'argile du brief (#C1694F) tombe à 3,65:1 en texte : l'échéance
+ *     dépassée s'écrit avec une encre plus sombre (#9A4E39, 5,6:1).
+ *   - `amber` reste réservé à la récompense (brief §5.2) : jamais un bouton,
+ *     jamais un lien.
+ */
+@theme {
+  --color-sprout-50: #f1f7f2;
+  --color-sprout-100: #deeee1;
+  --color-sprout-200: #c0dcc6;
+  --color-sprout-300: #97c2a1;
+  --color-sprout-400: #6ba878;
+  --color-sprout-500: #468f55;
+  --color-sprout-600: #327141;
+  --color-sprout-700: #245a33;
+  --color-sprout-800: #1b4527;
+  --color-sprout-900: #15331e;
+  --color-sprout-950: #0c1f12;
+
+  --color-amber-50: #fdf3e4;
+  --color-amber-100: #fbe1be;
+  --color-amber-200: #f7ca8c;
+  --color-amber-300: #f3af56;
+  --color-amber-400: #ee9931;
+  --color-amber-500: #d9861f;
+  --color-amber-600: #b66e17;
+  --color-amber-700: #8f5613;
+  --color-amber-800: #6c4110;
+  --color-amber-900: #4c2e0b;
+  --color-amber-950: #2e1b06;
+
+  --color-sable-50: #f7f8f5;
+  --color-sable-100: #edefe9;
+  --color-sable-200: #dcdfd5;
+  --color-sable-300: #c1c6b8;
+  --color-sable-400: #9ca38e;
+  --color-sable-500: #767d68;
+  --color-sable-600: #5b614f;
+  --color-sable-700: #454a3c;
+  --color-sable-800: #31352b;
+  --color-sable-900: #20231c;
+  --color-sable-950: #13150f;
+
+  --radius-card: 18px;
+
+  /* Polices auto-hébergées (next/font) : General Sans pour les titres et
+     les chiffres, Inter pour le reste (brief §6). Sous-ensemble latin
+     uniquement, ~25 Ko chacune, servies depuis notre domaine et mises en
+     cache par le service worker : aucune requête tierce, et rien à
+     retélécharger hors-ligne. */
+  --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--font-general), var(--font-inter), system-ui, sans-serif;
+}
+
+/* Rôles — clair */
+:root {
+  --canvas: var(--color-sable-50);
+  --card: #ffffff;
+  --raised: var(--color-sable-100);
+  --line: var(--color-sable-200);
+  --ink: var(--color-sable-900);
+  --muted: var(--color-sable-600);
+  --faint: var(--color-sable-400);
+  --primary: var(--color-sprout-600);
+  --primary-ink: var(--color-sprout-700);
+  --on-primary: #ffffff;
+  --done: var(--color-sprout-500);
+  --done-soft: var(--color-sprout-100);
+  --reward: var(--color-amber-50);
+  --reward-ink: var(--color-amber-800);
+  --reward-glow: var(--color-amber-300);
+  --reward-halo: var(--color-amber-100);
+  --clay: #c1694f;
+  --clay-ink: #9a4e39;
+  color-scheme: light;
+}
+
+/* Rôles — sombre. Fond `sable-950`, texte `sable-50` (brief §5.3). */
+:root[data-theme='dark'] {
+  --canvas: var(--color-sable-950);
+  --card: var(--color-sable-900);
+  --raised: var(--color-sable-800);
+  --line: var(--color-sable-800);
+  --ink: var(--color-sable-50);
+  --muted: var(--color-sable-400);
+  --faint: var(--color-sable-600);
+  --primary: var(--color-sprout-400);
+  --primary-ink: var(--color-sprout-300);
+  --on-primary: var(--color-sable-950);
+  --done: var(--color-sprout-400);
+  --done-soft: var(--color-sprout-950);
+  --reward: color-mix(in srgb, var(--color-amber-950) 55%, var(--color-sable-900));
+  --reward-ink: var(--color-amber-300);
+  --reward-glow: var(--color-amber-600);
+  --reward-halo: var(--color-amber-950);
+  --clay: #db8c73;
+  --clay-ink: #db8c73;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-card: var(--card);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-on-primary: var(--on-primary);
+  --color-done: var(--done);
+  --color-done-soft: var(--done-soft);
+  --color-reward: var(--reward);
+  --color-reward-ink: var(--reward-ink);
+  --color-reward-glow: var(--reward-glow);
+  --color-clay: var(--clay);
+  --color-clay-ink: var(--clay-ink);
+}
+
+html {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--canvas);
+}
+
+/* Chiffres de même largeur : un compteur de série qui passe de 9 à 10 ne
+   doit pas faire sauter la ligne. */
+.font-display {
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Champs à 16 px sur mobile : en dessous, Safari iOS zoome sur chaque
+   saisie et ne redescend jamais (même règle que Hive). Hors couche, elle
+   l'emporte sur les utilitaires Tailwind sans `!important`. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@utility card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+/* Réserve la place de la barre d'onglets et du bouton d'ajout, plus
+   l'encoche basse des iPhone en mode installé. */
+@utility pb-shell {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 9rem);
+}
