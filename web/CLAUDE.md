@@ -103,9 +103,11 @@ Copier `.env.example` en `.env.local` dans chaque app.
   données vivent dans `localStorage` (`sowly.state.v1`) et partent vers Supabase par une
   file d'envoi. Un seul client Supabase (navigateur), pas de middleware —
   [apps/sowly/lib/store.ts:1](apps/sowly/lib/store.ts#L1), [apps/sowly/lib/sync.ts:1](apps/sowly/lib/sync.ts#L1).
-- Sowly s'utilise **sans compte** ; à l'inscription, les données locales deviennent celles
-  du compte, et se connecter avec un autre compte efface d'abord l'appareil —
-  [apps/sowly/lib/sync.ts:109](apps/sowly/lib/sync.ts#L109).
+- Sowly exige un **compte** : `/bienvenue` (page d'entrée) → `/connexion` → `/premiers-pas`
+  → l'application. L'accès se décide sur l'état local (`meta.ownerId`), sans réseau, pour
+  rester utilisable hors-ligne ; se connecter avec un autre compte efface d'abord
+  l'appareil — [apps/sowly/lib/routing.ts:1](apps/sowly/lib/routing.ts#L1),
+  [apps/sowly/lib/gate.ts:1](apps/sowly/lib/gate.ts#L1).
 - Les tables `sowly_` ont des identifiants générés côté client et des suppressions
   logiques (`deleted_at`) : tout est `upsert`, rien n'est `delete`. Les séries ne sont
   jamais stockées, elles se recalculent — [apps/sowly/lib/streak.ts:1](apps/sowly/lib/streak.ts#L1).

@@ -99,17 +99,16 @@ async function runOnce(): Promise<void> {
 }
 
 /**
- * Rattache les données locales au compte connecté.
+ * Rattache l'appareil au compte connecté.
  *
- * Données saisies avant toute inscription : elles deviennent celles du
- * compte, et la file — qui les contient déjà toutes — part telle quelle.
- * Données d'un **autre** compte (téléphone partagé) : on les efface avant
- * de lire celles du nouveau, sans quoi les deux se mélangeraient.
+ * Même compte qu'avant (session expirée puis reconnexion) : on garde tout,
+ * y compris les modifications pas encore envoyées. Autre compte, ou premier
+ * compte sur l'appareil : on repart de zéro avant de lire les données du
+ * compte, sans quoi deux comptes se mélangeraient sur un téléphone partagé.
+ * Le compte étant obligatoire, aucune donnée n'existe avant la connexion.
  */
 export function adoptAccount(userId: string): void {
-  const { ownerId } = getState().meta;
-  if (ownerId === null) internal.setMeta({ ownerId: userId });
-  else if (ownerId !== userId) internal.reset(userId);
+  if (getState().meta.ownerId !== userId) internal.reset(userId);
 }
 
 // ---------------------------------------------------------------------------

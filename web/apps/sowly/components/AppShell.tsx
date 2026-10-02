@@ -16,7 +16,7 @@ const TABS = [
 ] as const;
 
 /** Écrans plein cadre, sans onglets ni bouton d'ajout. */
-const BARE = ['/bienvenue', '/connexion'];
+const BARE = ['/bienvenue', '/premiers-pas', '/connexion'];
 
 /**
  * Coque de l'application : barre d'onglets, bouton d'ajout rapide et mise en

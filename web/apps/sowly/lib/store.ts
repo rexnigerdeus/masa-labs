@@ -3,8 +3,9 @@
 /**
  * État de l'application, local d'abord (patterns architecturaux §6).
  *
- * `localStorage` est la source de vérité du quotidien : l'écran Aujourd'hui
- * s'affiche et se valide sans réseau, sans compte, sans attendre personne.
+ * `localStorage` est la source de vérité du quotidien : une fois le compte
+ * ouvert sur l'appareil, l'écran Aujourd'hui s'affiche et se valide sans
+ * réseau, sans attendre personne.
  * Supabase n'est que la sauvegarde multi-appareils, alimentée par la file
  * d'envoi (`outbox`) que `lib/sync.ts` vide quand il peut.
  *
@@ -29,12 +30,13 @@ import type { GroupBy } from './selectors.ts';
 
 export interface Prefs {
   groupBy: GroupBy;
-  /** Bandeau « crée un compte » refermé. */
-  accountHintDismissed: boolean;
 }
 
 export interface Meta {
-  /** Compte auquel appartiennent les données locales, `null` avant toute connexion. */
+  /**
+   * Compte connecté sur l'appareil, `null` sinon. C'est lui qui ouvre
+   * l'accès aux écrans (`lib/gate.ts`), sans appel réseau.
+   */
   ownerId: string | null;
   cursors: Partial<Record<Table, string>>;
   lastSyncAt: string | null;
@@ -49,7 +51,7 @@ export interface State {
 
 const KEY = 'sowly.state.v1';
 
-const DEFAULT_PREFS: Prefs = { groupBy: 'moment', accountHintDismissed: false };
+const DEFAULT_PREFS: Prefs = { groupBy: 'moment' };
 const DEFAULT_META: Meta = { ownerId: null, cursors: {}, lastSyncAt: null };
 
 function initial(): State {

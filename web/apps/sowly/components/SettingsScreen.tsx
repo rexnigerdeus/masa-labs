@@ -7,7 +7,8 @@ import { IDENTITIES, MAX_IDENTITIES } from '../lib/identities';
 import { setIdentities } from '../lib/mutations';
 import { archivedHabits } from '../lib/selectors';
 import { useAccount } from '../lib/session';
-import { commit, setPrefs, useStore } from '../lib/store';
+import { useGate } from '../lib/gate';
+import { commit, setPrefs } from '../lib/store';
 import { pendingCount, signOut, syncNow, useSyncStatus } from '../lib/sync';
 import { applyTheme, readThemeChoice, type ThemeChoice } from '../lib/theme';
 import { Button, ScreenTitle, Segmented } from './ui';
@@ -16,7 +17,7 @@ const STATUS_LABEL = {
   idle: 'À jour',
   syncing: 'Synchronisation…',
   offline: 'Hors connexion — tout est gardé sur l’appareil',
-  anonymous: 'Sans compte',
+  anonymous: 'Session expirée',
   error: 'Échec de la dernière synchronisation, nouvel essai automatique',
 } as const;
 
@@ -26,7 +27,7 @@ const STATUS_LABEL = {
  */
 export function SettingsScreen() {
   const router = useRouter();
-  const store = useStore();
+  const store = useGate('app');
   const account = useAccount();
   const sync = useSyncStatus();
   const [theme, setTheme] = useState<ThemeChoice>('system');
@@ -66,14 +67,14 @@ export function SettingsScreen() {
         {account === undefined ? null : account === null ? (
           <div className="flex flex-col gap-3">
             <p className="text-[15px] text-muted">
-              Tes habitudes et tes tâches vivent sur cet appareil. Un compte les sauvegarde et les
-              synchronise entre ton téléphone et ton ordinateur.
+              Ta session a expiré. Tes habitudes et tes tâches sont toujours sur cet appareil ;
+              reconnecte-toi pour reprendre la synchronisation.
             </p>
             <Link
-              href="/connexion"
+              href="/connexion?reconnexion=1"
               className="inline-flex h-10 items-center self-start rounded-full bg-primary px-4 text-sm font-medium text-on-primary hover:brightness-110"
             >
-              Créer un compte ou se connecter
+              Me reconnecter
             </Link>
           </div>
         ) : (

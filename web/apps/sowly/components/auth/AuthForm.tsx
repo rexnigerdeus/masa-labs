@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '../../lib/supabase/client';
 import { phoneToEmail } from '../../lib/phone';
+import { redirectFor } from '../../lib/routing';
+import { getState } from '../../lib/store';
 import { adoptAccount, syncNow } from '../../lib/sync';
 import { Button, Field, Input, Notice, Segmented } from '../ui';
 import { PasswordInput } from './PasswordInput';
@@ -14,13 +16,15 @@ type Mode = 'inscription' | 'connexion';
  * Connexion et inscription par numéro de téléphone, comme Hive : le numéro
  * devient un pseudo-email (`lib/phone.ts`), aucun SMS n'est envoyé.
  *
- * Le compte ne sert qu'à sauvegarder et synchroniser : tout fonctionne
- * avant. À l'inscription, les graines déjà semées sur l'appareil deviennent
- * celles du compte (`adoptAccount`) ; à la connexion sur un nouvel appareil,
- * on attend la première lecture avant d'ouvrir Aujourd'hui, pour ne pas
- * renvoyer quelqu'un dans l'onboarding qu'il a déjà fait ailleurs.
+ * Après la connexion, on attend la première lecture avant de choisir la
+ * destination : quelqu'un qui a déjà fait ses premiers pas sur un autre
+ * appareil doit arriver sur Aujourd'hui, pas les refaire.
  */
-export function AuthForm({ initialMode }: { initialMode: Mode }) {
+export function AuthForm({ initialMode, lockMode = false }: {
+  initialMode: Mode;
+  /** Reconnexion : seul le mode « connexion » a un sens. */
+  lockMode?: boolean;
+}) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [phone, setPhone] = useState('');
@@ -58,20 +62,22 @@ export function AuthForm({ initialMode }: { initialMode: Mode }) {
     // Hors-ligne juste après la connexion : on n'attend pas, la lecture se
     // fera au retour du réseau.
     await Promise.race([syncNow(), new Promise((r) => setTimeout(r, 8000))]);
-    router.replace('/');
+    router.replace(redirectFor('guest', getState()) ?? '/');
   }
 
   return (
     <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4">
-      <Segmented
-        label="Mode"
-        value={mode}
-        onChange={(m) => { setMode(m); setError(null); }}
-        options={[
-          { id: 'inscription', label: 'Créer un compte' },
-          { id: 'connexion', label: 'J’ai un compte' },
-        ]}
-      />
+      {lockMode ? null : (
+        <Segmented
+          label="Mode"
+          value={mode}
+          onChange={(m) => { setMode(m); setError(null); }}
+          options={[
+            { id: 'inscription', label: 'Créer un compte' },
+            { id: 'connexion', label: 'J’ai un compte' },
+          ]}
+        />
+      )}
 
       <Field label="Numéro de téléphone">
         <Input

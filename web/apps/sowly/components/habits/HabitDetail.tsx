@@ -11,7 +11,8 @@ import {
 } from '../../lib/mutations';
 import { checkedDays } from '../../lib/selectors';
 import { computeStreak } from '../../lib/streak';
-import { commit, nowIso, useStore, useToday } from '../../lib/store';
+import { useGate } from '../../lib/gate';
+import { commit, nowIso, useToday } from '../../lib/store';
 import { ChevronLeftIcon } from '../icons';
 import { Button } from '../ui';
 import { HabitForm, intention } from './HabitForm';
@@ -29,7 +30,7 @@ import { HistoryGrid } from './HistoryGrid';
 export function HabitDetail() {
   const router = useRouter();
   const id = useSearchParams().get('id');
-  const store = useStore();
+  const store = useGate('app');
   const today = useToday();
   const [editing, setEditing] = useState<HabitDraft | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);

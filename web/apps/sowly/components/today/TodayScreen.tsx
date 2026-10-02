@@ -1,18 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'motion/react';
 import { formatLong } from '../../lib/dates';
 import type { Task } from '../../lib/model';
 import { bringBack } from '../../lib/mutations';
 import { leftoverTasks, liveLists, myDayTasks, todayHabits } from '../../lib/selectors';
-import { commit, setPrefs, useStore, useToday } from '../../lib/store';
+import { useGate } from '../../lib/gate';
+import { commit, setPrefs, useToday } from '../../lib/store';
 import { useSyncStatus } from '../../lib/sync';
 import { TaskEditor } from '../tasks/TaskEditor';
 import { TaskRow } from '../tasks/TaskRow';
-import { CloseIcon, PlusIcon } from '../icons';
+import { PlusIcon } from '../icons';
 import { ScreenTitle, SectionTitle } from '../ui';
 import { HabitRow } from './HabitRow';
 
@@ -31,16 +31,10 @@ import { HabitRow } from './HabitRow';
  * c'est ce qui lui garde sa valeur de récompense.
  */
 export function TodayScreen() {
-  const router = useRouter();
-  const store = useStore();
+  const store = useGate('app');
   const today = useToday();
   const sync = useSyncStatus();
   const [editing, setEditing] = useState<Task | null>(null);
-
-  const onboarded = store?.data.profile.onboardedAt != null;
-  useEffect(() => {
-    if (store !== null && !onboarded) router.replace('/bienvenue');
-  }, [store, onboarded, router]);
 
   const view = useMemo(() => {
     if (store === null) return null;
@@ -56,11 +50,13 @@ export function TodayScreen() {
 
   // Rien avant la lecture du stockage local : un écran vide qui se remplit
   // une fraction de seconde plus tard ressemble à un bug.
-  if (store === null || view === null || !onboarded) return null;
+  if (store === null || view === null) return null;
 
   const { habits, tasks, leftovers } = view;
   const complete = habits.total > 0 && habits.done === habits.total;
-  const showAccountHint = sync === 'anonymous' && !store.prefs.accountHintDismissed;
+  // Compte ouvert sur l'appareil mais session perdue (expirée, effacée par
+  // le navigateur) : les données restent là, seule la synchro attend.
+  const sessionLost = sync === 'anonymous';
 
   return (
     <div className="flex flex-col gap-6">
@@ -180,23 +176,13 @@ export function TodayScreen() {
         )}
       </section>
 
-      {showAccountHint ? (
-        <aside className="card flex items-start gap-3 p-4 text-sm">
-          <p className="flex-1 text-muted">
-            Tes graines ne vivent que sur cet appareil.{' '}
-            <Link href="/connexion" className="font-medium text-primary-ink">
-              Crée un compte
-            </Link>{' '}
-            pour les retrouver partout — un numéro suffit.
-          </p>
-          <button
-            type="button"
-            onClick={() => setPrefs({ accountHintDismissed: true })}
-            aria-label="Masquer ce message"
-            className="-m-1 p-1 text-faint hover:text-muted"
-          >
-            <CloseIcon className="h-4 w-4" />
-          </button>
+      {sessionLost ? (
+        <aside className="card p-4 text-sm text-muted" role="status">
+          Ta session a expiré : tes modifications sont gardées sur cet appareil.{' '}
+          <Link href="/connexion?reconnexion=1" className="font-medium text-primary-ink">
+            Reconnecte-toi
+          </Link>{' '}
+          pour les synchroniser.
         </aside>
       ) : null}
 

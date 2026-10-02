@@ -10,7 +10,8 @@ import { bringBack, createList, deleteList, renameList, reorderTasks } from '../
 import {
   countOpen, leftoverTasks, liveLists, myDayTasks, plannedTasks, tasksOfList,
 } from '../../lib/selectors';
-import { commit, newId, nowIso, useStore, useToday } from '../../lib/store';
+import { useGate } from '../../lib/gate';
+import { commit, newId, nowIso, useToday } from '../../lib/store';
 import { Sheet } from '../Sheet';
 import { GripIcon, PlusIcon } from '../icons';
 import { Button, Field, Input, ScreenTitle } from '../ui';
@@ -29,18 +30,13 @@ import { TaskRow } from './TaskRow';
 export function TasksScreen() {
   const router = useRouter();
   const params = useSearchParams();
-  const store = useStore();
+  const store = useGate('app');
   const today = useToday();
   const [editing, setEditing] = useState<Task | null>(null);
   const [listSheet, setListSheet] = useState<'new' | 'edit' | null>(null);
 
   const vue = params.get('vue');
   const listeParam = params.get('liste');
-
-  const onboarded = store?.data.profile.onboardedAt != null;
-  useEffect(() => {
-    if (store !== null && !onboarded) router.replace('/bienvenue');
-  }, [store, onboarded, router]);
 
   const view = useMemo(() => {
     if (store === null) return null;
@@ -65,7 +61,7 @@ export function TasksScreen() {
     };
   }, [store, today, listeParam]);
 
-  if (store === null || view === null || !onboarded) return null;
+  if (store === null || view === null) return null;
 
   // Une liste supprimée sur un autre appareil : on retombe sur « Tâches ».
   const mode: 'myday' | 'planned' | 'list' =

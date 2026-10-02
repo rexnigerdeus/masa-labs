@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createHabit, type HabitDraft } from '../../lib/mutations';
-import { commit, newId, today, useStore } from '../../lib/store';
+import { useGate } from '../../lib/gate';
+import { commit, newId, today } from '../../lib/store';
 import { ChevronLeftIcon } from '../icons';
 import { Button } from '../ui';
 import { EMPTY_DRAFT, HabitForm } from './HabitForm';
@@ -15,7 +16,7 @@ import { EMPTY_DRAFT, HabitForm } from './HabitForm';
  */
 export function NewHabit() {
   const router = useRouter();
-  const store = useStore();
+  const store = useGate('app');
   const [draft, setDraft] = useState<HabitDraft>(EMPTY_DRAFT);
   const identities = store?.data.profile.identities ?? [];
 
