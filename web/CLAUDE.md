@@ -38,6 +38,7 @@ candidat est posée *à côté* du texte, jamais à sa place).
 | [apps/sowly/lib/](apps/sowly/lib/) | Logique pure testée (`streak`, `mutations`, `selectors`, `merge`, `rows`), puis `store` (localStorage) et `sync` (file d'envoi) côté navigateur |
 | [apps/everyday-co/](apps/everyday-co/) | Site vitrine statique, sans base ni session |
 | [packages/labs-ui/](packages/labs-ui/) | Langage visuel partagé (préfixe `labs-`) : feuille de styles, hero, script de page. Sans couleur en dur — chaque app branche sa palette |
+| [packages/pwa/](packages/pwa/) | Installation sur l'écran d'accueil commune aux trois PWA (`useInstallPrompt`, consigne iPhone) et génération des favicons. Chaque app garde son propre bouton |
 | [packages/cv-core/](packages/cv-core/) | Modèle `Resume`, descripteurs de templates, scoring déterministe. Aucune dépendance runtime |
 | [packages/cv-pdf/](packages/cv-pdf/) | Rendu PDF + harnais de validation ATS |
 | [../supabase/](../supabase/) | Migrations et Edge Function `scrape-job-offers` (hors de ce workspace) |
@@ -111,6 +112,7 @@ Copier `.env.example` en `.env.local` dans chaque app.
 - Les tables `sowly_` ont des identifiants générés côté client et des suppressions
   logiques (`deleted_at`) : tout est `upsert`, rien n'est `delete`. Les séries ne sont
   jamais stockées, elles se recalculent — [apps/sowly/lib/streak.ts:1](apps/sowly/lib/streak.ts#L1).
+- Sowly est déployé sur Vercel (projet `sowly`, racine `web/apps/sowly`) : https://sowly-one.vercel.app. Toutes ses icônes sortent de `public/icon.svg` via `npm run icons --workspace apps/sowly`.
 - Le détail d'une habitude est `/habitude?id=…` et non une route dynamique : c'est ce
   qui lui permet de s'ouvrir hors-ligne — [apps/sowly/components/habits/HabitDetail.tsx:1](apps/sowly/components/habits/HabitDetail.tsx#L1).
 - Sowly charge deux polices (General Sans sous-ensemblée + Inter via `next/font`), seule
