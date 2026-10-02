@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@everyday/pwa": "*",
     "@everyday/labs-ui": "*",
     "@everyday/cv-core": "*",
     "@everyday/cv-pdf": "*",

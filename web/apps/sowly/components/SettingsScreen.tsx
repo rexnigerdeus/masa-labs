@@ -10,7 +10,9 @@ import { useAccount } from '../lib/session';
 import { useGate } from '../lib/gate';
 import { commit, setPrefs } from '../lib/store';
 import { pendingCount, signOut, syncNow, useSyncStatus } from '../lib/sync';
+import { useInstallPrompt } from '@everyday/pwa';
 import { applyTheme, readThemeChoice, type ThemeChoice } from '../lib/theme';
+import { InstallCard } from './pwa/InstallCard';
 import { Button, ScreenTitle, Segmented } from './ui';
 
 const STATUS_LABEL = {
@@ -30,6 +32,7 @@ export function SettingsScreen() {
   const store = useGate('app');
   const account = useAccount();
   const sync = useSyncStatus();
+  const installState = useInstallPrompt().state;
   const [theme, setTheme] = useState<ThemeChoice>('system');
   const [confirmOut, setConfirmOut] = useState(false);
 
@@ -114,6 +117,12 @@ export function SettingsScreen() {
           </div>
         )}
       </Section>
+
+      {installState === 'available' || installState === 'ios' ? (
+        <Section title="Application">
+          <InstallCard variant="settings" />
+        </Section>
+      ) : null}
 
       <Section title="Apparence">
         <Segmented

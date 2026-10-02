@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { redirectFor } from '../lib/routing';
 import { useStore } from '../lib/store';
-import { CalendarIcon, ListIcon, SproutIcon, SunIcon } from './icons';
+import { BrandMark, CalendarIcon, ListIcon, SproutIcon, SunIcon } from './icons';
+import { InstallCard } from './pwa/InstallCard';
 
 const POINTS = [
   {
@@ -52,7 +53,7 @@ export function Landing() {
     <div className="flex min-h-dvh flex-col gap-10 pt-[max(2.5rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))]">
       <header className="flex flex-col gap-6">
         <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary text-on-primary">
-          <SproutIcon className="h-8 w-8" />
+          <BrandMark className="h-8 w-8" />
         </span>
         <h1 className="font-display text-[2.6rem] leading-[1.05] font-semibold tracking-tight">
           Suis tes habitudes.
@@ -88,6 +89,8 @@ export function Landing() {
           le même compte que pour les autres apps The Everyday Co.
         </p>
       </section>
+
+      <InstallCard variant="card" />
 
       <div className="sticky bottom-0 -mx-4 mt-auto flex flex-col gap-2 bg-canvas px-4 pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <Link

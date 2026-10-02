@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
+import { InstallBanner } from '../components/pwa/InstallBanner';
 import { ServiceWorkerRegistration } from '../components/pwa/ServiceWorkerRegistration';
 import { APP_URL, SITE_URL } from '../lib/config';
 import './globals.css';
@@ -42,7 +43,10 @@ export const metadata: Metadata = {
     title: 'Vitae',
     statusBarStyle: 'black-translucent',
   },
+  // Favicon : PNG déclaré ici, `public/favicon.ico` pour qui le demande à la
+  // racine. Générés depuis `public/icon-512.png` (packages/pwa/favicon.mjs).
   icons: {
+    icon: [{ url: '/favicon-48.png', type: 'image/png', sizes: '48x48' }],
     apple: '/apple-touch-icon.png',
   },
 };
@@ -89,7 +93,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </nav>
         </header>
 
+        <InstallBanner placement="top" />
+
         <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+
+        <InstallBanner placement="bottom" />
 
         <footer className="mx-auto max-w-6xl px-4 py-10 text-sm text-muted">
           Vitae est un produit{' '}

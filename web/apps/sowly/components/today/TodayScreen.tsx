@@ -13,6 +13,7 @@ import { useSyncStatus } from '../../lib/sync';
 import { TaskEditor } from '../tasks/TaskEditor';
 import { TaskRow } from '../tasks/TaskRow';
 import { PlusIcon } from '../icons';
+import { InstallCard } from '../pwa/InstallCard';
 import { ScreenTitle, SectionTitle } from '../ui';
 import { HabitRow } from './HabitRow';
 
@@ -185,6 +186,8 @@ export function TodayScreen() {
           pour les synchroniser.
         </aside>
       ) : null}
+
+      <InstallCard variant="card" />
 
       <TaskEditor task={editing} today={today} onClose={() => setEditing(null)} />
     </div>

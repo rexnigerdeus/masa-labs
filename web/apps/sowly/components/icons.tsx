@@ -111,3 +111,18 @@ export const MoonIcon = ({ className }: P) => (
     <path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z" />
   </Svg>
 );
+
+/**
+ * Marque Sowly : la pousse pleine de l'icône d'application
+ * (`public/icon.svg`), sans son fond. Même tracé partout — écran d'accueil
+ * du téléphone, page d'entrée, aperçu de partage.
+ */
+export const BrandMark = ({ className }: P) => (
+  <svg aria-hidden viewBox="132 110 296 342" fill="currentColor" className={className}>
+    <g transform="translate(-12 -14)">
+      <path d="M268 274c0-96 56-150 148-150 0 92-56 150-148 150z" />
+      <path d="M268 306c0-74-44-112-124-112 0 74 44 112 124 112z" />
+      <rect x="246" y="266" width="44" height="174" rx="22" />
+    </g>
+  </svg>
+);

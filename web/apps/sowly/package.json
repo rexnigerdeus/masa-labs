@@ -12,6 +12,7 @@
     "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
+    "@everyday/pwa": "*",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.115.0",
     "motion": "^13.4.0",

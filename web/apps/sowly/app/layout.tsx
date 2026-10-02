@@ -27,6 +27,22 @@ export const metadata: Metadata = {
     'Suis tes habitudes. Gère tes tâches. Sans limite. De petites graines, de vraies habitudes.',
   applicationName: 'Sowly',
   manifest: '/manifest.webmanifest',
+  // Partage : un lien Sowly circule surtout par WhatsApp, qui lit l'Open
+  // Graph ; l'image vient de `app/opengraph-image.tsx`.
+  openGraph: {
+    type: 'website',
+    siteName: 'Sowly — Graines d’Habitudes',
+    locale: 'fr_CI',
+    title: 'Sowly — Suis tes habitudes. Gère tes tâches. Sans limite.',
+    description:
+      'De petites graines, de vraies habitudes. Habitudes et tâches illimitées, gratuitement, '
+      + 'même sans réseau.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Sowly — Suis tes habitudes. Gère tes tâches. Sans limite.',
+    description: 'De petites graines, de vraies habitudes.',
+  },
   appleWebApp: {
     // iOS ignore le manifeste : ces métadonnées rendent l'installation
     // correcte sur iPhone — et sur iOS, seule une app installée reçoit des
@@ -35,7 +51,16 @@ export const metadata: Metadata = {
     title: 'Sowly',
     statusBarStyle: 'default',
   },
-  icons: { icon: '/icon.svg', apple: '/apple-touch-icon.png' },
+  // SVG pour les navigateurs récents (net à toutes les tailles), PNG pour
+  // Safari et les autres ; `public/favicon.ico` reste pour qui le demande
+  // à la racine. Tout sort de `public/icon.svg` (`npm run icons`).
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-48.png', type: 'image/png', sizes: '48x48' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
   robots: { index: false },
 };
 
