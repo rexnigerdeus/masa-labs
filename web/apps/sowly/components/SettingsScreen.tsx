@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { IDENTITIES, MAX_IDENTITIES } from '../lib/identities';
@@ -11,8 +11,9 @@ import { useGate } from '../lib/gate';
 import { commit, setPrefs } from '../lib/store';
 import { pendingCount, signOut, syncNow, useSyncStatus } from '../lib/sync';
 import { useInstallPrompt } from '@everyday/pwa';
-import { applyTheme, readThemeChoice, type ThemeChoice } from '../lib/theme';
+import { applyTheme } from '../lib/theme';
 import { InstallCard } from './pwa/InstallCard';
+import { useThemeChoice } from './ThemeToggle';
 import { Button, ScreenTitle, Segmented } from './ui';
 
 const STATUS_LABEL = {
@@ -33,10 +34,8 @@ export function SettingsScreen() {
   const account = useAccount();
   const sync = useSyncStatus();
   const installState = useInstallPrompt().state;
-  const [theme, setTheme] = useState<ThemeChoice>('system');
+  const theme = useThemeChoice();
   const [confirmOut, setConfirmOut] = useState(false);
-
-  useEffect(() => setTheme(readThemeChoice()), []);
 
   if (store === null) return null;
   const { data, prefs, meta } = store;
@@ -128,7 +127,7 @@ export function SettingsScreen() {
         <Segmented
           label="Thème"
           value={theme}
-          onChange={(t) => { setTheme(t); applyTheme(t); }}
+          onChange={applyTheme}
           options={[
             { id: 'system', label: 'Système' },
             { id: 'light', label: 'Clair' },

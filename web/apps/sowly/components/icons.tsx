@@ -112,6 +112,18 @@ export const MoonIcon = ({ className }: P) => (
   </Svg>
 );
 
+export const CloudIcon = ({ className }: P) => (
+  <Svg className={className}>
+    <path d="M7 18.5h10a4 4 0 00.6-7.96A5.5 5.5 0 006.9 9.2 4.65 4.65 0 007 18.5z" />
+  </Svg>
+);
+
+export const CloudOffIcon = ({ className }: P) => (
+  <Svg className={className}>
+    <path d="M8.5 7.6A5.5 5.5 0 0117.6 10.54 4 4 0 0119.4 17.6M15 18.5H7a4.65 4.65 0 01-.9-9.2M3.5 3.5l17 17" />
+  </Svg>
+);
+
 /**
  * Marque Sowly : la pousse pleine de l'icône d'application
  * (`public/icon.svg`), sans son fond. Même tracé partout — écran d'accueil
