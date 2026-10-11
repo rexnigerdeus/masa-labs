@@ -94,3 +94,17 @@ body {
   --labs-accent-glow: var(--color-vitae-glow);
   --labs-on-accent: var(--color-dark);
 }
+
+/* ============================================================
+   Logo sticker (public/logo*.svg, régénéré par scripts/logo-sticker.cjs)
+   La hauteur est fixée, la largeur suit le ratio du SVG.
+   ============================================================ */
+.labs-nav__logo { display: block; flex: none; line-height: 0; }
+/* 1,6rem tant que les deux boutons partagent la ligne d'un téléphone :
+   à 380 px, il reste environ 160 px au logo, il en prend 148. */
+.labs-nav__logo img { display: block; height: 1.6rem; width: auto; }
+@media (min-width: 30rem) { .labs-nav__logo img { height: 2rem; } }
+@media (min-width: 48rem) { .labs-nav__logo img { height: 2.25rem; } }
+
+.labs-footer__logo { margin: 0; line-height: 0; }
+.labs-footer__logo img { display: block; height: 4.5rem; width: auto; }

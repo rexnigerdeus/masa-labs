@@ -215,8 +215,18 @@ export default function HomePage() {
       <div className="labs-scroll-progress" aria-hidden />
 
       <header className="labs-nav" id="labs-nav">
+        {/* Logo sticker en SVG : 3,5 Ko gzip, aucune police à charger, et
+            `priority` parce qu'il est dans le premier écran. Next ne
+            réencode pas les SVG ; `unoptimized` le dit explicitement. */}
         <a href="#top" className="labs-nav__logo">
-          The Everyday Co.
+          <Image
+            src="/logo-ligne.svg"
+            alt="The Everyday Co."
+            width={1044}
+            height={181}
+            priority
+            unoptimized
+          />
         </a>
         <ul className="labs-nav__links">
           {NAV.map((item) => (
@@ -582,7 +592,9 @@ export default function HomePage() {
 
       <footer className="labs-footer">
         <div className="labs-footer__row">
-          <p className="labs-nav__logo">The Everyday Co.</p>
+          <p className="labs-footer__logo">
+            <Image src="/logo.svg" alt="The Everyday Co." width={633} height={392} unoptimized />
+          </p>
           <ul className="labs-footer__links">
             <li><a href={VITAE_URL}>Vitae</a></li>
             <li><a href={HIVE_URL}>Hive</a></li>
