@@ -74,6 +74,7 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
     <Sheet open={isOpen} onClose={close} label="Ajouter une tâche" keepMounted panelRef={panelRef}>
       <form onSubmit={submit} className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
+          <label className="flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-line bg-canvas px-3.5 transition focus-within:border-primary">
           <span aria-hidden className="h-5 w-5 shrink-0 rounded-[6px] border-2 border-faint" />
           <input
             ref={inputRef}
@@ -83,9 +84,10 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
             aria-label="Titre de la tâche"
             enterKeyHint="done"
             maxLength={200}
-            className="min-w-0 flex-1 bg-transparent py-2 text-[17px] text-ink placeholder:text-faint focus:outline-none focus-visible:outline-none"
+            className="h-full min-w-0 flex-1 bg-transparent text-[17px] text-ink placeholder:text-faint focus:outline-none"
           />
-          <Button type="submit" variant="primary" disabled={title.trim() === ''}>
+          </label>
+          <Button type="submit" variant="primary" disabled={title.trim() === ''} className="h-12">
             Ajouter
           </Button>
         </div>

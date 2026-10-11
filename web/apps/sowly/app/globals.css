@@ -170,9 +170,14 @@ body {
   }
 }
 
-:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+/* En couche `base` : hors couche, cette règle l'emportait sur les
+   `focus:outline-none` des champs, qui recevaient en plus de leur bordure
+   verte un contour carré par-dessus leurs coins arrondis. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

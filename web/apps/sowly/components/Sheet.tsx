@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, type PanInfo } from 'motion/react';
 
 /**
@@ -12,6 +12,39 @@ import { AnimatePresence, motion, type PanInfo } from 'motion/react';
  * permet de donner le focus à un champ *pendant* le toucher qui l'ouvre —
  * la seule façon de faire apparaître le clavier sur iOS (voir QuickAdd).
  */
+/**
+ * Hauteur du clavier virtuel qui recouvre le bas de l'écran.
+ *
+ * Sur iPhone (et Chrome Android récent), le clavier ne réduit pas la page :
+ * il se pose par-dessus. Un panneau `fixed` en `bottom: 0` reste collé au bas
+ * de la page… sous le clavier. `visualViewport` donne la zone réellement
+ * visible ; l'écart avec la fenêtre, c'est le clavier.
+ */
+function useKeyboardInset(active: boolean): { inset: number; visible: number | null } {
+  const [state, setState] = useState<{ inset: number; visible: number | null }>({ inset: 0, visible: null });
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!active || vv == null) {
+      setState({ inset: 0, visible: null });
+      return;
+    }
+    const update = (): void => {
+      setState({
+        inset: Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)),
+        visible: Math.round(vv.height),
+      });
+    };
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, [active]);
+  return state;
+}
+
 export function Sheet({ open, onClose, label, children, keepMounted = false, panelRef }: {
   open: boolean;
   onClose: () => void;
@@ -22,6 +55,7 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
 }) {
   const localRef = useRef<HTMLDivElement>(null);
   const ref = panelRef ?? localRef;
+  const keyboard = useKeyboardInset(open);
 
   useEffect(() => {
     if (!open) return;
@@ -44,7 +78,15 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
       // Fermé, le panneau reste dans le DOM mais sort de l'arbre focalisable.
       inert={!open}
       className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-xl rounded-t-[28px] border border-b-0 border-line bg-card px-5 pt-3 shadow-[0_-12px_40px_-12px_rgb(0_0_0/0.25)]"
-      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.25rem)' }}
+      style={{
+        // Clavier ouvert : le panneau se pose sur le clavier, et la marge de
+        // l'encoche (qui est sous le clavier) n'a plus lieu d'être.
+        bottom: keyboard.inset,
+        paddingBottom: keyboard.inset > 0 ? '0.75rem' : 'calc(env(safe-area-inset-bottom) + 1.25rem)',
+        maxHeight: keyboard.visible === null ? '92dvh' : keyboard.visible - 12,
+        overflowY: 'auto',
+        transition: 'bottom 0.2s ease-out',
+      }}
       initial={{ y: '110%' }}
       animate={{ y: open ? 0 : '110%' }}
       exit={{ y: '110%' }}
