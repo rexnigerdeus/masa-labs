@@ -1,5 +1,6 @@
 // Générateur du logo sticker The Everyday Co. — texte Inter 900 vectorisé.
-// Usage : node scripts/logo-sticker.cjs <Inter-Black.ttf> <dossier de sortie>
+// Usage : node scripts/logo-sticker.cjs <Inter-Black.ttf> public
+// Écrit public/logo.svg (empilé) et public/logo-ligne.svg (navigation).
 // La police est l'instance statique wght=900 d'Inter (OFL), tirée de la
 // version variable avec fontTools : instancer.instantiateVariableFont(f, {'wght': 900}).
 const fontkit = require('fontkit');
@@ -78,20 +79,18 @@ function sticker({ lines, border, keyline = 0, fill = INK, rotate = 0, shadow = 
 
 const T = 'The Everyday Co.';
 
-// A — empilé, encre sur sticker blanc.
-function stacked(fill, keyline) {
-  const big = 120;
-  const l1 = textPath('The', { size: big * 0.62, y: 0 });
-  const l2 = textPath('Everyday', { size: big, y: big * 0.92 });
-  const l3 = textPath('Co.', { size: big, y: big * 1.84 });
-  // Aligné à gauche, interlignage serré : la bordure soude les trois lignes.
-  return sticker({ lines: [l1, l2, l3], border: 44, keyline, fill, rotate: -4, title: T });
-}
-fs.writeFileSync(OUT + '/a-empile-encre.svg', stacked(INK, 0));
-fs.writeFileSync(OUT + '/b-empile-jaune.svg', stacked(YELLOW, 7));
+// Logo principal : empilé, lettres jaunes cernées d'encre pour rester
+// lisibles sur la découpe blanche, incliné comme un autocollant posé.
+const big = 120;
+const stacked = [
+  textPath('The', { size: big * 0.62, y: 0 }),
+  textPath('Everyday', { size: big, y: big * 0.92 }),
+  textPath('Co.', { size: big, y: big * 1.84 }),
+];
+// Aligné à gauche, interlignage serré : la bordure soude les trois lignes.
+fs.writeFileSync(OUT + '/logo.svg', sticker({ lines: stacked, border: 44, keyline: 7, fill: YELLOW, rotate: -4, title: T }));
 
-// C — une ligne, pour la barre de navigation.
+// Déclinaison sur une ligne, droite, pour la barre de navigation.
 const line = textPath(T, { size: 120 });
-fs.writeFileSync(OUT + '/c-ligne-encre.svg', sticker({ lines: [line], border: 40, rotate: 0, shadow: true, title: T }));
-fs.writeFileSync(OUT + '/c-ligne-jaune.svg', sticker({ lines: [line], border: 40, keyline: 6, fill: YELLOW, rotate: 0, shadow: true, title: T }));
+fs.writeFileSync(OUT + '/logo-ligne.svg', sticker({ lines: [line], border: 40, keyline: 6, fill: YELLOW, title: T }));
 console.log('ok');
