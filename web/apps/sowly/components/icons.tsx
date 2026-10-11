@@ -125,16 +125,18 @@ export const CloudOffIcon = ({ className }: P) => (
 );
 
 /**
- * Marque Sowly : la pousse pleine de l'icône d'application
- * (`public/icon.svg`), sans son fond. Même tracé partout — écran d'accueil
- * du téléphone, page d'entrée, aperçu de partage.
+ * Marque Sowly : la pousse de l'icône d'application (`public/icon.svg`),
+ * sans son fond. Même tracé partout — écran d'accueil du téléphone, page
+ * d'entrée, aperçu de partage.
+ *
+ * `sun` ajoute le soleil jaune de l'icône (le jaune du logo The Everyday
+ * Co.), à réserver aux fonds verts ou sombres : sur fond clair, il disparaît.
  */
-export const BrandMark = ({ className }: P) => (
-  <svg aria-hidden viewBox="132 110 296 342" fill="currentColor" className={className}>
-    <g transform="translate(-12 -14)">
-      <path d="M268 274c0-96 56-150 148-150 0 92-56 150-148 150z" />
-      <path d="M268 306c0-74-44-112-124-112 0 74 44 112 124 112z" />
-      <rect x="246" y="266" width="44" height="174" rx="22" />
-    </g>
+export const BrandMark = ({ className, sun = false }: P & { sun?: boolean }) => (
+  <svg aria-hidden viewBox={sun ? '76 72 356 386' : '96 104 336 354'} fill="currentColor" className={className}>
+    {sun ? <circle cx="128" cy="124" r="44" fill="var(--color-soleil-300)" /> : null}
+    <path d="M214 440c-4-60 12-116 48-164h22c-26 52-38 110-34 164a18 18 0 01-36 0z" />
+    <path d="M262 284c-6-104 50-172 160-172 6 108-54 170-160 172z" />
+    <path d="M252 334c4-84-46-136-150-134-6 86 46 136 150 134z" />
   </svg>
 );

@@ -105,7 +105,7 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
     <motion.div
       key="backdrop"
       aria-hidden
-      className="fixed inset-0 z-40 bg-sable-950/40"
+      className="fixed inset-0 z-40 bg-creme-950/40"
       initial={{ opacity: 0 }}
       animate={{ opacity: open ? 1 : 0 }}
       exit={{ opacity: 0 }}

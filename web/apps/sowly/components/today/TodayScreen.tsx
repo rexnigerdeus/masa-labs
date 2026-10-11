@@ -26,9 +26,9 @@ import { HabitRow } from './HabitRow';
  *   2. « Ma journée », en dessous, plus discret : lignes compactes, cases
  *      carrées.
  *
- * Journée complète : le bloc des habitudes prend un halo ambré (brief
+ * Journée complète : le bloc des habitudes prend un halo soleil (brief
  * §8.B.4) — pas de personnage, pas de feu d'artifice, un état visuel
- * distinct et calme. L'ambre n'apparaît nulle part ailleurs sur l'écran,
+ * distinct et calme. Le jaune n'apparaît nulle part ailleurs sur l'écran,
  * c'est ce qui lui garde sa valeur de récompense.
  */
 export function TodayScreen() {
@@ -94,7 +94,7 @@ export function TodayScreen() {
             animate={{
               backgroundColor: complete ? 'var(--reward)' : 'var(--card)',
               borderColor: complete ? 'var(--reward-glow)' : 'var(--line)',
-              // Le halo `amber-100` autour du bloc (brief §8.B.4).
+              // Le halo jaune soleil autour du bloc (brief §8.B.4).
               boxShadow: complete ? '0 0 0 6px var(--reward-halo)' : '0 0 0 0px var(--reward-halo)',
             }}
             transition={{ duration: 0.6, ease: 'easeOut' }}

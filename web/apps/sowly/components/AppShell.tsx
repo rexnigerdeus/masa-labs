@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             type="button"
             onClick={openQuickAdd}
             aria-label="Ajouter une tâche"
-            className="fixed z-30 grid h-14 w-14 place-items-center rounded-full bg-primary text-on-primary shadow-lg shadow-sprout-900/20 transition active:scale-95"
+            className="fixed z-30 grid h-14 w-14 place-items-center rounded-full bg-primary text-on-primary shadow-lg shadow-pousse-900/20 transition active:scale-95"
             style={{
               bottom: 'calc(env(safe-area-inset-bottom) + 5.25rem)',
               right: 'max(1rem, calc((100vw - 36rem) / 2 + 1rem))',

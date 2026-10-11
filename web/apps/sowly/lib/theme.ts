@@ -51,7 +51,7 @@ export function resolvedTheme(): ResolvedTheme {
  * une app sombre garde une barre d'état claire.
  */
 export function syncThemeColor(): void {
-  const color = resolvedTheme() === 'dark' ? '#13150f' : '#f7f8f5';
+  const color = resolvedTheme() === 'dark' ? '#171411' : '#fafaf7';
   document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
     m.content = color;
   });

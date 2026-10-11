@@ -9,7 +9,7 @@ import { redirectFor } from '../lib/routing';
 import { useStore } from '../lib/store';
 import { BrandMark } from './icons';
 import {
-  GrowingSprout, HistoryDemo, IdentityCycle, InfinityDraw, OfflineDemo, TasksDemo, ThemeSwitch, TodayDemo,
+  GrowingSprout, HistoryDemo, RisingSun, IdentityCycle, InfinityDraw, OfflineDemo, TasksDemo, ThemeSwitch, TodayDemo,
 } from './landing/demos';
 import { EASE, Tile, TileText } from './landing/Tile';
 import { ThemeToggle } from './ThemeToggle';
@@ -69,9 +69,7 @@ export function Landing() {
     <div className="flex min-h-dvh flex-col gap-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:gap-6">
       <header className="flex items-center justify-between gap-3 py-1">
         <span className="flex items-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-on-primary">
-            <BrandMark className="h-6 w-6" />
-          </span>
+          <AppBadge className="h-10 w-10 rounded-xl" mark="h-7 w-7" />
           <span className="font-display text-xl font-semibold tracking-tight">Sowly</span>
         </span>
         <span className="flex items-center gap-2">
@@ -89,15 +87,21 @@ export function Landing() {
         {/* ------------------------------------------------------ Promesse */}
         <Tile
           label="Sowly, Graines d’Habitudes"
-          className="relative min-h-[26rem] border-transparent bg-primary text-on-primary sm:col-span-2 lg:row-span-2 lg:min-h-[34rem]"
+          className="relative min-h-[26rem] border-line bg-night text-creme-50 sm:col-span-2 lg:row-span-2 lg:min-h-[34rem]"
         >
-          <GrowingSprout className="absolute -right-16 -bottom-8 h-64 w-64 text-on-primary opacity-[0.16] sm:h-80 sm:w-80" />
-          <p className="relative text-sm font-medium tracking-wide uppercase opacity-80">Graines d’Habitudes</p>
+          {/* Le langage du hero de The Everyday Co. : fond encre, pastille à
+              point jaune, dernière ligne dans le vert lumineux du produit. */}
+          <GrowingSprout className="absolute -right-10 -bottom-4 h-60 w-60 text-pousse-400 opacity-30 sm:h-72 sm:w-72" />
+          <RisingSun className="absolute top-6 right-6 h-9 w-9 sm:top-8 sm:right-8 sm:h-11 sm:w-11" />
+          <p className="relative inline-flex items-center gap-2 self-start rounded-full border border-creme-50/20 px-3 py-1.5 text-xs font-semibold tracking-[0.12em] uppercase">
+            <span aria-hidden className="h-2 w-2 rounded-full bg-soleil-300" />
+            Graines d’Habitudes
+          </p>
           <h1 className="relative mt-4 font-display text-[2.5rem] leading-[1.02] font-semibold tracking-tight sm:text-[3.4rem]">
             {['Suis tes habitudes.', 'Gère tes tâches.', 'Sans limite.'].map((line, i) => (
               <span key={line} className="block overflow-hidden pb-[0.06em]">
                 <motion.span
-                  className={`block ${i === 2 ? 'opacity-70' : ''}`}
+                  className={`block ${i === 2 ? 'text-pousse-300' : ''}`}
                   initial={{ y: '105%' }}
                   animate={{ y: 0 }}
                   transition={{ duration: 0.7, ease: EASE, delay: 0.1 + i * 0.12 }}
@@ -107,19 +111,19 @@ export function Landing() {
               </span>
             ))}
           </h1>
-          <p className="relative mt-4 max-w-sm text-[16px] leading-relaxed opacity-85">
+          <p className="relative mt-4 max-w-sm text-[16px] leading-relaxed text-creme-300">
             De petites graines, de vraies habitudes. Gratuit, illimité, et ça marche même sans réseau.
           </p>
           <div ref={heroCta} className="relative mt-auto flex flex-wrap items-center gap-2 pt-8">
             <Link
               href={SIGN_UP}
-              className="inline-flex h-12 items-center justify-center rounded-full bg-on-primary px-6 text-base font-semibold text-primary-ink transition hover:scale-[1.03] active:scale-95"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-creme-50 px-6 text-base font-semibold text-creme-950 transition hover:scale-[1.03] active:scale-95"
             >
               Créer mon compte
             </Link>
             <Link
               href={SIGN_IN}
-              className="inline-flex h-12 items-center rounded-full px-4 text-[15px] font-medium underline-offset-4 opacity-90 hover:underline"
+              className="inline-flex h-12 items-center rounded-full border border-creme-50/30 px-5 text-[15px] font-semibold transition hover:bg-creme-50/10"
             >
               J’ai déjà un compte
             </Link>
@@ -339,7 +343,7 @@ function InstallBlock() {
         {[0, 1, 2, 3].map((i) => (
           <motion.span
             key={i}
-            className={`grid h-14 w-14 place-items-center rounded-2xl ${i === 1 ? 'bg-primary text-on-primary' : 'bg-raised'}`}
+            className={`grid h-14 w-14 place-items-center rounded-2xl ${i === 1 ? '' : 'bg-raised'}`}
             initial={{ y: 20, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0.5 }}
@@ -347,7 +351,7 @@ function InstallBlock() {
               ? { type: 'spring', stiffness: 260, damping: 14, delay: 0.55 }
               : { duration: 0.4, ease: EASE, delay: 0.15 + i * 0.08 }}
           >
-            {i === 1 ? <BrandMark className="h-7 w-7" /> : null}
+            {i === 1 ? <AppBadge className="h-14 w-14 rounded-2xl" mark="h-9 w-9" /> : null}
           </motion.span>
         ))}
       </div>
@@ -357,5 +361,14 @@ function InstallBlock() {
       </TileText>
       <div className="pt-3">{body}</div>
     </>
+  );
+}
+
+/** La marque dans son carré vert, comme l'icône d'app — mêmes couleurs dans les deux thèmes. */
+function AppBadge({ className, mark }: { className: string; mark: string }) {
+  return (
+    <span className={`grid shrink-0 place-items-center bg-gradient-to-b from-pousse-500 to-pousse-700 text-creme-50 ${className}`}>
+      <BrandMark sun className={mark} />
+    </span>
   );
 }

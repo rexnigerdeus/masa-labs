@@ -8,112 +8,130 @@
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 /**
- * Design system Sowly — brief §5.
+ * Design system Sowly — brief §5, aligné sur The Everyday Co.
  *
- * Trois échelles générées façon uicolors.app (50 → 950), utilisables telles
- * quelles (`bg-sprout-100`, `text-amber-800`), plus des rôles sémantiques
- * (`bg-canvas`, `text-ink`, `bg-primary`…) qui basculent en mode sombre.
- * Les écrans n'emploient que les rôles ; les échelles servent aux rares
- * cas où la nuance exacte compte (halo de fin de journée).
+ * Sowly est une app de la maison The Everyday Co. : elle en reprend les
+ * neutres (crème chaud `#fafaf7` / `#f4f2ec`, encre brun-noir `#171411`,
+ * gris chauds `#5c5650`) et le jaune signal du logo (`#fdf150`), et garde
+ * son propre accent, le vert de la pousse — plus frais que l'ancien vert
+ * forêt, de la même famille vive que le vert de Vitae sans s'y confondre
+ * (Vitae tire vers le jaune-vert, Sowly vers la feuille).
+ *
+ * Trois échelles 50 → 950, utilisables telles quelles (`bg-pousse-100`,
+ * `text-soleil-800`), plus des rôles sémantiques (`bg-canvas`, `text-ink`,
+ * `bg-primary`…) qui basculent en mode sombre. Les écrans n'emploient que
+ * les rôles.
+ *
+ *   pousse   l'accent : boutons, validations, liens
+ *   creme    les neutres de The Everyday Co.
+ *   soleil   le jaune du logo Everyday Co., réservé à la récompense (journée
+ *            complète) et au soleil de l'icône : jamais un bouton, jamais un
+ *            lien — c'est ce qui lui garde sa valeur.
  *
  * Contrastes mesurés (WCAG) qui ont dicté les rôles :
- *   - `sprout-500` sur fond clair : 3,7:1 — assez pour une pastille validée
- *     (élément graphique, seuil 3:1), pas pour du texte. Le bouton principal
- *     est donc en `sprout-600` (texte blanc à 5,9:1).
- *   - L'argile du brief (#C1694F) tombe à 3,65:1 en texte : l'échéance
- *     dépassée s'écrit avec une encre plus sombre (#9A4E39, 5,6:1).
- *   - `amber` reste réservé à la récompense (brief §5.2) : jamais un bouton,
- *     jamais un lien.
+ *   - bouton principal `pousse-600`, texte blanc : 5,0:1 ; en sombre,
+ *     `pousse-400` sous un texte `creme-950` : 7,3:1.
+ *   - `pousse-500` sur blanc : 3,5:1 — assez pour une pastille validée
+ *     (élément graphique, seuil 3:1), pas pour du texte : l'encre verte est
+ *     `pousse-700` (7,1:1).
+ *   - le jaune signal tombe à 1,1:1 sur blanc : il n'écrit jamais. Le texte
+ *     de récompense est `soleil-800` sur `soleil-50` (7,8:1).
+ *   - L'argile (#C1694F) tombe à 3,65:1 en texte : l'échéance dépassée
+ *     s'écrit avec une encre plus sombre (#9A4E39, 5,6:1).
  */
 @theme {
-  --color-sprout-50: #f1f7f2;
-  --color-sprout-100: #deeee1;
-  --color-sprout-200: #c0dcc6;
-  --color-sprout-300: #97c2a1;
-  --color-sprout-400: #6ba878;
-  --color-sprout-500: #468f55;
-  --color-sprout-600: #327141;
-  --color-sprout-700: #245a33;
-  --color-sprout-800: #1b4527;
-  --color-sprout-900: #15331e;
-  --color-sprout-950: #0c1f12;
+  --color-pousse-50: #effaf0;
+  --color-pousse-100: #d8f3dc;
+  --color-pousse-200: #b3e6bd;
+  --color-pousse-300: #80d193;
+  --color-pousse-400: #4fb86a;
+  --color-pousse-500: #2f9d4f;
+  --color-pousse-600: #237f3e;
+  --color-pousse-700: #1e6534;
+  --color-pousse-800: #1b502c;
+  --color-pousse-900: #174226;
+  --color-pousse-950: #082513;
 
-  --color-amber-50: #fdf3e4;
-  --color-amber-100: #fbe1be;
-  --color-amber-200: #f7ca8c;
-  --color-amber-300: #f3af56;
-  --color-amber-400: #ee9931;
-  --color-amber-500: #d9861f;
-  --color-amber-600: #b66e17;
-  --color-amber-700: #8f5613;
-  --color-amber-800: #6c4110;
-  --color-amber-900: #4c2e0b;
-  --color-amber-950: #2e1b06;
+  --color-soleil-50: #fffde8;
+  --color-soleil-100: #fff8b8;
+  --color-soleil-200: #fff6a6;
+  --color-soleil-300: #fdf150;
+  --color-soleil-400: #f0dd25;
+  --color-soleil-500: #d4bf12;
+  --color-soleil-600: #a6940c;
+  --color-soleil-700: #7a6d0d;
+  --color-soleil-800: #5a510f;
+  --color-soleil-900: #3d370c;
+  --color-soleil-950: #25210a;
 
-  --color-sable-50: #f7f8f5;
-  --color-sable-100: #edefe9;
-  --color-sable-200: #dcdfd5;
-  --color-sable-300: #c1c6b8;
-  --color-sable-400: #9ca38e;
-  --color-sable-500: #767d68;
-  --color-sable-600: #5b614f;
-  --color-sable-700: #454a3c;
-  --color-sable-800: #31352b;
-  --color-sable-900: #20231c;
-  --color-sable-950: #13150f;
+  --color-creme-50: #fafaf7;
+  --color-creme-100: #f4f2ec;
+  --color-creme-200: #e8e4db;
+  --color-creme-300: #d4cec2;
+  --color-creme-400: #aaa398;
+  --color-creme-500: #8a8378;
+  --color-creme-600: #5c5650;
+  --color-creme-700: #46413b;
+  --color-creme-800: #36302a;
+  --color-creme-900: #26211c;
+  --color-creme-950: #171411;
 
   --radius-card: 18px;
 
   /* Polices auto-hébergées (next/font) : General Sans pour les titres et
-     les chiffres, Inter pour le reste (brief §6). Sous-ensemble latin
-     uniquement, ~25 Ko chacune, servies depuis notre domaine et mises en
-     cache par le service worker : aucune requête tierce, et rien à
-     retélécharger hors-ligne. */
+     les chiffres, Inter pour le reste (brief §6) — Inter est aussi la police
+     de The Everyday Co. Sous-ensemble latin uniquement, ~25 Ko chacune,
+     servies depuis notre domaine et mises en cache par le service worker :
+     aucune requête tierce, et rien à retélécharger hors-ligne. */
   --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-display: var(--font-general), var(--font-inter), system-ui, sans-serif;
 }
 
 /* Rôles — clair */
 :root {
-  --canvas: var(--color-sable-50);
+  --canvas: var(--color-creme-50);
   --card: #ffffff;
-  --raised: var(--color-sable-100);
-  --line: var(--color-sable-200);
-  --ink: var(--color-sable-900);
-  --muted: var(--color-sable-600);
-  --faint: var(--color-sable-400);
-  --primary: var(--color-sprout-600);
-  --primary-ink: var(--color-sprout-700);
+  --raised: var(--color-creme-100);
+  --line: var(--color-creme-200);
+  --ink: var(--color-creme-950);
+  --muted: var(--color-creme-600);
+  --faint: var(--color-creme-400);
+  --primary: var(--color-pousse-600);
+  --primary-ink: var(--color-pousse-700);
   --on-primary: #ffffff;
-  --done: var(--color-sprout-500);
-  --done-soft: var(--color-sprout-100);
-  --reward: var(--color-amber-50);
-  --reward-ink: var(--color-amber-800);
-  --reward-glow: var(--color-amber-300);
-  --reward-halo: var(--color-amber-100);
+  --done: var(--color-pousse-500);
+  --done-soft: var(--color-pousse-100);
+  /* Surface sombre « Everyday » (hero de la page d'entrée) : l'encre de
+     la maison en clair, un cran au-dessus du fond en sombre. */
+  --night: var(--color-creme-950);
+  --reward: var(--color-soleil-50);
+  --reward-ink: var(--color-soleil-800);
+  --reward-glow: var(--color-soleil-400);
+  --reward-halo: var(--color-soleil-200);
   --clay: #c1694f;
   --clay-ink: #9a4e39;
   color-scheme: light;
 }
 
-/* Rôles — sombre. Fond `sable-950`, texte `sable-50` (brief §5.3). */
+/* Rôles — sombre. Fond `creme-950`, l'encre de The Everyday Co. */
 :root[data-theme='dark'] {
-  --canvas: var(--color-sable-950);
-  --card: var(--color-sable-900);
-  --raised: var(--color-sable-800);
-  --line: var(--color-sable-800);
-  --ink: var(--color-sable-50);
-  --muted: var(--color-sable-400);
-  --faint: var(--color-sable-600);
-  --primary: var(--color-sprout-400);
-  --primary-ink: var(--color-sprout-300);
-  --on-primary: var(--color-sable-950);
-  --done: var(--color-sprout-400);
-  --done-soft: var(--color-sprout-950);
-  --reward: color-mix(in srgb, var(--color-amber-950) 55%, var(--color-sable-900));
-  --reward-ink: var(--color-amber-300);
-  --reward-glow: var(--color-amber-600);
-  --reward-halo: var(--color-amber-950);
+  --canvas: var(--color-creme-950);
+  --card: var(--color-creme-900);
+  --raised: var(--color-creme-800);
+  --line: var(--color-creme-800);
+  --ink: var(--color-creme-50);
+  --muted: var(--color-creme-400);
+  --faint: var(--color-creme-600);
+  --primary: var(--color-pousse-400);
+  --primary-ink: var(--color-pousse-300);
+  --on-primary: var(--color-creme-950);
+  --done: var(--color-pousse-400);
+  --done-soft: var(--color-pousse-950);
+  --night: var(--color-creme-900);
+  --reward: color-mix(in srgb, var(--color-soleil-950) 70%, var(--color-creme-900));
+  --reward-ink: var(--color-soleil-300);
+  --reward-glow: var(--color-soleil-500);
+  --reward-halo: var(--color-soleil-950);
   --clay: #db8c73;
   --clay-ink: #db8c73;
   color-scheme: dark;
@@ -132,6 +150,7 @@
   --color-on-primary: var(--on-primary);
   --color-done: var(--done);
   --color-done-soft: var(--done-soft);
+  --color-night: var(--night);
   --color-reward: var(--reward);
   --color-reward-ink: var(--reward-ink);
   --color-reward-glow: var(--reward-glow);

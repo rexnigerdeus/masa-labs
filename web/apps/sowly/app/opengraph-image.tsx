@@ -32,20 +32,21 @@ export default async function Image() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: '#F7F8F5',
+          // Le fond encre et le vert lumineux du hero de The Everyday Co.
+          background: '#171411',
           padding: '0 96px',
           fontFamily: 'General Sans',
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28, maxWidth: 720 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 36, fontWeight: 600, color: '#245A33' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 36, fontWeight: 600, color: '#FAFAF7' }}>
             Sowly
-            <span style={{ fontSize: 26, fontWeight: 500, color: '#5B614F' }}>· Graines d’Habitudes</span>
+            <span style={{ fontSize: 26, fontWeight: 500, color: '#AAA398' }}>· Graines d’Habitudes</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', fontSize: 74, fontWeight: 600, lineHeight: 1.05, letterSpacing: -2, color: '#20231C' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', fontSize: 74, fontWeight: 600, lineHeight: 1.05, letterSpacing: -2, color: '#FAFAF7' }}>
             <span>Suis tes habitudes.</span>
             <span>Gère tes tâches.</span>
-            <span style={{ color: '#327141' }}>Sans limite.</span>
+            <span style={{ color: '#80D193' }}>Sans limite.</span>
           </div>
           <div style={{ display: 'flex', gap: 14 }}>
             {['Gratuit, illimité', 'Hors connexion', 'Sans culpabilité'].map((t) => (
@@ -56,8 +57,9 @@ export default async function Image() {
                   alignItems: 'center',
                   flexShrink: 0,
                   whiteSpace: 'nowrap',
-                  background: '#DEEEE1',
-                  color: '#245A33',
+                  background: '#26211C',
+                  color: '#FAFAF7',
+                  border: '1px solid #46413B',
                   borderRadius: 999,
                   padding: '12px 22px',
                   fontSize: 23,
@@ -70,12 +72,20 @@ export default async function Image() {
           </div>
         </div>
 
+        {/* Même dessin que public/icon.svg. */}
         <svg width="300" height="300" viewBox="0 0 512 512">
-          <rect width="512" height="512" rx="112" fill="#327141" />
-          <g transform="translate(-12 -14)" fill="#F7F8F5">
-            <path d="M268 274c0-96 56-150 148-150 0 92-56 150-148 150z" />
-            <path d="M268 306c0-74-44-112-124-112 0 74 44 112 124 112z" />
-            <rect x="246" y="266" width="44" height="174" rx="22" />
+          <defs>
+            <linearGradient id="fond" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#2F9D4F" />
+              <stop offset="1" stopColor="#1E6534" />
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" rx="112" fill="url(#fond)" />
+          <circle cx="128" cy="124" r="44" fill="#FDF150" />
+          <g fill="#FAFAF7">
+            <path d="M214 440c-4-60 12-116 48-164h22c-26 52-38 110-34 164a18 18 0 01-36 0z" />
+            <path d="M262 284c-6-104 50-172 160-172 6 108-54 170-160 172z" />
+            <path d="M252 334c4-84-46-136-150-134-6 86 46 136 150 134z" />
           </g>
         </svg>
       </div>

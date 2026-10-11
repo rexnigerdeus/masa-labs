@@ -32,8 +32,10 @@ function useLoop(ref: React.RefObject<Element | null>, ms: number, step: () => v
 /* ------------------------------------------------------------------ Pousse */
 
 /**
- * La marque qui pousse : la tige monte, les feuilles s'ouvrent, puis le tout
- * se balance doucement. Même tracé que `BrandMark`, découpé en trois pièces.
+ * La marque qui pousse : la tige monte, les feuilles s'ouvrent, puis la
+ * pousse se balance doucement. Même tracé que `BrandMark`, découpé en
+ * pièces. Le soleil de l'icône vit à part (`RisingSun`) : on le place où il
+ * ne gêne pas le texte.
  */
 export function GrowingSprout({ className = '' }: { className?: string }) {
   return (
@@ -44,42 +46,52 @@ export function GrowingSprout({ className = '' }: { className?: string }) {
           className="absolute inset-[18%] rounded-full border-2 border-current"
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: [0.6, 1.5], opacity: [0.35, 0] }}
-          transition={{ duration: 3.6, repeat: Infinity, delay: 1.4 + i * 1.2, ease: 'easeOut' }}
+          transition={{ duration: 3.6, repeat: Infinity, delay: 1.6 + i * 1.2, ease: 'easeOut' }}
         />
       ))}
-      <motion.svg
-        viewBox="132 110 296 342"
-        fill="currentColor"
-        className="relative h-full w-full"
-        style={{ originX: 0.5, originY: 1 }}
-        animate={{ rotate: [-2.5, 2.5] }}
-        transition={{ duration: 3.2, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay: 1.6 }}
-      >
-        <g transform="translate(-12 -14)">
-          <motion.rect
-            x="246" y="266" width="44" height="174" rx="22"
+      <svg viewBox="96 104 336 354" fill="currentColor" className="relative h-full w-full overflow-visible">
+        <motion.g
+          style={{ transformBox: 'fill-box', originX: 0.45, originY: 1 }}
+          animate={{ rotate: [-2.5, 2.5] }}
+          transition={{ duration: 3.2, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay: 1.6 }}
+        >
+          <motion.path
+            d="M214 440c-4-60 12-116 48-164h22c-26 52-38 110-34 164a18 18 0 01-36 0z"
             style={{ transformBox: 'fill-box', originY: 1 }}
             initial={{ scaleY: 0 }}
             animate={{ scaleY: 1 }}
             transition={{ duration: 0.7, ease: EASE, delay: 0.25 }}
           />
           <motion.path
-            d="M268 306c0-74-44-112-124-112 0 74 44 112 124 112z"
+            d="M252 334c4-84-46-136-150-134-6 86 46 136 150 134z"
             style={{ transformBox: 'fill-box', originX: 1, originY: 1 }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 160, damping: 14, delay: 0.75 }}
           />
           <motion.path
-            d="M268 274c0-96 56-150 148-150 0 92-56 150-148 150z"
+            d="M262 284c-6-104 50-172 160-172 6 108-54 170-160 172z"
             style={{ transformBox: 'fill-box', originX: 0, originY: 1 }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 160, damping: 14, delay: 0.95 }}
           />
-        </g>
-      </motion.svg>
+        </motion.g>
+      </svg>
     </div>
+  );
+}
+
+/** Le soleil jaune de l'icône (le jaune du logo The Everyday Co.), qui se lève. */
+export function RisingSun({ className = '' }: { className?: string }) {
+  return (
+    <motion.span
+      aria-hidden
+      className={`pointer-events-none rounded-full bg-soleil-300 shadow-[0_0_48px_8px_rgb(253_241_80/0.25)] ${className}`}
+      initial={{ y: 28, opacity: 0, scale: 0.7 }}
+      animate={{ y: 0, opacity: 1, scale: 1 }}
+      transition={{ duration: 1, ease: EASE, delay: 1.1 }}
+    />
   );
 }
 
@@ -94,7 +106,7 @@ const DEMO_HABITS = [
 /**
  * L'écran Aujourd'hui en miniature, vraiment cliquable : valider une
  * habitude fait grandir sa série ; les trois validées, le bloc prend le
- * halo ambré de la journée complète — exactement comme dans l'app.
+ * halo soleil de la journée complète — exactement comme dans l'app.
  */
 export function TodayDemo() {
   const [done, setDone] = useState([true, false, false]);
@@ -462,7 +474,7 @@ export function ThemeSwitch() {
       <motion.span
         layout
         transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-        className="grid h-12 w-12 place-items-center rounded-full bg-card text-ink shadow-md shadow-sable-900/15"
+        className="grid h-12 w-12 place-items-center rounded-full bg-card text-ink shadow-md shadow-creme-900/15"
       >
         {theme === null ? null : dark ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
       </motion.span>
