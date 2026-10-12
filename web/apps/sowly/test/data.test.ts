@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { emptyData, type Data } from '../lib/model.ts';
 import {
   completeOnboarding, createHabit, createList, createTask, deleteList, postponeTask,
-  reorderTasks, toggleCheck, toggleTask, type HabitDraft,
+  patchTask, reorderTasks, toggleCheck, toggleTask, type HabitDraft,
 } from '../lib/mutations.ts';
 import {
   habitsForDay, leftoverTasks, myDayTasks, tasksOfList, todayHabits,
@@ -124,6 +124,20 @@ test('fusion : une écriture locale en attente l’emporte sur le serveur', () =
   const pending = new Set([outboxKey('sowly_tasks', 't')]);
   assert.equal(mergeRows(data, 'sowly_tasks', server, pending).tasks.t?.title, 'Local');
   assert.equal(mergeRows(data, 'sowly_tasks', server, new Set()).tasks.t?.title, 'Serveur');
+});
+
+test('description : nettoyée, bornée, et envoyée avec la tâche', () => {
+  let data = createTask(emptyData(), { title: 'Devis', listId: null, myDay: null, dueDay: null }, 't').data;
+  assert.equal(data.tasks.t?.description, '');
+  const result = patchTask(data, 't', { description: `  ${'a'.repeat(2100)}  ` });
+  data = result.data;
+  assert.equal(data.tasks.t?.description.length, 2000);
+  assert.equal(result.changes[0]?.row.description, data.tasks.t?.description);
+});
+
+test('description : une ligne serveur sans la colonne donne une description vide', () => {
+  const server = [{ id: 't', title: 'Ancienne', list_id: null, position: 0, updated_at: NOW }];
+  assert.equal(mergeRows(emptyData(), 'sowly_tasks', server, new Set()).tasks.t?.description, '');
 });
 
 test('fusion : une ligne malformée est ignorée plutôt que de casser l’écran', () => {

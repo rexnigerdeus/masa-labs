@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { haptic, readFeedbackPrefs } from '../lib/feedback';
 
 /**
  * Pastille de validation : le cercle se remplit, la coche se dessine
@@ -52,11 +53,10 @@ export function CheckMark({ checked, shape = 'round', size = 'lg' }: {
   );
 }
 
-/** Retour tactile léger, là où il existe (Android ; Safari iOS l'ignore). */
+/**
+ * Retour tactile léger (onboarding, démo de la page d'entrée). Passe par
+ * `lib/feedback.ts`, qui sait aussi faire vibrer un iPhone.
+ */
 export function tick(): void {
-  try {
-    navigator.vibrate?.(12);
-  } catch {
-    // Sans vibreur ou refusé par le navigateur : rien à faire.
-  }
+  if (readFeedbackPrefs().haptics) haptic('task');
 }

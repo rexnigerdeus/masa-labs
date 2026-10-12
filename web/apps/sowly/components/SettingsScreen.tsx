@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { IDENTITIES, MAX_IDENTITIES } from '../lib/identities';
@@ -14,7 +14,8 @@ import { useInstallPrompt } from '@everyday/pwa';
 import { applyTheme } from '../lib/theme';
 import { InstallCard } from './pwa/InstallCard';
 import { useThemeChoice } from './ThemeToggle';
-import { Button, ScreenTitle, Segmented } from './ui';
+import { Button, ScreenTitle, Segmented, Switch } from './ui';
+import { play, haptic, readFeedbackPrefs, writeFeedbackPrefs, type FeedbackPrefs } from '../lib/feedback';
 
 const STATUS_LABEL = {
   idle: 'À jour',
@@ -36,6 +37,9 @@ export function SettingsScreen() {
   const installState = useInstallPrompt().state;
   const theme = useThemeChoice();
   const [confirmOut, setConfirmOut] = useState(false);
+  // Lu après l'hydratation : le serveur ne connaît pas le stockage local.
+  const [feedback, setFeedback] = useState<FeedbackPrefs | null>(null);
+  useEffect(() => setFeedback(readFeedbackPrefs()), []);
 
   if (store === null) return null;
   const { data, prefs, meta } = store;
@@ -145,6 +149,38 @@ export function SettingsScreen() {
         </div>
       </Section>
 
+      {feedback !== null ? (
+        <Section title="Sons et vibrations">
+          <p className="text-sm text-muted">
+            Quand tu valides une habitude ou termines une tâche. Le son suit le mode silencieux du téléphone.
+          </p>
+          <SettingRow label="Sons">
+            <Switch
+              label="Sons"
+              checked={feedback.sound}
+              onChange={(sound) => {
+                const next = { ...feedback, sound };
+                writeFeedbackPrefs(next);
+                setFeedback(next);
+                if (sound) play('task');
+              }}
+            />
+          </SettingRow>
+          <SettingRow label="Vibrations">
+            <Switch
+              label="Vibrations"
+              checked={feedback.haptics}
+              onChange={(haptics) => {
+                const next = { ...feedback, haptics };
+                writeFeedbackPrefs(next);
+                setFeedback(next);
+                if (haptics) haptic('task');
+              }}
+            />
+          </SettingRow>
+        </Section>
+      ) : null}
+
       <Section title="Qui je deviens">
         <p className="text-sm text-muted">Jusqu’à {MAX_IDENTITIES} identités.</p>
         <div className="flex flex-wrap gap-2">
@@ -197,5 +233,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2 className="font-display text-base font-semibold">{title}</h2>
       {children}
     </section>
+  );
+}
+
+function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-[15px]">{label}</span>
+      {children}
+    </div>
   );
 }

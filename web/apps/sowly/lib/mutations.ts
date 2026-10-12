@@ -171,6 +171,7 @@ export function createTask(data: Data, draft: TaskDraft, id: string): Result {
     id,
     listId: draft.listId,
     title,
+    description: '',
     dueDay: draft.dueDay,
     myDay: draft.myDay,
     doneAt: null,
@@ -191,6 +192,7 @@ export function patchTask(data: Data, id: string, patch: Partial<Omit<Task, 'id'
     task.title = patch.title.trim().slice(0, 200);
     if (task.title === '') return { data, changes: [] };
   }
+  if (patch.description !== undefined) task.description = patch.description.trim().slice(0, 2000);
   return {
     data: { ...data, tasks: { ...data.tasks, [id]: task } },
     changes: [taskChange(task)],

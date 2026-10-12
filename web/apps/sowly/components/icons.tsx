@@ -112,6 +112,19 @@ export const MoonIcon = ({ className }: P) => (
   </Svg>
 );
 
+export const NoteIcon = ({ className }: P) => (
+  <Svg className={className}>
+    <path d="M5 6h14M5 11h14M5 16h9" />
+  </Svg>
+);
+
+export const BellIcon = ({ className }: P) => (
+  <Svg className={className}>
+    <path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 1.5h-15z" />
+    <path d="M10 20.5a2 2 0 004 0" />
+  </Svg>
+);
+
 export const CloudIcon = ({ className }: P) => (
   <Svg className={className}>
     <path d="M7 18.5h10a4 4 0 00.6-7.96A5.5 5.5 0 006.9 9.2 4.65 4.65 0 007 18.5z" />

@@ -29,6 +29,15 @@ export const COLUMNS: Record<Table, string> = {
     'id, list_id, title, due_day, my_day, done_at, position, deleted_at, updated_at',
 };
 
+/**
+ * Colonnes ajoutées après le lot 1. Tant que leur migration n'est pas en
+ * base, la synchronisation s'en passe au lieu d'échouer en entier (voir
+ * `lib/sync.ts`) — l'app peut donc être déployée avant la migration.
+ */
+export const OPTIONAL_COLUMNS: Partial<Record<Table, readonly string[]>> = {
+  sowly_tasks: ['description'],
+};
+
 /** Clé d'`upsert` de chaque table, pour `onConflict`. */
 export const CONFLICT_KEY: Record<Table, string> = {
   sowly_profiles: 'user_id',
@@ -101,6 +110,7 @@ export function taskChange(t: Task): Change {
       id: t.id,
       list_id: t.listId,
       title: t.title,
+      description: t.description,
       due_day: t.dueDay,
       my_day: t.myDay,
       done_at: t.doneAt,
@@ -178,6 +188,7 @@ export function taskFromRow(r: Row): Task | null {
     id: r.id,
     listId: strOrNull(r.list_id),
     title: r.title,
+    description: typeof r.description === 'string' ? r.description : '',
     dueDay: dayOrNull(r.due_day),
     myDay: dayOrNull(r.my_day),
     doneAt: strOrNull(r.done_at),

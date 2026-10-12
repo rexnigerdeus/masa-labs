@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'motion/react';
 import { IDENTITIES } from '../../lib/identities';
-import { CheckMark, tick } from '../CheckMark';
+import { burst } from '../../lib/burst';
+import { reward } from '../../lib/feedback';
+import { CheckMark } from '../CheckMark';
 import { CloudIcon, CloudOffIcon, MoonIcon, PlusIcon, SunIcon } from '../icons';
 import { switchTheme, useResolvedTheme } from '../ThemeToggle';
 import { EASE } from './Tile';
@@ -114,10 +116,15 @@ export function TodayDemo() {
   const complete = done.every(Boolean);
   const hint = touched ? -1 : done.indexOf(false);
 
-  const toggle = (i: number): void => {
-    tick();
+  const toggle = (i: number, origin: Element | null): void => {
     setTouched(true);
-    setDone((d) => d.map((v, j) => (j === i ? !v : v)));
+    const next = done.map((v, j) => (j === i ? !v : v));
+    setDone(next);
+    if (!next[i]) return;
+    // La vraie récompense de l'app : vibration, son et gerbe.
+    const all = next.every(Boolean);
+    reward(all ? 'complete' : 'habit');
+    burst(origin, all ? { count: 22, spread: 1.7 } : { count: 10 });
   };
 
   return (
@@ -150,7 +157,7 @@ export function TodayDemo() {
               <button
                 type="button"
                 aria-pressed={done[i]}
-                onClick={() => toggle(i)}
+                onClick={(e) => toggle(i, e.currentTarget.querySelector('span'))}
                 className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-raised/60"
               >
                 <span className="relative">

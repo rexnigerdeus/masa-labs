@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Primitives d'interface, dans l'esprit de Kokonut UI (brief §7) sans en
  * importer le registre : une poignée de composants, minces et sans état,
@@ -8,6 +10,7 @@
  * (patterns architecturaux §10).
  */
 
+import { useLayoutEffect, useRef } from 'react';
 import type React from 'react';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -125,4 +128,69 @@ export function ScreenTitle({ kicker, children }: { kicker?: string; children: R
       <ThemeToggle className="mb-1" />
     </header>
   );
+}
+
+/** Pastille cliquable (raccourcis d'échéance, choix de liste). */
+export function Chip({ active, onClick, children, as = 'button', radio = false }: {
+  active: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+  as?: 'button' | 'span';
+  radio?: boolean;
+}) {
+  const className = `inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+    active ? 'border-primary bg-done-soft text-primary-ink' : 'border-line text-muted hover:text-ink'
+  }`;
+  if (as === 'span') return <span className={className}>{children}</span>;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={className}
+      {...(radio ? { role: 'radio', 'aria-checked': active } : { 'aria-pressed': active })}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Interrupteur on / off, pour les réglages et le détail d'une tâche. */
+export function Switch({ checked, onChange, label }: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+        checked ? 'bg-primary' : 'bg-creme-300 dark:bg-creme-700'
+      }`}
+    >
+      <span
+        aria-hidden
+        className={`h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200 ${checked ? 'translate-x-5' : ''}`}
+      />
+    </button>
+  );
+}
+
+/**
+ * Zone de texte qui grandit avec son contenu : un titre long se lit en
+ * entier, sans barre de défilement ni coupure.
+ */
+export function AutoTextarea({ className = '', value, ...props }:
+React.TextareaHTMLAttributes<HTMLTextAreaElement> & { value: string }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el === null) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return <textarea ref={ref} rows={1} value={value} {...props} className={`resize-none overflow-hidden ${className}`} />;
 }

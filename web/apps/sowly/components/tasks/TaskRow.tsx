@@ -1,13 +1,15 @@
 'use client';
 
+import { useRef } from 'react';
 import { motion, useMotionValue, useTransform, type PanInfo } from 'motion/react';
 import { formatRelative, type Day } from '../../lib/dates';
 import type { Task } from '../../lib/model';
-import { postponeTask, toggleMyDay, toggleTask } from '../../lib/mutations';
+import { completeTask } from '../../lib/complete';
+import { postponeTask, toggleMyDay } from '../../lib/mutations';
 import { isOverdue } from '../../lib/selectors';
-import { commit, nowIso } from '../../lib/store';
-import { CheckMark, tick } from '../CheckMark';
-import { CalendarIcon, SunIcon } from '../icons';
+import { commit } from '../../lib/store';
+import { CheckMark } from '../CheckMark';
+import { CalendarIcon, NoteIcon, SunIcon } from '../icons';
 
 const SWIPE = 84;
 
@@ -35,6 +37,7 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
   nested?: boolean;
 }) {
   const x = useMotionValue(0);
+  const box = useRef<HTMLButtonElement>(null);
   const doneHint = useTransform(x, [0, SWIPE], [0, 1]);
   const laterHint = useTransform(x, [-SWIPE, 0], [1, 0]);
   const done = task.doneAt !== null;
@@ -42,8 +45,7 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
 
   const onDragEnd = (_: unknown, info: PanInfo): void => {
     if (info.offset.x > SWIPE) {
-      tick();
-      commit((d) => toggleTask(d, task.id, nowIso()));
+      completeTask(task, today, box.current);
     } else if (info.offset.x < -SWIPE && canPostpone) {
       commit((d) => postponeTask(d, task.id, today));
     }
@@ -51,6 +53,9 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
 
   const overdue = isOverdue(task, today);
   const meta: React.ReactNode[] = [];
+  if (task.description !== '') {
+    meta.push(<NoteIcon key="n" className="h-3.5 w-3.5" />);
+  }
   if (task.dueDay !== null) {
     meta.push(
       <span key="e" className={`inline-flex items-center gap-1 ${overdue ? 'text-clay-ink' : ''}`}>
@@ -92,10 +97,8 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
         {handle}
         <button
           type="button"
-          onClick={() => {
-            if (!done) tick();
-            commit((d) => toggleTask(d, task.id, nowIso()));
-          }}
+          ref={box}
+          onClick={() => completeTask(task, today, box.current)}
           aria-label={done ? `Rouvrir « ${task.title} »` : `Terminer « ${task.title} »`}
           aria-pressed={done}
           className="-m-2 p-2"

@@ -12,7 +12,7 @@ import { commit, setPrefs, useToday } from '../../lib/store';
 import { useSyncStatus } from '../../lib/sync';
 import { TaskEditor } from '../tasks/TaskEditor';
 import { TaskRow } from '../tasks/TaskRow';
-import { PlusIcon } from '../icons';
+import { PlusIcon, SunIcon } from '../icons';
 import { InstallCard } from '../pwa/InstallCard';
 import { ScreenTitle, SectionTitle } from '../ui';
 import { HabitRow } from './HabitRow';
@@ -161,6 +161,31 @@ export function TodayScreen() {
           </p>
         ) : (
           <ul className="flex flex-col gap-1.5">
+            {/* Ma journée bouclée : la même récompense soleil que les
+                habitudes, en plus discret — une ligne, pas un bloc. */}
+            <AnimatePresence initial={false}>
+              {tasks.every((t) => t.doneAt !== null) ? (
+                <motion.li
+                  key="boucle"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  className="overflow-hidden"
+                >
+                  <p role="status" className="mb-1 flex items-center gap-2.5 rounded-2xl border border-reward-glow bg-reward px-4 py-3 text-sm font-medium text-reward-ink">
+                    <motion.span
+                      initial={{ rotate: -90, scale: 0.4 }}
+                      animate={{ rotate: 0, scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.1 }}
+                    >
+                      <SunIcon className="h-5 w-5" />
+                    </motion.span>
+                    Ma journée est bouclée. Profite du reste !
+                  </p>
+                </motion.li>
+              ) : null}
+            </AnimatePresence>
             <AnimatePresence initial={false}>
               {tasks.map((task) => (
                 <TaskRow

@@ -7,7 +7,7 @@ import { liveLists } from '../../lib/selectors';
 import { commit, getState, newId, today as getToday } from '../../lib/store';
 import { Sheet } from '../Sheet';
 import { CalendarIcon, SunIcon } from '../icons';
-import { Button } from '../ui';
+import { Button, Chip } from '../ui';
 
 export interface QuickAddHandle {
   /** À appeler dans le gestionnaire du toucher, pour que le clavier s'ouvre sur iOS. */
@@ -137,26 +137,3 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
     </Sheet>
   );
 });
-
-function Chip({ active, onClick, children, as = 'button', radio = false }: {
-  active: boolean;
-  onClick?: () => void;
-  children: React.ReactNode;
-  as?: 'button' | 'span';
-  radio?: boolean;
-}) {
-  const className = `inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-    active ? 'border-primary bg-done-soft text-primary-ink' : 'border-line text-muted hover:text-ink'
-  }`;
-  if (as === 'span') return <span className={className}>{children}</span>;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={className}
-      {...(radio ? { role: 'radio', 'aria-checked': active } : { 'aria-pressed': active })}
-    >
-      {children}
-    </button>
-  );
-}

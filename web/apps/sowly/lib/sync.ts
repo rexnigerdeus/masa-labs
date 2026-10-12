@@ -17,7 +17,7 @@ import { useSyncExternalStore } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getState, internal, onLocalChange } from './store.ts';
 import { TABLES, type Change, type Table } from './model.ts';
-import { COLUMNS, CONFLICT_KEY } from './rows.ts';
+import { COLUMNS, CONFLICT_KEY, OPTIONAL_COLUMNS } from './rows.ts';
 import { nextCursor } from './merge.ts';
 
 /**
@@ -46,6 +46,62 @@ export function useSyncStatus(): SyncStatus {
     () => status,
     () => 'idle',
   );
+}
+
+// ---------------------------------------------------------------------------
+// Colonnes optionnelles
+
+/**
+ * Colonnes optionnelles (`OPTIONAL_COLUMNS`) que le serveur n'a pas encore,
+ * sous la forme `table.colonne`. Découvert à l'exécution : Postgres répond
+ * `42703` à une lecture, PostgREST `PGRST204` à une écriture. On retire
+ * alors la colonne des requêtes, et l'écran masque le champ qui l'utilise.
+ * Pas mémorisé d'un lancement à l'autre : dès la migration appliquée, la
+ * colonne revient au lancement suivant.
+ */
+const missing = new Set<string>();
+const schemaListeners = new Set<() => void>();
+
+/** La colonne existe-t-elle côté serveur ? `true` tant qu'on ne sait pas le contraire. */
+export function useColumnAvailable(table: Table, column: string): boolean {
+  return useSyncExternalStore(
+    (l) => { schemaListeners.add(l); return () => schemaListeners.delete(l); },
+    () => !missing.has(`${table}.${column}`),
+    () => true,
+  );
+}
+
+function missingColumn(table: Table, error: { code?: string; message?: string }): string | null {
+  if (error.code !== '42703' && error.code !== 'PGRST204') return null;
+  const column = (OPTIONAL_COLUMNS[table] ?? [])
+    .find((c) => !missing.has(`${table}.${c}`) && (error.message ?? '').includes(c));
+  if (column === undefined) return null;
+  missing.add(`${table}.${column}`);
+  for (const l of schemaListeners) l();
+  return column;
+}
+
+function selectColumns(table: Table): string {
+  const extra = (OPTIONAL_COLUMNS[table] ?? []).filter((c) => !missing.has(`${table}.${c}`));
+  return [COLUMNS[table], ...extra].join(', ');
+}
+
+function withoutMissing(table: Table, row: Record<string, unknown>): Record<string, unknown> {
+  const out = { ...row };
+  for (const c of OPTIONAL_COLUMNS[table] ?? []) if (missing.has(`${table}.${c}`)) delete out[c];
+  return out;
+}
+
+/**
+ * Une ligne lue sans une colonne optionnelle ne doit pas effacer la valeur
+ * locale : sans cela, une description écrite sur l'appareil disparaîtrait
+ * à la lecture suivante.
+ */
+function keepLocal(table: Table, row: Record<string, unknown>): Record<string, unknown> {
+  if (table === 'sowly_tasks' && missing.has('sowly_tasks.description') && typeof row.id === 'string') {
+    return { ...row, description: getState().data.tasks[row.id]?.description ?? '' };
+  }
+  return row;
 }
 
 // ---------------------------------------------------------------------------
@@ -131,12 +187,16 @@ async function push(supabase: SupabaseClient, userId: string): Promise<void> {
 async function sendBatch(
   supabase: SupabaseClient, table: Table, entries: Array<[string, Change]>, userId: string,
 ): Promise<void> {
-  const rows = entries.map(([, c]) => (table === 'sowly_profiles' ? { ...c.row, user_id: userId } : c.row));
+  const rows = entries.map(([, c]) => withoutMissing(
+    table, table === 'sowly_profiles' ? { ...c.row, user_id: userId } : c.row,
+  ));
   const { error } = await supabase.from(table).upsert(rows, { onConflict: CONFLICT_KEY[table] });
   if (error === null) {
     internal.acknowledge(Object.fromEntries(entries));
     return;
   }
+  // Colonne pas encore en base : on la retire et on renvoie le lot.
+  if (missingColumn(table, error) !== null) return sendBatch(supabase, table, entries, userId);
   if (!isRejected(error)) throw error;
 
   // Une ligne refusée par la base (contrainte, RLS) ne passera jamais : la
@@ -176,14 +236,18 @@ async function pull(supabase: SupabaseClient): Promise<void> {
     let cursor = since;
 
     for (let offset = 0; ; offset += PAGE) {
-      let query = supabase.from(table).select(COLUMNS[table])
+      let query = supabase.from(table).select(selectColumns(table))
         .order('updated_at', { ascending: true })
         .range(offset, offset + PAGE - 1);
       if (from !== null) query = query.gte('updated_at', from);
 
       const { data, error } = await query;
-      if (error !== null) throw error;
-      const rows = (data ?? []) as unknown as Record<string, unknown>[];
+      if (error !== null) {
+        // Colonne pas encore en base : on relit la même page sans elle.
+        if (missingColumn(table, error) !== null) { offset -= PAGE; continue; }
+        throw error;
+      }
+      const rows = ((data ?? []) as unknown as Record<string, unknown>[]).map((r) => keepLocal(table, r));
       cursor = nextCursor(cursor, rows);
       internal.merge(table, rows, cursor);
       if (rows.length < PAGE) break;

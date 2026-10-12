@@ -68,6 +68,8 @@ export interface Task {
   /** `null` = liste par défaut « Tâches », qui n'a pas de ligne en base. */
   listId: string | null;
   title: string;
+  /** Note libre sous le titre ; chaîne vide quand il n'y en a pas. */
+  description: string;
   dueDay: Day | null;
   /** Jour où la tâche a été mise dans « Ma journée ». */
   myDay: Day | null;

@@ -1,11 +1,11 @@
 'use client';
 
+import { useRef } from 'react';
 import Link from 'next/link';
 import type { Day } from '../../lib/dates';
-import { toggleCheck } from '../../lib/mutations';
+import { completeHabit } from '../../lib/complete';
 import type { HabitLine } from '../../lib/selectors';
-import { commit, nowIso } from '../../lib/store';
-import { CheckMark, tick } from '../CheckMark';
+import { CheckMark } from '../CheckMark';
 
 /**
  * Une habitude du jour. La pastille est à droite, sous le pouce ; le texte
@@ -19,6 +19,7 @@ import { CheckMark, tick } from '../CheckMark';
 export function HabitRow({ line, today }: { line: HabitLine; today: Day }) {
   const { habit, done, streak } = line;
   const detail = [habit.cue, habit.place].filter((s) => s !== '').join(' · ');
+  const pastille = useRef<HTMLButtonElement>(null);
 
   return (
     <li className="flex items-center gap-3 py-2.5 pr-1 pl-4">
@@ -37,10 +38,8 @@ export function HabitRow({ line, today }: { line: HabitLine; today: Day }) {
       </Link>
       <button
         type="button"
-        onClick={() => {
-          if (!done) tick();
-          commit((d) => toggleCheck(d, habit.id, today, today, nowIso()));
-        }}
+        ref={pastille}
+        onClick={() => completeHabit(habit.id, done, today, pastille.current)}
         aria-label={done ? `Annuler « ${habit.action} » pour aujourd’hui` : `Valider « ${habit.action} »`}
         aria-pressed={done}
         className="grid h-12 w-12 place-items-center"
