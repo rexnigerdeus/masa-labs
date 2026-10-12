@@ -11,3 +11,12 @@ export const APP_URL: string =
   ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL !== undefined
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : 'http://localhost:3003');
+
+/**
+ * Clé publique VAPID des rappels (Web Push). Publique par nature : le
+ * navigateur la donne au service push pour n'accepter que les messages
+ * signés par la clé privée, qui ne vit que dans les secrets de l'Edge
+ * Function `sowly-push` (fichier local supabase/.env.sowly-push).
+ */
+export const VAPID_PUBLIC_KEY =
+  'BHpHQQKrp9gCLsgliky8ELdaJ9fURe5RlB7hVwdQSxb3fvkX-brLMvylYAvKPNENpEphzi9zEwyvtHvzZb0cB6A';

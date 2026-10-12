@@ -4,3 +4,6 @@ rondo/.flutter-plugins
 rondo/.flutter-plugins-dependencies
 rondo/ios/Pods/
 rondo/android/.gradle/
+
+# Secrets locaux des Edge Functions (clés VAPID…), jamais commités
+supabase/.env*

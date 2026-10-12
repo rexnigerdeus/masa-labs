@@ -13,6 +13,7 @@ import { pendingCount, signOut, syncNow, useSyncStatus } from '../lib/sync';
 import { useInstallPrompt } from '@everyday/pwa';
 import { applyTheme } from '../lib/theme';
 import { InstallCard } from './pwa/InstallCard';
+import { RemindersSettings } from './Reminders';
 import { useThemeChoice } from './ThemeToggle';
 import { Button, ScreenTitle, Segmented, Switch } from './ui';
 import { play, haptic, readFeedbackPrefs, writeFeedbackPrefs, type FeedbackPrefs } from '../lib/feedback';
@@ -26,8 +27,8 @@ const STATUS_LABEL = {
 } as const;
 
 /**
- * Réglages (brief §8.C) : compte, apparence, identités, habitudes archivées,
- * export. Les notifications arrivent au lot 2 avec le Web Push.
+ * Réglages (brief §8.C) : compte, apparence, rappels, sons et vibrations,
+ * identités, habitudes archivées, export.
  */
 export function SettingsScreen() {
   const router = useRouter();
@@ -147,6 +148,10 @@ export function SettingsScreen() {
             options={[{ id: 'moment', label: 'Moment' }, { id: 'identity', label: 'Identité' }]}
           />
         </div>
+      </Section>
+
+      <Section title="Rappels">
+        <RemindersSettings />
       </Section>
 
       {feedback !== null ? (

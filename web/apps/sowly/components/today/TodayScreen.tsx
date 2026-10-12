@@ -14,6 +14,7 @@ import { TaskEditor } from '../tasks/TaskEditor';
 import { TaskRow } from '../tasks/TaskRow';
 import { PlusIcon, SunIcon } from '../icons';
 import { InstallCard } from '../pwa/InstallCard';
+import { RemindersCard } from '../Reminders';
 import { ScreenTitle, SectionTitle } from '../ui';
 import { HabitRow } from './HabitRow';
 
@@ -211,6 +212,9 @@ export function TodayScreen() {
           pour les synchroniser.
         </aside>
       ) : null}
+
+      {/* Les rappels n'ont de sens qu'une fois une habitude semée. */}
+      {habits.total > 0 ? <RemindersCard /> : null}
 
       <InstallCard variant="card" />
 

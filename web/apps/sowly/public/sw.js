@@ -19,7 +19,7 @@
  * deux fois le poids de ce fichier pour les mêmes trois règles.
  */
 
-const VERSION = 'sowly-v2';
+const VERSION = 'sowly-v3';
 const PAGES = [
   '/',
   '/bienvenue',
@@ -80,6 +80,40 @@ self.addEventListener('fetch', (event) => {
       }),
     );
   }
+});
+
+/**
+ * Rappels (Web Push, voir lib/push.ts). Le message vient de l'Edge Function
+ * `sowly-push` : { title, body, url, tag }. `tag` remplace un rappel du
+ * même créneau encore affiché au lieu d'en empiler deux.
+ */
+self.addEventListener('push', (event) => {
+  let message = { title: 'Sowly', body: '', url: '/', tag: 'sowly' };
+  try {
+    message = { ...message, ...event.data.json() };
+  } catch {
+    // Charge illisible : un rappel générique plutôt que rien.
+  }
+  event.waitUntil(self.registration.showNotification(message.title, {
+    body: message.body,
+    icon: '/icon-192.png',
+    badge: '/favicon-48.png',
+    tag: message.tag,
+    data: { url: message.url },
+  }));
+});
+
+/** Toucher la notification ouvre Sowly — l'onglet existant s'il y en a un. */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL(event.notification.data?.url ?? '/', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => w.url.startsWith(self.location.origin));
+      if (open !== undefined) return open.focus().then((w) => w?.navigate(url));
+      return self.clients.openWindow(url);
+    }),
+  );
 });
 
 /**
