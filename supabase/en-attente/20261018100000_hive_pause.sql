@@ -51,11 +51,24 @@ alter table public.waitlist enable row level security;
 
 -- Insertion seule, consentement obligatoire. Aucune politique de lecture :
 -- la liste ne se relit qu'au SQL Editor, jamais depuis une app.
-drop policy if exists "Anyone can join a waitlist" on public.waitlist;
-create policy "Anyone can join a waitlist"
-  on public.waitlist for insert
-  to anon, authenticated
-  with check (consent and product = 'hive');
+--
+-- Créée seulement si elle n'existe pas : la migration waitlist de Vitae
+-- (branche feat/vitae-brief-v2) remplace cette politique par une version
+-- qui accepte aussi les produits de Vitae. Si elle est appliquée avant
+-- celle-ci, on ne doit pas la ramener à Hive seul.
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+     where schemaname = 'public' and tablename = 'waitlist'
+       and policyname = 'Anyone can join a waitlist'
+  ) then
+    create policy "Anyone can join a waitlist"
+      on public.waitlist for insert
+      to anon, authenticated
+      with check (consent and product = 'hive');
+  end if;
+end $$;
 
 -- 3. Écritures de Hive fermées -------------------------------------------
 drop policy if exists "Hive en pause : pas de nouvelle annonce" on public.hive_listings;
