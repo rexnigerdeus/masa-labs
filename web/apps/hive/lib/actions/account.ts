@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient, currentUser } from '../supabase/server';
 import { COMMUNES } from '../catalog';
+import { refuseWhilePaused } from '../pause';
 
 export type FormState = { error: string } | { ok: true } | null;
 
@@ -15,6 +16,7 @@ export type FormState = { error: string } | { ok: true } | null;
  * `hive_profiles`, qui n'intéresse que Hive.
  */
 export async function saveAccount(_prev: FormState, form: FormData): Promise<FormState> {
+  refuseWhilePaused();
   const user = await currentUser();
   if (user === null) redirect('/connexion?suite=/compte');
 

@@ -44,7 +44,12 @@ const config: NextConfig = {
   },
 
   async headers() {
-    return [{ source: '/:path*', headers: SECURITY_HEADERS }];
+    return [{
+      source: '/:path*',
+      // Hive en pause : désindexé, y compris les fichiers que la balise
+      // `robots` du layout ne couvre pas (images, plan du site en cache).
+      headers: [...SECURITY_HEADERS, { key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+    }];
   },
 };
 

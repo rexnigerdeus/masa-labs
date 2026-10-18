@@ -12,8 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Hive — Louez et vendez du matériel audiovisuel à Abidjan',
     short_name: 'Hive',
     description:
-      'Louez, vendez et trouvez du matériel audiovisuel, de sonorisation et de '
-      + 'musique à Abidjan, entre particuliers et professionnels.',
+      'Hive fait une pause. Laisse ton numéro pour être prévenu au retour.',
     lang: 'fr',
     dir: 'ltr',
     start_url: '/',
@@ -27,10 +26,6 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
       { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-    ],
-    shortcuts: [
-      { name: 'Rechercher du matériel', url: '/annonces' },
-      { name: 'Publier une annonce', url: '/publier' },
     ],
   };
 }

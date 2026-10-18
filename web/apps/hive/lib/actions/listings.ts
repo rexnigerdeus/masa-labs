@@ -6,6 +6,7 @@ import { createClient, currentUser } from '../supabase/server';
 import { CATEGORY_LABELS, COMMUNES } from '../catalog';
 import { MAX_PHOTOS } from '../limits';
 import { PHOTO_BUCKET } from '../storage';
+import { refuseWhilePaused } from '../pause';
 
 /** Résultat rendu sous le formulaire ; `null` tant que rien n'a été soumis. */
 export type FormState = { error: string } | null;
@@ -27,6 +28,7 @@ export type FormState = { error: string } | null;
  * l'avancement plutôt que de bloquer sur un seul envoi de plusieurs Mo.
  */
 export async function saveListing(_prev: FormState, form: FormData): Promise<FormState> {
+  refuseWhilePaused();
   const id = String(form.get('id') ?? '');
   const isEdit = id !== '';
 
@@ -130,6 +132,7 @@ export async function saveListing(_prev: FormState, form: FormData): Promise<For
  * s'est passé.
  */
 export async function setListingStatus(form: FormData): Promise<void> {
+  refuseWhilePaused();
   const user = await currentUser();
   if (user === null) redirect('/connexion?suite=/mes-annonces');
 

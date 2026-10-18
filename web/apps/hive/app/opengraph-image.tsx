@@ -9,7 +9,7 @@ import { ImageResponse } from 'next/og';
  * stockée en fichier : le texte reste modifiable dans le code, et aucun
  * visiteur ne la télécharge — seuls les robots d'aperçu la demandent.
  */
-export const alt = 'Hive — Le Vinted de l’audiovisuel, à Abidjan';
+export const alt = 'Hive fait une pause';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -50,28 +50,11 @@ export default function Image() {
         </div>
 
         <div style={{ fontSize: 68, fontWeight: 700, lineHeight: 1.1, letterSpacing: -2 }}>
-          Le matériel qui dort chez l’un tourne chez l’autre.
+          Hive fait une pause.
         </div>
 
         <div style={{ fontSize: 32, color: '#F4E4DE', lineHeight: 1.3 }}>
-          Caméras, enceintes, projecteurs, instruments — à louer et à vendre à Abidjan.
-        </div>
-
-        <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
-          {['Sans commission', 'Paiement en main propre', 'Dans votre commune'].map((t) => (
-            <div
-              key={t}
-              style={{
-                display: 'flex',
-                background: '#C1443D',
-                borderRadius: 999,
-                padding: '10px 22px',
-                fontSize: 24,
-              }}
-            >
-              {t}
-            </div>
-          ))}
+          On le reprendra quand on pourra le faire bien : loueurs vérifiés, cautions, contrats.
         </div>
       </div>
     ),

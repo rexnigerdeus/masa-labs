@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient, currentUser } from '../supabase/server';
+import { refuseWhilePaused } from '../pause';
 
 export type FormState = { error: string } | { ok: true } | null;
 
@@ -15,6 +16,7 @@ export type FormState = { error: string } | { ok: true } | null;
  * n'existe pas.
  */
 export async function reportListing(_prev: FormState, form: FormData): Promise<FormState> {
+  refuseWhilePaused();
   const listingId = String(form.get('listing_id') ?? '');
   const reason = String(form.get('reason') ?? '').trim();
 

@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient, currentUser } from '../supabase/server';
+import { refuseWhilePaused } from '../pause';
 
 /**
  * Ouvrir ou retrouver la conversation d'une annonce.
@@ -12,6 +13,7 @@ import { createClient, currentUser } from '../supabase/server';
  * d'une page blanche. L'unicité est garantie en base, on la retrouve ici.
  */
 export async function openConversation(form: FormData): Promise<void> {
+  refuseWhilePaused();
   const listingId = String(form.get('listing_id') ?? '');
 
   const user = await currentUser();
@@ -53,6 +55,7 @@ export async function openConversation(form: FormData): Promise<void> {
  * donne l'impression que le message n'est pas parti.
  */
 export async function sendMessage(form: FormData): Promise<void> {
+  refuseWhilePaused();
   const conversationId = String(form.get('conversation_id') ?? '');
   const body = String(form.get('body') ?? '').trim();
 

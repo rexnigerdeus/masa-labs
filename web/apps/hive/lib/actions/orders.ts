@@ -7,6 +7,7 @@ import { computeRentQuote } from '../pricing';
 import { canTransition, hasDateConflict, type Party } from '../orders';
 import { ONLINE_PAYMENT_ENABLED } from '../payments';
 import type { OrderStatus, PaymentMethod } from '../types';
+import { refuseWhilePaused } from '../pause';
 
 export type FormState = { error: string } | null;
 
@@ -18,6 +19,7 @@ export type FormState = { error: string } | null;
  * ça, n'importe qui réserverait une caméra à 100 FCFA en modifiant un champ.
  */
 export async function requestOrder(_prev: FormState, form: FormData): Promise<FormState> {
+  refuseWhilePaused();
   const listingId = String(form.get('listing_id') ?? '');
 
   const user = await currentUser();
@@ -105,6 +107,7 @@ export async function requestOrder(_prev: FormState, form: FormData): Promise<Fo
  * du loueur. La table des transitions (lib/orders.ts) tranche ensuite.
  */
 export async function advanceOrder(form: FormData): Promise<void> {
+  refuseWhilePaused();
   const user = await currentUser();
   if (user === null) redirect('/connexion?suite=/mes-commandes');
 

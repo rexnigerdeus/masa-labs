@@ -10,8 +10,9 @@
  * un cache agressif, deux choses qui vont contre la contrainte de poids.
  */
 
-const VERSION = 'hive-v1';
-const SHELL = ['/', '/hors-ligne'];
+// v2 : pause de Hive — l'ancien accueil en cache est purgé à l'activation.
+const VERSION = 'hive-v2';
+const SHELL = ['/'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -53,7 +54,7 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).catch(() =>
-        caches.match(request).then((hit) => hit ?? caches.match('/hors-ligne'))),
+        caches.match(request).then((hit) => hit ?? caches.match('/'))),
     );
     return;
   }
