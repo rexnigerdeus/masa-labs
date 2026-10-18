@@ -503,8 +503,7 @@ export default function HomePage() {
         </section>
 
         {/* Écoles et partenaires — le public premier de la vitrine depuis
-            le brief v2. Le bouton n'existe que si une boîte sur le domaine
-            est configurée : jamais d'adresse personnelle. */}
+            le brief v2. */}
         <section id="ecoles" className="labs-section">
           <div className="labs-section-head labs-reveal">
             <p className="labs-eyebrow">Écoles et partenaires</p>
@@ -515,8 +514,7 @@ export default function HomePage() {
               téléphone. Votre école, votre association ou votre programme
               d’insertion veut en organiser un ?
             </p>
-            {CONTACT_EMAIL === null ? null : (
-              <div>
+            <div>
                 <a
                   href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(WORKSHOP_SUBJECT)}`}
                   data-track="school_contact"
@@ -526,7 +524,6 @@ export default function HomePage() {
                   <span>Organiser un atelier</span>
                 </a>
               </div>
-            )}
           </div>
         </section>
 
@@ -574,15 +571,13 @@ export default function HomePage() {
                 >
                   <span>Profil LinkedIn</span>
                 </a>
-                {CONTACT_EMAIL === null ? null : (
-                  <a
-                    href={`mailto:${CONTACT_EMAIL}`}
-                    className="gl-btn gl-btn--small is-liquid"
-                    style={{ ['--liquid-fill' as string]: 'var(--color-text)' }}
-                  >
-                    <span>Nous écrire</span>
-                  </a>
-                )}
+                <a
+                  href={`mailto:${CONTACT_EMAIL}`}
+                  className="gl-btn gl-btn--small is-liquid"
+                  style={{ ['--liquid-fill' as string]: 'var(--color-text)' }}
+                >
+                  <span>Nous écrire</span>
+                </a>
               </div>
             </div>
           </div>

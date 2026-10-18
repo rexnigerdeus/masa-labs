@@ -56,28 +56,18 @@ export function vitaeLink(path = '/'): string {
 export const VITAE_LINK: string = vitaeLink();
 
 /**
- * Adresse de contact, sur le domaine du site.
+ * Adresse de contact : « Organiser un atelier », « Nous écrire », pied de
+ * page, mentions légales.
  *
- * Une adresse Gmail est refusée, même renseignée : le brief v2 demande
- * qu'aucune n'apparaisse plus, et la variable de production en contient
- * encore une au moment de l'écrire. Tant qu'aucune boîte sur le domaine
- * n'est confirmée, les liens de contact disparaissent plutôt que d'envoyer
- * vers une adresse personnelle.
+ * Temporaire : la boîte de la fondatrice, tant que le domaine n'est pas
+ * acheté (décision de Daniel, 18/10/2026). Le brief v2 demande ensuite
+ * contact@<domaine> à la place de toute adresse Gmail : il suffira de
+ * renseigner `NEXT_PUBLIC_CONTACT_EMAIL`, sans toucher au code.
  */
-function resolveContactEmail(): string | null {
-  const configured = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim();
-  if (configured === undefined || configured === '') return null;
-  if (/@(gmail|googlemail)\.com$/i.test(configured)) {
-    console.warn(
-      `NEXT_PUBLIC_CONTACT_EMAIL (${configured}) est une adresse Gmail : ignorée. `
-      + 'Renseignez contact@<domaine> pour afficher les liens de contact.',
-    );
-    return null;
-  }
-  return configured;
-}
+const TEMPORARY_CONTACT_EMAIL = 'bambaradeborah2007@gmail.com';
 
-export const CONTACT_EMAIL: string | null = resolveContactEmail();
+export const CONTACT_EMAIL: string =
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || TEMPORARY_CONTACT_EMAIL;
 
 /** Objet imposé par le brief v2 au bouton « Organiser un atelier ». */
 export const WORKSHOP_SUBJECT = 'Atelier CV Vitae';
@@ -92,8 +82,7 @@ export const WHATSAPP_CHANNEL_URL: string | null =
 
 /**
  * Politique de confidentialité de Vitae, vers laquelle renvoie la page
- * /confidentialite pour les données des CV. `null` tant que Vitae n'en
- * publie pas : la page le dit sans lien plutôt qu'avec un lien mort.
+ * /confidentialite pour les données des CV. Publiée par Vitae elle-même
+ * (apps/vitae/app/confidentialite).
  */
-export const VITAE_PRIVACY_URL: string | null =
-  process.env.NEXT_PUBLIC_VITAE_PRIVACY_URL?.trim() || null;
+export const VITAE_PRIVACY_URL: string = `${VITAE_URL}/confidentialite`;

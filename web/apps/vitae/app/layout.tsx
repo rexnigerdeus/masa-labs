@@ -121,7 +121,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               The Everyday Co
             </a>
           )}
-          . Création et téléchargement gratuits.
+          . Création et téléchargement gratuits.{' '}
+          <Link className="underline" href="/confidentialite">
+            Confidentialité
+          </Link>
         </footer>
       </body>
     </html>

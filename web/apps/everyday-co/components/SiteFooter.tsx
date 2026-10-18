@@ -6,8 +6,8 @@ import { FOUNDER } from '../lib/founder';
  * Pied de page, commun à l'accueil et aux pages légales.
  *
  * Les ancres sont écrites `/#…` : depuis /mentions-legales, `#vision` seul
- * ne mènerait nulle part. Les liens dont la cible n'est pas encore
- * configurée (chaîne WhatsApp, boîte de contact) s'effacent.
+ * ne mènerait nulle part. Le lien WhatsApp s'efface tant que la chaîne
+ * n'existe pas.
  */
 export function SiteFooter() {
   return (
@@ -39,9 +39,7 @@ export function SiteFooter() {
               LinkedIn
             </a>
           </li>
-          {CONTACT_EMAIL === null ? null : (
-            <li><a href={`mailto:${CONTACT_EMAIL}`}>Contact</a></li>
-          )}
+          <li><a href={`mailto:${CONTACT_EMAIL}`}>Contact</a></li>
           <li><a href="/mentions-legales">Mentions légales</a></li>
           <li><a href="/confidentialite">Confidentialité</a></li>
         </ul>

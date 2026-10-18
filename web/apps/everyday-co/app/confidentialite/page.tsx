@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 /**
  * Confidentialité (brief v2, « Pages légales ») : le site ne collecte que
  * des statistiques de visite anonymes ; les données des CV relèvent de
- * Vitae, qui a sa propre politique.
+ * Vitae, qui publie sa propre politique (VITAE_PRIVACY_URL).
  *
  * Chaque phrase décrit ce que fait le code : si la mesure change
  * (components/Measure.tsx), cette page change avec elle.
@@ -41,7 +41,7 @@ export default function ConfidentialitePage() {
       <h2>Quand vous nous écrivez</h2>
       <p>
         Si vous nous envoyez un e-mail
-        {CONTACT_EMAIL === null ? null : <> (<a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>)</>},
+        (<a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>),
         nous conservons votre message et votre adresse le temps de vous
         répondre et d’assurer le suivi de votre demande, sans autre usage.
         Vous pouvez demander à tout moment qu’ils soient supprimés.
@@ -51,10 +51,7 @@ export default function ConfidentialitePage() {
       <p>
         Les CV ne passent pas par ce site : ils sont créés et enregistrés dans
         l’application <a href={VITAE_LINK}>Vitae</a>, qui a sa propre politique
-        de confidentialité
-        {VITAE_PRIVACY_URL === null
-          ? '.'
-          : <>, à lire <a href={VITAE_PRIVACY_URL}>sur Vitae</a>.</>}
+        de confidentialité, à lire <a href={VITAE_PRIVACY_URL}>sur Vitae</a>.
       </p>
 
       <h2>Liens externes</h2>
