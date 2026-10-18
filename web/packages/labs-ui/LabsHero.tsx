@@ -50,6 +50,12 @@ export interface LabsHeroSlide {
   href: string;
   photo: string;
   /**
+   * Variantes de `photo` par largeur (« /a-800.webp 800w, /a-1600.webp
+   * 1600w »). Facultatif : sans elle, le téléphone télécharge la photo
+   * pleine taille prévue pour un écran de bureau.
+   */
+  srcSet?: string;
+  /**
    * Point de la photo à garder au centre quand le cadre la rogne
    * (« 30% 40% »). Le centre géométrique par défaut, qui convient
    * rarement à un portrait recadré en carré sur téléphone.
@@ -230,6 +236,8 @@ export function LabsHero({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={s.photo}
+              srcSet={s.srcSet}
+              sizes={s.srcSet === undefined ? undefined : '100vw'}
               alt=""
               className="labs-hero__photo"
               loading="eager"

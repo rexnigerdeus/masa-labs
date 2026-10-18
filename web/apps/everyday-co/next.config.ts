@@ -31,6 +31,25 @@ const SECURITY_HEADERS = [
 ];
 
 /**
+ * Ancienne adresse du site. Une fois le domaine propre renseigné dans
+ * `NEXT_PUBLIC_SITE_URL`, toute requête qui arrive encore ici est renvoyée,
+ * chemin compris, vers ce domaine en redirection permanente (308) : les
+ * liens déjà partagés suivent, et les moteurs transfèrent le référencement.
+ * Tant que la variable vaut l'adresse vercel.app ou manque, rien ne change.
+ */
+const LEGACY_HOST = 'the-everyday-co.vercel.app';
+
+function siteHost(): string | null {
+  const url = process.env.NEXT_PUBLIC_SITE_URL;
+  if (url === undefined || url === '') return null;
+  try {
+    return new URL(url).host;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Site vitrine The Everyday Co.
  *
  * Déployé séparément des applications (brief §8) : un domaine, un cycle de
@@ -44,6 +63,19 @@ const config: NextConfig = {
 
   async headers() {
     return [{ source: '/:path*', headers: SECURITY_HEADERS }];
+  },
+
+  async redirects() {
+    const host = siteHost();
+    if (host === null || host === LEGACY_HOST) return [];
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: LEGACY_HOST }],
+        destination: `https://${host}/:path*`,
+        permanent: true,
+      },
+    ];
   },
 };
 

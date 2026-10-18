@@ -29,18 +29,15 @@
   --color-yellow: #fdf150;
   --color-yellow-soft: #fff6a6;
   --color-vitae: #6fae2e;
-  --color-hive: #9a2b32;
   /* Le vert de marque est trop lumineux pour porter du texte : 2,7:1 sur
      blanc, très en dessous des 4,5:1 demandés. Cette variante assombrie
      atteint 5,1:1 et sert partout où le vert est de l'encre plutôt qu'un
-     aplat. Le rouge de Hive, lui, est déjà à 7,6:1 et n'en a pas besoin. */
+     aplat. */
   --color-vitae-ink: #4a7a1f;
   /* Et l'inverse, pour le hero : sur le fond sombre, le vert de marque
-     tombe à 2,8:1 et le rouge de Hive à 1,01:1 — un titre littéralement
-     invisible. Ces deux versions éclaircies passent à 4,8:1 et 4,2:1 tout
-     en restant reconnaissables comme la couleur de leur produit. */
+     tombe à 2,8:1. Cette version éclaircie passe à 4,8:1 tout en restant
+     reconnaissable comme la couleur de Vitae. */
   --color-vitae-glow: #9ede56;
-  --color-hive-glow: #ffa8a0;
 }
 
 html {
@@ -72,9 +69,9 @@ body {
    Branchement du langage visuel partagé
    La forme de la page vit dans `@everyday/labs-ui` ; ici on ne
    fait que dire quelle couleur de la maison joue quel rôle.
-   La vitrine porte deux produits, donc deux accents : celui
-   déclaré ici est celui de Vitae, et chaque carte Hive repose
-   `--accent` sur la sienne.
+   L'accent est celui de Vitae, la seule application en ligne ;
+   une carte produit peut reposer `--accent` sur la couleur d'une
+   autre app le jour où il y en aura une.
    ============================================================ */
 :root {
   --labs-ink: var(--color-text);
@@ -100,7 +97,7 @@ body {
    La hauteur est fixée, la largeur suit le ratio du SVG.
    ============================================================ */
 .labs-nav__logo { display: block; flex: none; line-height: 0; }
-/* 1,6rem tant que les deux boutons partagent la ligne d'un téléphone :
+/* 1,6rem tant que le logo partage la ligne d'un téléphone avec le bouton :
    à 380 px, il reste environ 160 px au logo, il en prend 148. */
 .labs-nav__logo img { display: block; height: 1.6rem; width: auto; }
 @media (min-width: 30rem) { .labs-nav__logo img { height: 2rem; } }
@@ -108,3 +105,93 @@ body {
 
 .labs-footer__logo { margin: 0; line-height: 0; }
 .labs-footer__logo img { display: block; height: 4.5rem; width: auto; }
+
+/* ============================================================
+   Ajouts du brief v2 — le moins possible, et seulement ce que le
+   langage partagé ne savait pas faire.
+   ============================================================ */
+
+/* Intertitre « Ce qu'on étudie ensuite » entre les deux grilles du
+   problème : collé à la grille qu'il annonce plutôt qu'à mi-chemin. */
+.site-subhead { margin-bottom: -1rem; }
+
+/* Une seule app : la carte prend toute la largeur. Sur téléphone elle
+   remplit la piste au lieu de laisser deviner une seconde carte qui
+   n'existe pas ; sur grand écran, photo à gauche, texte à droite. */
+.labs-carousel--single .labs-card-slot { flex-basis: 100%; }
+@media (min-width: 768px) {
+  .labs-carousel--single .labs-carousel__track { grid-template-columns: 1fr; }
+}
+@media (min-width: 1024px) {
+  .labs-carousel--single .labs-card { flex-direction: row; }
+  .labs-carousel--single .labs-card__media { flex: 0 0 55%; aspect-ratio: auto; min-height: 26rem; }
+  .labs-carousel--single .labs-card__body { padding: 2rem 2.2rem; justify-content: center; }
+}
+
+/* Source sous chaque chiffre : un lien discret mais réel, souligné pour
+   qu'on le reconnaisse comme tel sans survol (téléphone). */
+.site-stat__source {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+.site-stat__source:hover { color: var(--color-text); }
+
+/* « Suivre sur WhatsApp », sous la frise de « Et après ? ». */
+.site-follow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-top: 1.5rem;
+}
+.site-follow__note { margin: 0; font-size: 0.85rem; opacity: 0.65; }
+
+/* Bouton plein à l'encre, pour les sections claires : le `gl-btn` de base
+   est blanc sur blanc hors du hero. */
+.site-btn-ink {
+  --btn-bg: var(--color-dark);
+  --btn-fg: #fff;
+  border-color: var(--color-dark);
+  margin-top: 0.5rem;
+}
+.site-btn-ink:hover span,
+.site-btn-ink:focus-visible span { color: var(--color-dark); }
+
+/* ============================================================
+   Pages légales : une colonne de lecture, sans hero.
+   ============================================================ */
+.site-legal-nav {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 1rem clamp(1.25rem, 4vw, 3rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.site-legal-nav img { display: block; height: 1.6rem; width: auto; }
+.site-legal-nav__back { color: var(--color-muted); font-size: 0.9rem; }
+.site-legal {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 4rem) clamp(1.25rem, 4vw, 3rem) clamp(3rem, 8vw, 6rem);
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+.site-legal h1 { font-size: clamp(1.8rem, 6vw, 2.6rem); letter-spacing: -0.03em; line-height: 1.1; margin: 0 0 0.5rem; }
+.site-legal h2 { font-size: 1.15rem; margin: 2.2rem 0 0.5rem; }
+.site-legal p, .site-legal li { color: var(--color-muted); font-size: 0.95rem; }
+.site-legal a { color: var(--color-vitae-ink); }
+.site-legal dl { display: grid; grid-template-columns: minmax(8rem, auto) 1fr; gap: 0.4rem 1rem; margin: 0; }
+.site-legal dt { font-weight: 600; font-size: 0.9rem; }
+.site-legal dd { margin: 0; color: var(--color-muted); font-size: 0.95rem; }
+@media (max-width: 30rem) {
+  .site-legal dl { grid-template-columns: 1fr; }
+  .site-legal dd { margin-bottom: 0.5rem; }
+}
+.site-legal__updated { font-size: 0.85rem; }

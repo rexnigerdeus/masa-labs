@@ -2,12 +2,16 @@ import type { MetadataRoute } from 'next';
 import { SITE_URL } from '../lib/config';
 
 /**
- * Plan du site.
+ * Plan du site, sur le domaine de `SITE_URL`.
  *
- * Une seule page : le site vitrine est une page unique à ancres, et déclarer
- * des ancres comme des URL distinctes reviendrait à annoncer du contenu
- * dupliqué. Les applications, elles, ont leur propre plan sur leur domaine.
+ * L'accueil est une page unique à ancres : déclarer les ancres comme des URL
+ * distinctes reviendrait à annoncer du contenu dupliqué. Seules s'y ajoutent
+ * les deux pages légales. Les applications ont leur propre plan.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [{ url: SITE_URL, changeFrequency: 'monthly', priority: 1 }];
+  return [
+    { url: `${SITE_URL}/`, changeFrequency: 'monthly', priority: 1 },
+    { url: `${SITE_URL}/mentions-legales`, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${SITE_URL}/confidentialite`, changeFrequency: 'yearly', priority: 0.2 },
+  ];
 }
