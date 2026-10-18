@@ -34,9 +34,7 @@ export default function MentionsLegalesPage() {
         <dd>{FOUNDER.name}, {FOUNDER.role.toLowerCase()}</dd>
         <dt>Contact</dt>
         <dd>
-          {CONTACT_EMAIL === null
-            ? '[contact@domaine]'
-            : <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>}
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         </dd>
       </dl>
 

@@ -26,3 +26,13 @@ export const APP_URL: string =
  * alors le nom sans lien, plutôt qu'un lien mort.
  */
 export const SITE_URL: string | null = process.env.NEXT_PUBLIC_SITE_URL ?? null;
+
+/**
+ * Adresse de contact, citée par la page /confidentialite.
+ *
+ * Temporaire : la boîte de la fondatrice, en attendant contact@<domaine>
+ * (décision de Daniel, 18/10/2026). Renseigner `NEXT_PUBLIC_CONTACT_EMAIL`
+ * suffira à la remplacer, sans toucher au code.
+ */
+export const CONTACT_EMAIL: string =
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || 'bambaradeborah2007@gmail.com';
