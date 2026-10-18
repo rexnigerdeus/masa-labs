@@ -50,7 +50,7 @@ const NAV = [
   { href: '#probleme', label: 'Le problème' },
   { href: '#vitae', label: 'Vitae' },
   { href: '#vision', label: 'Vision' },
-  { href: '#apres', label: 'Et après ?' },
+  { href: '#apres', label: 'Et après ?' },
   { href: '#ecoles', label: 'Écoles' },
   { href: '#equipe', label: 'L’équipe' },
 ];
@@ -58,7 +58,7 @@ const NAV = [
 /** Le seul problème auquel une app répond aujourd'hui. */
 const ACTIVE_PROBLEM = {
   title: 'Le CV qui ne passe pas',
-  body: 'Un diplômé envoie trente candidatures et n’obtient aucune réponse. Souvent, ce n’est pas son parcours qui bloque : c’est un fichier mal construit, illisible pour le logiciel de tri ou pour le recruteur pressé.',
+  body: 'Un diplômé envoie trente candidatures et n’obtient aucune réponse. Souvent, ce n’est pas son parcours qui bloque : c’est un fichier mal construit, illisible pour le logiciel de tri ou pour le recruteur pressé.',
 };
 
 /** Problèmes à l'étude : annoncés comme tels, sans app promise. */
@@ -154,7 +154,7 @@ const OBJECTIVES = [
   {
     horizon: 'Prochains mois',
     title: 'Faire la preuve de l’usage.',
-    body: 'Mesurer ce qui compte : combien de CV sont menés jusqu’au téléchargement, et combien aident à décrocher un entretien.',
+    body: 'Mesurer ce qui compte : combien de CV sont menés jusqu’au téléchargement, et combien aident à décrocher un entretien.',
     done: false,
   },
   {
@@ -413,7 +413,7 @@ export default function HomePage() {
           <div className="labs-after__inner">
             <span id="objectifs" className="labs-anchor" aria-hidden />
             <p className="labs-eyebrow">La suite</p>
-            <h2 className="labs-after__title">Et après ?</h2>
+            <h2 className="labs-after__title">Et après ?</h2>
             <p className="labs-after__desc">
               Chaque application sort quand elle est prête — annoncée une fois,
               jamais avant. Une chose à la fois, dans cet ordre.
@@ -481,7 +481,7 @@ export default function HomePage() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Source : {stat.source.name}
+                  Source : {stat.source.name}
                 </a>
               </li>
             ))}
@@ -494,7 +494,7 @@ export default function HomePage() {
             <h3>Comment ça se finance</h3>
             <p>
               Le premier CV est gratuit, pour toujours. Plus tard, deux options
-              payantes, à prix affiché et sans abonnement caché : des versions
+              payantes, à prix affiché et sans abonnement caché : des versions
               supplémentaires du CV, ciblées sur une offre, et un pass de
               candidature de 30 jours. Les écoles pourront aussi équiper leurs
               promotions.
@@ -510,10 +510,10 @@ export default function HomePage() {
             <p className="labs-eyebrow">Écoles et partenaires</p>
             <h2 className="labs-h2">Des promotions dont les CV sont prêts le jour du forum.</h2>
             <p className="labs-sub">
-              Nous animons des ateliers CV dans les écoles d’Abidjan : en deux
+              Nous animons des ateliers CV dans les écoles d’Abidjan : en deux
               heures, chaque étudiant repart avec un CV propre, fait sur son
               téléphone. Votre école, votre association ou votre programme
-              d’insertion veut en organiser un ?
+              d’insertion veut en organiser un ?
             </p>
             {CONTACT_EMAIL === null ? null : (
               <div>
