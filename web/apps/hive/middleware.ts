@@ -1,40 +1,24 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
 
 /**
- * Rafraîchissement de la session.
+ * Hive en pause : toute route renvoie vers la page d'attente.
  *
- * Les jetons Supabase expirent en une heure. Sans ce passage, quelqu'un qui
- * revient sur Hive le lendemain se retrouve déconnecté au moment où il valide
- * une réservation — soit le pire moment possible. Le middleware renouvelle le
- * jeton et réécrit les cookies à chaque requête.
+ * /annonces, /publier, /messages, /compte, /connexion, /api… n'affichent
+ * plus rien, y compris pour un lien partagé avant la pause. Redirection
+ * temporaire (307) et non permanente : Hive doit pouvoir rouvrir sans que
+ * les navigateurs aient mémorisé un détour. Les écritures sont de toute
+ * façon refusées par les actions (lib/pause.ts) et par la base.
+ *
+ * L'ancien middleware rafraîchissait la session Supabase à chaque requête ;
+ * plus aucune page ne la lit, l'appel au serveur d'auth est donc supprimé.
  */
-export async function middleware(request: NextRequest): Promise<NextResponse> {
-  const response = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: (list) => {
-          for (const { name, value, options } of list) {
-            response.cookies.set(name, value, options);
-          }
-        },
-      },
-    },
-  );
-
-  // L'appel lui-même est l'effet recherché : il déclenche le renouvellement.
-  await supabase.auth.getUser();
-
-  return response;
+export function middleware(request: NextRequest): NextResponse {
+  if (request.nextUrl.pathname === '/') return NextResponse.next();
+  return NextResponse.redirect(new URL('/', request.url), 307);
 }
 
 export const config = {
-  // On évite les assets et les images : le middleware coûte une requête au
-  // serveur d'auth, il n'a rien à faire sur un fichier statique.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)'],
+  // Restent servis tels quels : fichiers statiques, icônes, manifeste,
+  // robots et image de partage de la page d'attente.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|robots.txt|opengraph-image|sw.js|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)'],
 };

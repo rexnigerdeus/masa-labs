@@ -1,22 +1,13 @@
 import type { MetadataRoute } from 'next';
-import { APP_URL } from '../lib/config';
 
 /**
- * Directives d'exploration.
+ * Hive en pause : exploration permise mais rien à indexer.
  *
- * Tout ce qui n'a de sens que connecté est écarté : ces pages redirigent vers
- * la connexion pour un robot, et les laisser explorer gaspille le budget de
- * crawl sur des redirections au lieu des annonces, qui sont le seul contenu
- * que Hive a intérêt à voir indexé.
+ * On n'interdit pas l'exploration : un robot qui ne peut pas lire la page ne
+ * voit pas son `noindex`, et garderait en index les anciennes annonces.
+ * La désindexation passe par la balise (layout.tsx) et l'en-tête
+ * `X-Robots-Tag` (next.config.ts). Plus de plan du site.
  */
 export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/api/', '/auth/', '/compte', '/connexion', '/messages', '/mes-annonces', '/mes-commandes', '/publier'],
-    },
-    sitemap: `${APP_URL}/sitemap.xml`,
-    host: APP_URL,
-  };
+  return { rules: { userAgent: '*', allow: '/' } };
 }
