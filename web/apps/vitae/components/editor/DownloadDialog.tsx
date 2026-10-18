@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { Button } from './fields';
+import { WHATSAPP_CHANNEL_URL } from '../../lib/config';
 
 /**
  * Confirmation du téléchargement : ce qui s'est passé, où est le fichier, et
@@ -24,6 +26,11 @@ import { Button } from './fields';
  * Le partage est proposé ici, sur un nouveau geste, et non enchaîné à la
  * génération : `navigator.share` exige un geste récent de l'utilisateur, que
  * l'attente de la génération du PDF a consommé.
+ *
+ * Brief v2 (« Écran après téléchargement ») : le titre, la phrase sous le
+ * titre et les deux blocs du bas sont repris mot pour mot. Le CV prêt, la
+ * suite logique est d'avoir où l'envoyer : la chaîne WhatsApp (seulement si
+ * son lien est configuré) et les offres pour débutants.
  */
 
 export type Platform = 'android' | 'ios' | 'desktop';
@@ -123,7 +130,6 @@ export function DownloadDialog({ cv, onClose }: { cv: DownloadedCv; onClose: () 
   const title = useRef<HTMLHeadingElement>(null);
   const [shareable, setShareable] = useState(false);
   const [standalone, setStandalone] = useState(false);
-  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     setShareable(canShareFile(cv.file));
@@ -139,7 +145,6 @@ export function DownloadDialog({ cv, onClose }: { cv: DownloadedCv; onClose: () 
   async function share(): Promise<void> {
     try {
       await navigator.share({ files: [cv.file], title: 'Mon CV' });
-      setShared(true);
     } catch (error) {
       // Feuille de partage refermée : l'utilisateur a changé d'avis, rien à faire.
       if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -206,8 +211,12 @@ export function DownloadDialog({ cv, onClose }: { cv: DownloadedCv; onClose: () 
             </svg>
           </span>
           <h2 id="telechargement-titre" ref={title} tabIndex={-1} className="text-xl font-bold outline-none">
-            {shared ? 'C’est fait !' : cv.saved ? 'Votre CV est téléchargé' : 'Votre CV est prêt'}
+            Votre CV est prêt.
           </h2>
+          <p className="text-sm text-muted">
+            Vous pouvez le modifier et le télécharger de nouveau quand vous
+            voulez, gratuitement.
+          </p>
         </div>
 
         {/* Le fichier, tel qu'il apparaîtra dans le gestionnaire de fichiers :
@@ -239,6 +248,33 @@ export function DownloadDialog({ cv, onClose }: { cv: DownloadedCv; onClose: () 
         <div className="flex flex-col gap-2.5">
           {primary}
           {secondary}
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-line pt-5">
+          {WHATSAPP_CHANNEL_URL === null ? null : (
+            <section className="flex flex-col gap-2 rounded-2xl bg-canvas p-4" aria-labelledby="bloc-chaine">
+              <h3 id="bloc-chaine" className="font-semibold">Des offres pour débutants, chaque jour</h3>
+              <a
+                href={WHATSAPP_CHANNEL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-track="whatsapp_channel_clicked"
+                data-track-props='{"emplacement":"apres_telechargement"}'
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-header px-5 text-center text-sm font-semibold text-white hover:bg-ink"
+              >
+                Rejoindre la chaîne WhatsApp Vitae
+              </a>
+            </section>
+          )}
+          <section className="flex flex-col gap-2 rounded-2xl bg-canvas p-4" aria-labelledby="bloc-postuler">
+            <h3 id="bloc-postuler" className="font-semibold">Postuler maintenant</h3>
+            <Link
+              href="/offres"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-accent bg-white px-5 text-center text-sm font-semibold text-accent-ink hover:bg-accent-soft"
+            >
+              Voir les offres de stage et de premier emploi
+            </Link>
+          </section>
           <Button variant="ghost" full onClick={onClose}>Fermer</Button>
         </div>
       </div>

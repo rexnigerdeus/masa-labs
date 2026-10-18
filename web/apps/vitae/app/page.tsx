@@ -5,6 +5,7 @@ import { SAMPLE_RESUME, TEMPLATE_LIST, scoreResume } from '@everyday/cv-core';
 import { LabsHero, type LabsHeroSlide } from '@everyday/labs-ui/hero';
 import { LabsPageScript } from '@everyday/labs-ui/script';
 import { TemplateSketch } from '../components/TemplateSketch';
+import { WaitlistForm } from '../components/WaitlistForm';
 
 /**
  * Accueil de Vitae.
@@ -43,7 +44,7 @@ import { TemplateSketch } from '../components/TemplateSketch';
 /** Les trois usages de Vitae, en vedette à tour de rôle. */
 const HERO_SLIDES: LabsHeroSlide[] = [
   {
-    eyebrow: 'Créer · Gratuit',
+    eyebrow: 'Créer · Premier CV gratuit',
     label: 'Créer',
     subtitle: 'Un formulaire guidé, un score en direct, un PDF propre en quelques minutes.',
     cta: 'Créer mon CV',
@@ -141,7 +142,7 @@ const STEPS = [
  */
 const FACTS = [
   { figure: String(TEMPLATE_LIST.length), label: 'Modèles, tous vérifiés lisibles par les logiciels de tri' },
-  { figure: '0 F', label: 'Pour créer, corriger et télécharger le PDF' },
+  { figure: '0 F', label: 'Pour votre premier CV : créer, corriger, télécharger, autant de fois que vous voulez' },
   { figure: '0', label: 'Filigrane sur le document, jamais' },
   { figure: '/100', label: 'Un score recalculé à chaque mot que vous tapez' },
 ];
@@ -169,9 +170,9 @@ export default function AccueilPage() {
       <section className="labs-manifesto">
         <div className="labs-manifesto__inner labs-reveal">
           <p className="labs-manifesto__text">
-            Avant d’arriver sur le bureau d’un recruteur, la plupart des
-            candidatures passent par un logiciel qui lit le fichier et écarte
-            ce qu’il ne comprend pas.
+            Dans les grandes entreprises, beaucoup de candidatures passent par
+            un logiciel qui lit le fichier avant un recruteur. Ce qu’il ne
+            comprend pas, il l’écarte.
           </p>
           <p className="labs-manifesto__claim">
             Un beau CV illisible ne sera jamais lu.
@@ -184,8 +185,8 @@ export default function AccueilPage() {
         <div className="labs-section-head labs-reveal">
           <p className="labs-eyebrow">Pourquoi votre CV n’a pas de réponse</p>
           <h2 className="labs-h2 labs-h2--max">
-            Ce n’est pas votre parcours qu’on a refusé. C’est votre fichier
-            qu’on n’a pas su lire.
+            Parfois, ce n’est pas votre parcours qu’on a refusé. C’est votre
+            fichier qu’on n’a pas su lire.
           </h2>
         </div>
 
@@ -219,9 +220,11 @@ export default function AccueilPage() {
           <h2 className="labs-h2">Du caractère. Aucune icône. Aucun tableau.</h2>
           <p className="labs-sub">
             Colonne colorée, frise, capitales espacées : de quoi se démarquer
-            sans perdre la machine. Chaque modèle est relu par un logiciel de
-            tri avant d’être proposé, accepte votre photo et la couleur de
-            votre choix ; les croquis montrent la mise en page réelle.
+            sans perdre la machine. Chaque modèle est vérifié automatiquement :
+            on relit le texte de chaque PDF produit, et un modèle qui ne se
+            relit pas n’est pas proposé. Chacun accepte votre photo et la
+            couleur de votre choix ; les croquis montrent la mise en page
+            réelle.
           </p>
         </div>
 
@@ -295,7 +298,7 @@ export default function AccueilPage() {
       <section className="labs-section">
         <div className="labs-section-head labs-reveal">
           <p className="labs-eyebrow">Ce que ça vous coûte</p>
-          <h2 className="labs-h2">Rien, et sans contrepartie cachée.</h2>
+          <h2 className="labs-h2">Votre premier CV : rien. Et sans contrepartie cachée.</h2>
         </div>
 
         <ul className="labs-stats">
@@ -307,14 +310,23 @@ export default function AccueilPage() {
           ))}
         </ul>
 
+        {/* Encadré tarifs (brief v2) : ce qui sera payant est annoncé avant
+            d'exister, prix compris. Le bouton déplie la liste d'attente sans
+            JavaScript (<details>) ; le formulaire, lui, est le seul îlot
+            client de cette section. */}
         <div className="labs-note labs-reveal">
-          <h3>Pourquoi c’est gratuit</h3>
+          <h3>Ce qui est gratuit, ce qui sera payant</h3>
           <p>
-            À ce stade, ce qui compte est que des CV sortent et soient lus, pas
-            le revenu. Le modèle viendra plus tard de fonctionnalités avancées
-            — jamais de la porte d’entrée, et jamais en rendant payant ce qui
-            est gratuit aujourd’hui.
+            Votre premier CV est gratuit pour toujours, avec les offres et les
+            conseils. Bientôt, deux options pour ceux qui postulent beaucoup :
+            une version supplémentaire de votre CV, ciblée sur un poste ou une
+            offre, à 500 F ; et le Pass Candidature, 2 000 F pour 30 jours.
+            Prix affiché avant paiement, sans abonnement.
           </p>
+          <details className="accueil-waitlist">
+            <summary>Me prévenir quand c’est disponible</summary>
+            <WaitlistForm product="cv_cible" placement="accueil" />
+          </details>
         </div>
       </section>
 
@@ -333,8 +345,8 @@ export default function AccueilPage() {
             <p className="labs-final-card__eyebrow">Créer</p>
             <h3>Votre CV, en quelques minutes et sans compte.</h3>
             <p className="labs-final-card__body">
-              Le formulaire vous guide, le score vous corrige, le PDF sort
-              gratuit et sans filigrane.
+              Le formulaire vous guide, le score vous corrige. Le premier CV
+              est gratuit, sans filigrane.
             </p>
             <span className="labs-final-card__cta">Créer mon CV →</span>
           </Link>

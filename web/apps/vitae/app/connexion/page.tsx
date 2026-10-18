@@ -13,29 +13,31 @@ export default async function ConnexionPage({
 }) {
   const { suite } = await searchParams;
   const user = await currentUser();
-  // Connecté : le téléchargement reprend dans l'éditeur, le reste va au compte.
-  if (user !== null) redirect(suite === 'telechargement' ? '/cv' : '/compte');
+  // `suite` : où reprendre après la connexion (un paiement, une version).
+  // Seul un chemin interne est accepté : la page ne doit pas servir de
+  // tremplin vers un autre site.
+  const next = typeof suite === 'string' && suite.startsWith('/') && !suite.startsWith('//')
+    ? suite
+    : null;
+  if (user !== null) redirect(next ?? (suite === 'telechargement' ? '/cv' : '/compte'));
 
   const googleEnabled = await isGoogleEnabled();
   const fromDownload = suite === 'telechargement';
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">
-        {fromDownload ? 'Encore une étape' : 'Votre compte Vitae'}
-      </h1>
-      {fromDownload ? (
+      <h1 className="text-2xl font-bold">Votre compte Vitae</h1>
+      {next !== null ? (
         <p className="max-w-md text-muted">
-          Créez un compte pour télécharger votre CV. C’est gratuit, et votre
-          travail est déjà enregistré : vous reviendrez exactement où vous en
-          étiez.
+          Un compte est nécessaire pour cette étape. Votre CV est déjà
+          enregistré sur ce téléphone : il sera rattaché à votre compte.
         </p>
       ) : null}
       {/* Venu du téléchargement : le retour ramène sur l'écran final du
           parcours, qui annonce que le téléchargement est désormais possible. */}
       <AuthForm
         googleEnabled={googleEnabled}
-        next={fromDownload ? '/cv?suite=telechargement' : '/cv'}
+        next={next ?? (fromDownload ? '/cv?suite=telechargement' : '/cv')}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PAGE_SIZE, cleanQuery, fetchJobs } from '../../lib/jobs';
+import { WHATSAPP_CHANNEL_URL } from '../../lib/config';
 import {
   JOB_CATEGORIES, formatAge, formatLongDate, jobCategoryLabel,
 } from '../../lib/catalog';
@@ -35,6 +36,11 @@ export const metadata: Metadata = {
  *
  * Aucun JavaScript : un formulaire GET et `<details>`. Les filtres restent
  * dans l'URL, donc partageables et compatibles avec le bouton retour.
+ *
+ * Brief v2 : la vue par défaut ne montre que les stages, les offres pour
+ * débutants et celles dont le niveau n'a pas pu être lu (`tous=1` pour le
+ * reste). Chaque offre dit sa source ; « Postuler » est compté
+ * (`data-track`, lu par AnalyticsBoot) sans JavaScript dans la page.
  */
 export const revalidate = 3600;
 
@@ -57,6 +63,8 @@ interface Params {
   ville?: string;
   jours?: string;
   plus?: string;
+  /** `1` : toutes les offres, pas seulement stages et débutants. */
+  tous?: string;
 }
 
 /** URL de la liste avec ces critères, les autres conservés. */
@@ -92,6 +100,7 @@ export default async function OffresPage({
     category: params.secteur,
     city: params.ville,
     limit: pages * PAGE_SIZE,
+    all: params.tous === '1',
     ...(days !== undefined && Number.isFinite(days) ? { days } : {}),
   });
 
@@ -114,6 +123,19 @@ export default async function OffresPage({
         </p>
       </header>
 
+      {/* Vue par défaut : ce qu'un étudiant ou un jeune diplômé peut viser. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-white px-4 py-2 text-sm shadow-[inset_0_0_0_1px_var(--color-line)]">
+        <span className="font-semibold">
+          {params.tous === '1' ? 'Toutes les offres' : 'Stages et offres pour débutants'}
+        </span>
+        <Link
+          href={offersHref(base, { tous: params.tous === '1' ? '' : '1' })}
+          className="inline-flex min-h-11 items-center font-semibold text-accent-ink underline underline-offset-4"
+        >
+          {params.tous === '1' ? 'Revenir aux offres pour débutants' : 'Voir toutes les offres'}
+        </Link>
+      </div>
+
       {/* Le choix que tout le monde fait : toujours visible, en onglets. */}
       <nav aria-label="Type d’offre" className="grid grid-cols-3 gap-1 rounded-full bg-white p-1 shadow-[inset_0_0_0_1px_var(--color-line)]">
         {TYPES.map((t) => {
@@ -135,6 +157,7 @@ export default async function OffresPage({
 
       <form action="/offres" method="get" role="search" className="flex flex-col gap-3">
         {params.type ? <input type="hidden" name="type" value={params.type} /> : null}
+        {params.tous ? <input type="hidden" name="tous" value={params.tous} /> : null}
 
         <div className="flex gap-2">
           <label className="relative min-w-0 flex-1">
@@ -213,7 +236,7 @@ export default async function OffresPage({
               >
                 Voir les offres
               </button>
-              <Link href={offersHref({}, { type: params.type })} className="min-h-11 px-2 py-3 text-sm font-semibold text-muted underline-offset-4 hover:text-ink hover:underline">
+              <Link href={offersHref({}, { type: params.type, tous: params.tous })} className="min-h-11 px-2 py-3 text-sm font-semibold text-muted underline-offset-4 hover:text-ink hover:underline">
                 Tout effacer
               </Link>
             </div>
@@ -251,7 +274,7 @@ export default async function OffresPage({
           <p className="text-sm text-muted">
             Essayez un mot plus court, ou retirez un filtre.
           </p>
-          <Link href="/offres" className="inline-flex min-h-11 items-center rounded-full border-2 border-accent px-4 text-sm font-semibold text-accent-ink">
+          <Link href="/offres?tous=1" className="inline-flex min-h-11 items-center rounded-full border-2 border-accent px-4 text-sm font-semibold text-accent-ink">
             Voir toutes les offres
           </Link>
         </div>
@@ -280,24 +303,36 @@ export default async function OffresPage({
                 <p className="line-clamp-2 text-sm text-muted">{offer.description}</p>
               ) : null}
 
-              <div className="mt-auto flex items-center justify-between gap-3 pt-2">
-                <span className="min-w-0 truncate text-xs text-muted">
-                  {[jobCategoryLabel(offer.category), offer.contractType].filter(Boolean).join(' · ')}
+              <div className="mt-auto flex items-end justify-between gap-3 pt-2">
+                <span className="min-w-0 text-xs text-muted">
+                  <span className="block truncate">
+                    {[jobCategoryLabel(offer.category), offer.contractType].filter(Boolean).join(' · ')}
+                  </span>
+                  {offer.source === null ? null : (
+                    <span className="block truncate">Source : {offer.source}</span>
+                  )}
                 </span>
-                <a
-                  href={offer.applyUrl}
-                  target="_blank"
-                  // noreferrer autant que noopener : on n'envoie pas le
-                  // parcours de nos utilisateurs aux sites d'annonces.
-                  rel="noopener noreferrer"
-                  aria-label={`Postuler : ${offer.title} (ouvre le site de l’annonce)`}
-                  className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-accent px-5 text-sm font-semibold text-header hover:bg-accent-dark"
-                >
-                  Postuler
-                  <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 3h7v7M13 3L4 12" />
-                  </svg>
-                </a>
+                <span className="flex shrink-0 flex-col items-end gap-0.5">
+                  <a
+                    href={offer.applyUrl}
+                    target="_blank"
+                    // noreferrer autant que noopener : on n'envoie pas le
+                    // parcours de nos utilisateurs aux sites d'annonces.
+                    rel="noopener noreferrer"
+                    aria-label={`Postuler : ${offer.title} (ouvre le site de l’annonce)`}
+                    data-track="offer_clicked"
+                    data-track-props={JSON.stringify({ offre: offer.id, niveau: offer.level, source: offer.source })}
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-accent px-5 text-sm font-semibold text-header hover:bg-accent-dark"
+                  >
+                    Postuler
+                    <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M6 3h7v7M13 3L4 12" />
+                    </svg>
+                  </a>
+                  <Link href="/cv" className="inline-flex min-h-9 items-center text-xs font-semibold text-accent-ink underline underline-offset-4">
+                    Votre CV est-il prêt ?
+                  </Link>
+                </span>
               </div>
             </li>
           ))}
@@ -314,6 +349,36 @@ export default async function OffresPage({
           Afficher plus d’offres ({total - offers.length} restantes)
         </Link>
       ) : null}
+
+      {WHATSAPP_CHANNEL_URL === null ? null : (
+        <aside className="card flex flex-col items-start gap-2 p-4">
+          <h2 className="font-semibold">Des offres pour débutants, chaque jour</h2>
+          <a
+            href={WHATSAPP_CHANNEL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-track="whatsapp_channel_clicked"
+            data-track-props='{"emplacement":"offres"}'
+            className="mt-1 inline-flex min-h-11 items-center rounded-full bg-header px-4 text-sm font-semibold text-white hover:bg-ink"
+          >
+            Rejoindre la chaîne WhatsApp Vitae
+          </a>
+        </aside>
+      )}
+
+      <aside className="card flex flex-col items-start gap-2 p-4">
+        <h2 className="font-semibold">Vous recrutez un stagiaire ou un débutant ?</h2>
+        <p className="text-sm text-muted">
+          Publiez votre offre sur Vitae : c’est gratuit, et elle est relue
+          avant d’être mise en ligne.
+        </p>
+        <Link
+          href="/publier-une-offre"
+          className="mt-1 inline-flex min-h-11 items-center rounded-full border-2 border-accent px-4 text-sm font-semibold text-accent-ink hover:bg-accent-soft"
+        >
+          Publier une offre gratuitement
+        </Link>
+      </aside>
 
       <aside className="card flex flex-col items-start gap-2 p-4">
         <h2 className="font-semibold">Votre CV est-il prêt ?</h2>

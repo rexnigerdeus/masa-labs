@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { pdfFileName, renderResumePdf } from '@everyday/cv-pdf';
 import { normalizeResume, type Resume } from '@everyday/cv-core';
-import { currentUser } from '../../../lib/supabase/server';
 
 /**
  * Export PDF.
@@ -10,22 +9,16 @@ import { currentUser } from '../../../lib/supabase/server';
  * avec police embarquée, jamais une image de la page. C'est exactement le
  * chemin que vérifie `npm run ats:check`.
  *
- * C'est le seul endroit du produit qui exige un compte. Tout le reste — saisie,
- * score, aperçu, offres, conseils — est accessible sans inscription.
+ * Ouvert sans compte (brief v2, règle 1) : le premier CV se crée et se
+ * télécharge sans inscription, autant de fois qu'on veut. Le compte n'apparaît
+ * qu'au moment où il sert — un deuxième CV, un achat. La route ne lit ni
+ * n'écrit rien en base : elle met en page ce qu'on lui envoie et le renvoie.
  */
 
 // react-pdf lit les fichiers de police sur le disque : runtime Node obligatoire.
 export const runtime = 'nodejs';
 
 export async function POST(request: Request): Promise<Response> {
-  const user = await currentUser();
-  if (user === null) {
-    return NextResponse.json(
-      { error: 'Créez un compte pour télécharger votre CV.' },
-      { status: 401 },
-    );
-  }
-
   let payload: unknown;
   try {
     payload = await request.json();

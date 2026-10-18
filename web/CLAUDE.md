@@ -76,7 +76,11 @@ Copier `.env.example` en `.env.local` dans chaque app.
 
 - Vitae : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (requises,
   échec explicite si absentes — [apps/vitae/lib/supabase/server.ts:49](apps/vitae/lib/supabase/server.ts#L49)) ;
-  `NEXT_PUBLIC_APP_URL` et `NEXT_PUBLIC_SITE_URL` facultatives.
+  `NEXT_PUBLIC_APP_URL` (domaine définitif : déclenche la 308 depuis vitae-lemon.vercel.app),
+  `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_WHATSAPP_CHANNEL_URL`
+  facultatives. Lot B, **serveur uniquement** : `PAYMENTS_ENABLED` (`false` par défaut),
+  `WAVE_API_KEY`, `WAVE_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` — voir
+  [apps/vitae/.env.example](apps/vitae/.env.example).
 - Sowly : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — copier le
   fichier de Hive plutôt que retaper la clé (une clé anon fausse d'un caractère casse
   l'inscription sans message clair).
@@ -85,7 +89,12 @@ Copier `.env.example` en `.env.local` dans chaque app.
 
 ## Repères
 
-- Le seul écran exigeant un compte est le téléchargement PDF — [apps/vitae/app/api/export/route.ts:20](apps/vitae/app/api/export/route.ts#L20).
+- Vitae suit le brief v2 ([apps/vitae/docs/brief-vitae-v2.md](apps/vitae/docs/brief-vitae-v2.md)) : le premier CV se crée **et se télécharge** sans compte — [apps/vitae/app/api/export/route.ts:1](apps/vitae/app/api/export/route.ts#L1). Le compte (numéro + mot de passe, pseudo-e-mail comme Hive) n'apparaît qu'au 2e CV ou à l'achat.
+- « Un seul CV gratuit par compte » est tenu par la base : le premier CV d'un compte devient `is_primary` (déclencheur), la RLS refuse toute autre insertion, et une version ne naît que de `vitae_create_cv_version`, qui vérifie et consomme le droit — [../supabase/migrations/20261018120100_vitae_lot_b.sql](../supabase/migrations/20261018120100_vitae_lot_b.sql).
+- Paiement Wave derrière `PAYMENTS_ENABLED` : seul le webhook signé accorde un droit (`vitae_grant_entitlement`, idempotent), la page de retour ne fait que lire — [apps/vitae/app/api/wave/webhook/route.ts:1](apps/vitae/app/api/wave/webhook/route.ts#L1), [apps/vitae/lib/wave.ts:1](apps/vitae/lib/wave.ts#L1).
+- Mesure d'audience maison, sans donnée personnelle : `anon_id` et `ref` en localStorage, envoi par `sendBeacon` vers `/api/evenements`, clics comptés par `data-track` sans JavaScript dans les pages — [apps/vitae/lib/analytics.ts:1](apps/vitae/lib/analytics.ts#L1), [apps/vitae/components/AnalyticsBoot.tsx:1](apps/vitae/components/AnalyticsBoot.tsx#L1).
+- Niveau, secteur, ville et source d'une offre sont calculés **en base** par un déclencheur, qui refuse aussi les sources non vérifiées et les doublons : le scraper, le formulaire `/publier-une-offre` et l'admin passent tous par lui — `vitae_job_offers_prepare` dans [../supabase/migrations/20261018120000_vitae_lot_a.sql](../supabase/migrations/20261018120000_vitae_lot_a.sql). LinkedIn n'est plus collecté.
+- Administration Vitae : `/admin/*`, rôle en base (`vitae_admins`, `vitae_is_admin()`), 404 pour les autres — [apps/vitae/lib/admin.ts:1](apps/vitae/lib/admin.ts#L1).
 - Un CV porte sa photo et sa couleur primaire ; tout CV venu du navigateur ou de la base passe par `normalizeResume` avant d'atteindre un renderer — [packages/cv-core/src/resume.ts:1](packages/cv-core/src/resume.ts#L1).
 - La photo est recadrée et compressée dans le navigateur, puis stockée avec le CV : aucun bucket, rien à charger à l'ouverture de l'éditeur — [apps/vitae/components/editor/PhotoField.tsx:1](apps/vitae/components/editor/PhotoField.tsx#L1).
 - Les vignettes de modèles de la page d'accueil sont des croquis SVG composés mot à mot à partir du descripteur ; dans le parcours, le choix du modèle se fait au contraire sur de vrais CV rendus — [apps/vitae/components/TemplateSketch.tsx:1](apps/vitae/components/TemplateSketch.tsx#L1), [apps/vitae/components/editor/TemplateStep.tsx:1](apps/vitae/components/editor/TemplateStep.tsx#L1).

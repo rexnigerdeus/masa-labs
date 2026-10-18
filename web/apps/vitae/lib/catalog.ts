@@ -16,7 +16,10 @@ export const JOB_CATEGORIES: Record<string, string> = {
   juridique: 'Juridique',
   ingenierieBtp: 'Ingénierie et BTP',
   sante: 'Santé',
-  educationFormation: 'Éducation et formation',
+  // Identifiant hérité, libellé du brief v2 : sport et animation y sont
+  // classés (migration 20261018120000_vitae_lot_a.sql).
+  educationFormation: 'Éducation, sport et animation',
+  associatifOng: 'Associatif et ONG',
   logistiqueTransport: 'Logistique et transport',
   hotellerieRestauration: 'Hôtellerie et restauration',
   autre: 'Autre',
@@ -67,3 +70,24 @@ export function formatAge(iso: string): string {
   if (days < 31) return `il y a ${Math.floor(days / 7)} semaine${days >= 14 ? 's' : ''}`;
   return `il y a ${Math.floor(days / 30)} mois`;
 }
+
+/**
+ * Liste fixe des villes (brief v2, offres §3), dans l'ordre où on les
+ * propose : les communes d'Abidjan, puis les grandes villes. La base range
+ * chaque offre dans l'une d'elles (`vitae_offer_city`) ; le formulaire de
+ * dépôt la suggère pour que les annonceurs écrivent la même chose.
+ */
+export const CITIES: readonly string[] = [
+  'Abidjan', 'Abobo', 'Adjamé', 'Attécoubé', 'Cocody', 'Koumassi', 'Marcory',
+  'Plateau', 'Port-Bouët', 'Treichville', 'Yopougon', 'Anyama', 'Bingerville',
+  'Songon', 'Bouaké', 'Daloa', 'Korhogo', 'San-Pédro', 'Yamoussoukro',
+  'Grand-Bassam', 'Gagnoa', 'Abengourou', 'Divo', 'Soubré', 'Man',
+];
+
+/** Niveaux d'une offre, tels que la base les nomme. */
+export const JOB_LEVELS: Record<string, string> = {
+  stage: 'Stage',
+  debutant: 'Débutant',
+  confirme: 'Confirmé',
+  senior: 'Senior',
+};

@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { AnalyticsBoot } from '../components/AnalyticsBoot';
 import { InstallBanner } from '../components/pwa/InstallBanner';
 import { ServiceWorkerRegistration } from '../components/pwa/ServiceWorkerRegistration';
-import { APP_URL, SITE_URL } from '../lib/config';
+import { APP_URL, SITE_URL, WHATSAPP_CHANNEL_URL } from '../lib/config';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body className="bg-canvas text-ink">
         <ServiceWorkerRegistration />
+        <AnalyticsBoot />
         <header className="bg-header text-white">
           <nav className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:gap-6">
             {/* Logo sticker (scripts/logo-sticker.cjs) : la grammaire du logo
@@ -111,20 +113,38 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <InstallBanner placement="bottom" />
 
-        <footer className="mx-auto max-w-6xl px-4 py-10 text-sm text-muted">
-          Vitae est un produit{' '}
-          {SITE_URL === null ? (
-            // Pas de lien tant que le site vitrine n'a pas d'adresse connue.
-            <span className="font-medium">The Everyday Co</span>
-          ) : (
-            <a className="underline" href={SITE_URL}>
-              The Everyday Co
-            </a>
-          )}
-          . Création et téléchargement gratuits.{' '}
-          <Link className="underline" href="/confidentialite">
-            Confidentialité
-          </Link>
+        <footer className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-10 text-sm text-muted">
+          <p>
+            Vitae est un produit{' '}
+            {SITE_URL === null ? (
+              // Pas de lien tant que le site vitrine n'a pas d'adresse connue.
+              <span className="font-medium">The Everyday Co</span>
+            ) : (
+              <a className="underline" href={SITE_URL}>
+                The Everyday Co
+              </a>
+            )}
+            . Premier CV gratuit pour toujours.
+          </p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-2">
+            {WHATSAPP_CHANNEL_URL === null ? null : (
+              <li>
+                <a
+                  className="underline"
+                  href={WHATSAPP_CHANNEL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-track="whatsapp_channel_clicked"
+                  data-track-props='{"emplacement":"pied_de_page"}'
+                >
+                  Chaîne WhatsApp Vitae
+                </a>
+              </li>
+            )}
+            <li><Link className="underline" href="/tarifs">Tarifs</Link></li>
+            <li><Link className="underline" href="/publier-une-offre">Publier une offre</Link></li>
+            <li><Link className="underline" href="/confidentialite">Confidentialité</Link></li>
+          </ul>
         </footer>
       </body>
     </html>

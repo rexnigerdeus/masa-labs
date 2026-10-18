@@ -14,7 +14,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/auth/', '/connexion', '/compte', '/hors-ligne'],
+      disallow: [
+        '/api/', '/auth/', '/connexion', '/compte', '/hors-ligne',
+        '/admin', '/ambassadeur/', '/paiement', '/lettres', '/cv/version',
+      ],
     },
     sitemap: `${APP_URL}/sitemap.xml`,
     host: APP_URL,

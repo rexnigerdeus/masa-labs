@@ -30,6 +30,13 @@ const SECURITY_HEADERS = [
   },
 ];
 
+/** Fichiers lus sur le disque par le moteur PDF, à embarquer avec ses routes. */
+const PDF_FILES = [
+  '../../packages/cv-pdf/fonts/**',
+  '../../node_modules/pdfkit/js/standard-fonts/**',
+  '../../node_modules/pdfkit/js/data/**',
+];
+
 const config: NextConfig = {
   // Les packages du workspace sont publiés en TypeScript brut : Next les
   // compile lui-même, ce qui évite une étape de build intermédiaire.
@@ -45,12 +52,10 @@ const config: NextConfig = {
   // tables par un `require` dynamique que le traçage ne voit pas. Sans elles,
   // la route plante sur Vercel (« Cannot find module …/Helvetica.cjs ») alors
   // qu'elle fonctionne en local, où tout `node_modules` est présent.
+  // La lettre de motivation (lot B) passe par le même moteur : mêmes fichiers.
   outputFileTracingIncludes: {
-    '/api/export': [
-      '../../packages/cv-pdf/fonts/**',
-      '../../node_modules/pdfkit/js/standard-fonts/**',
-      '../../node_modules/pdfkit/js/data/**',
-    ],
+    '/api/export': PDF_FILES,
+    '/api/lettre/[id]': PDF_FILES,
   },
 
   experimental: {

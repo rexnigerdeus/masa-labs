@@ -3,14 +3,23 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '../../lib/supabase/client';
+import { phoneToEmail } from '../../lib/phone';
+import { track } from '../../lib/analytics';
 import { Button, Field, PasswordInput, TextInput } from '../editor/fields';
 
 /**
  * Connexion et inscription.
  *
- * Un seul formulaire, deux modes : la cible arrive ici depuis le bouton de
- * téléchargement et ne sait pas toujours si elle a déjà un compte. Un écran
- * unique évite de la faire hésiter à ce moment-là.
+ * Un seul formulaire, deux modes : la cible ne sait pas toujours si elle a
+ * déjà un compte. Un écran unique évite de la faire hésiter.
+ *
+ * Brief v2, lot B : le compte se crée avec un numéro de téléphone. Le brief
+ * vise un code à usage unique par SMS, qui demande un fournisseur payant à
+ * chiffrer d'abord ; en attendant, numéro + mot de passe, exactement comme
+ * Hive (pseudo-email `0700000000@everyday.co`, lib/phone.ts) : aucun SMS,
+ * aucun coût par inscription, et le même compte The Everyday Co. dans les
+ * deux apps. Les comptes déjà créés avec un e-mail se connectent toujours :
+ * le champ accepte l'un ou l'autre.
  */
 
 type Mode = 'connexion' | 'inscription';
@@ -18,16 +27,23 @@ type Mode = 'connexion' | 'inscription';
 export function AuthForm({ googleEnabled, next }: { googleEnabled: boolean; next: string }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('inscription');
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function submit(event: React.FormEvent): Promise<void> {
     event.preventDefault();
-    setBusy(true);
     setError(null);
 
+    // Un « @ » : un compte e-mail existant. Sinon, un numéro ivoirien.
+    const email = identifier.includes('@') ? identifier.trim() : phoneToEmail(identifier);
+    if (email === null) {
+      setError('Entrez un numéro ivoirien à dix chiffres, par exemple 07 00 00 00 00.');
+      return;
+    }
+
+    setBusy(true);
     const supabase = getSupabaseClient();
     const { error: authError } = mode === 'inscription'
       ? await supabase.auth.signUp({ email, password })
@@ -38,6 +54,7 @@ export function AuthForm({ googleEnabled, next }: { googleEnabled: boolean; next
       setBusy(false);
       return;
     }
+    if (mode === 'inscription') track('account_created');
 
     // `refresh()` avant `push()` : les composants serveur doivent revoir la
     // session, sinon la page d'arrivée se rend encore en visiteur anonyme.
@@ -79,14 +96,17 @@ export function AuthForm({ googleEnabled, next }: { googleEnabled: boolean; next
         ))}
       </div>
 
-      <Field label="Email">
+      <Field
+        label="Numéro de téléphone"
+        hint={mode === 'connexion' ? 'Ou l’adresse e-mail de votre compte, s’il a été créé avec.' : undefined}
+      >
         <TextInput
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          value={email}
-          onChange={setEmail}
-          placeholder="vous@exemple.ci"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          value={identifier}
+          onChange={setIdentifier}
+          placeholder="07 00 00 00 00"
         />
       </Field>
 
@@ -116,8 +136,8 @@ export function AuthForm({ googleEnabled, next }: { googleEnabled: boolean; next
       ) : null}
 
       <p className="text-xs text-muted">
-        Votre CV reste enregistré dans ce navigateur : créer un compte sert à le
-        retrouver ailleurs et à télécharger le PDF.
+        Votre premier CV se crée et se télécharge sans compte. Le compte sert à
+        le retrouver sur un autre téléphone, et à créer d’autres versions.
       </p>
     </form>
   );
@@ -126,8 +146,8 @@ export function AuthForm({ googleEnabled, next }: { googleEnabled: boolean; next
 /** Les messages de GoTrue arrivent en anglais ; l'interface est en français. */
 function translate(message: string): string {
   const known: Record<string, string> = {
-    'Invalid login credentials': 'Email ou mot de passe incorrect.',
-    'User already registered': 'Un compte existe déjà avec cet email. Choisissez « J’ai déjà un compte ».',
+    'Invalid login credentials': 'Numéro (ou e-mail) ou mot de passe incorrect.',
+    'User already registered': 'Un compte existe déjà avec ce numéro. Choisissez « J’ai déjà un compte ».',
     'Password should be at least 6 characters.': 'Le mot de passe doit faire au moins 6 caractères.',
     'Unable to validate email address: invalid format': 'Format d’email invalide.',
     'Signups not allowed for this instance': 'Les inscriptions sont désactivées sur ce projet.',

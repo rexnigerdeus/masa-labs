@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { isTemplateId } from '@everyday/cv-core';
+import { redirect } from 'next/navigation';
+import { isTemplateId, offerKeywords } from '@everyday/cv-core';
 import { ResumeEditor } from '../../components/editor/ResumeEditor';
 import { currentUser } from '../../lib/supabase/server';
 import { loadResume } from '../../lib/resumes';
+import { fetchJob } from '../../lib/jobs';
+import { formatPhone, phoneFromEmail } from '../../lib/phone';
+import type { ResumeTarget } from '../../components/editor/TargetKeywords';
 import { isStepId } from '../../lib/wizard';
 
 export const metadata: Metadata = {
@@ -32,12 +36,33 @@ export default async function CvPage({
   const { id, nouveau, etape, modele, suite } = await searchParams;
   const user = await currentUser();
 
+  // Lot B : un compte qui a déjà un CV ne repart pas d'une page blanche
+  // gratuite — « Créer un nouveau CV » mène à l'écran du 2e CV.
+  if (user !== null && nouveau !== undefined && (await loadResume()) !== null) {
+    redirect('/cv/version');
+  }
+
   // Le CV enregistré n'est lu que pour un compte connecté ; un visiteur
   // anonyme repart de son brouillon local. Un identifiant introuvable (CV
   // supprimé, lien d'un autre compte) retombe sur le dernier CV.
   const requested = user !== null && id !== undefined ? await loadResume(id) : null;
   const stored = requested ?? (user === null || nouveau !== undefined ? null : await loadResume());
   const target = nouveau !== undefined ? 'new' : requested !== null ? 'open' : 'latest';
+
+  // Version ciblée : le poste visé et les mots importants de l'offre,
+  // extraits une fois ici plutôt qu'à chaque frappe dans le navigateur.
+  let focus: ResumeTarget | null = null;
+  if (requested !== null && requested.targetTitle !== null) {
+    const offer = requested.targetOfferId === null ? null : await fetchJob(requested.targetOfferId);
+    focus = {
+      title: requested.targetTitle,
+      offerUrl: offer?.applyUrl ?? requested.targetOfferUrl,
+      keywords: offerKeywords(offer?.title ?? requested.targetTitle, offer?.description ?? ''),
+    };
+  }
+  const who = user === null ? null : (phoneFromEmail(user.email) === null
+    ? user.email ?? ''
+    : formatPhone(phoneFromEmail(user.email) as string));
 
   return (
     <>
@@ -50,7 +75,7 @@ export default async function CvPage({
             </svg>
             Mes CV
           </Link>
-          <span className="truncate text-muted">{user.email}</span>
+          <span className="truncate text-muted">{who}</span>
         </div>
       )}
       <ResumeEditor
@@ -64,6 +89,7 @@ export default async function CvPage({
         // Modèle touché sur la page d'accueil ; ignoré s'il n'existe pas.
         initialTemplate={isTemplateId(modele) ? modele : null}
         justSignedIn={user !== null && suite === 'telechargement'}
+        focus={focus}
       />
     </>
   );

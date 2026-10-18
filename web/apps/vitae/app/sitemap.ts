@@ -23,6 +23,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${APP_URL}/cv`, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${APP_URL}/conseils`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${APP_URL}/offres`, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${APP_URL}/tarifs`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${APP_URL}/publier-une-offre`, changeFrequency: 'yearly', priority: 0.4 },
+    { url: `${APP_URL}/concours`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${APP_URL}/confidentialite`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 

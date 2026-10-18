@@ -23,6 +23,8 @@ import {
 } from './DownloadDialog';
 import { loadDraft, loadDraftId, saveDraft, saveDraftId } from '../../lib/draft';
 import { saveResume } from '../../lib/resumes';
+import { firstTime, track, trackOnce } from '../../lib/analytics';
+import { TargetKeywords, type ResumeTarget } from './TargetKeywords';
 import {
   STEPS,
   STEP_IDS,
@@ -100,7 +102,7 @@ function revealFirstError(): void {
 }
 
 export function ResumeEditor({
-  signedIn, stored, target, initialStep, initialTemplate, justSignedIn,
+  signedIn, stored, target, initialStep, initialTemplate, justSignedIn, focus = null,
 }: {
   signedIn: boolean;
   /** CV en ligne : celui demandé (`target: 'open'`) ou le dernier modifié. */
@@ -117,6 +119,8 @@ export function ResumeEditor({
   initialTemplate: TemplateId | null;
   /** Retour de la connexion demandée au premier téléchargement. */
   justSignedIn: boolean;
+  /** Version ciblée (lot B) : le poste visé et les mots de l'offre. */
+  focus?: ResumeTarget | null;
 }) {
   const [resume, setResume] = useState<Resume | null>(null);
   const [step, setStep] = useState<StepId>('modele');
@@ -156,27 +160,31 @@ export function ResumeEditor({
       const draft = loadDraft();
       const draftId = loadDraftId();
       const draftFull = hasContent(draft);
-      const shelter = async (): Promise<void> => {
-        if (signedIn && draftFull) await saveResume(draft, draftId);
+      // false si le brouillon n'a pas pu être mis à l'abri — en pratique, un
+      // compte qui a déjà son CV gratuit (lot B : la base refuse un second CV
+      // créé hors d'une version payée). Le brouillon reste alors ouvert et
+      // intact : rien ne l'écrase sans copie en ligne.
+      const shelter = async (): Promise<boolean> => {
+        if (!signedIn || !draftFull) return true;
+        const outcome = await saveResume(draft, draftId);
+        if (!outcome.ok) setSyncError(outcome.error ?? null);
+        return outcome.ok;
       };
-      const mode = !signedIn && draftFull ? 'latest' : target;
+      let mode = !signedIn && draftFull ? 'latest' : target;
+      if (mode !== 'latest' && !(draftFull && mode === 'open' && draftId === stored?.id)) {
+        if (!(await shelter())) mode = 'latest';
+      }
 
       let initial: Resume;
       let id: string | null;
       let first: StepId;
 
       if (mode === 'new') {
-        await shelter();
         initial = emptyResume(initialTemplate ?? undefined);
         id = null;
         first = 'modele';
       } else if (mode === 'open' && stored !== null) {
-        if (draftFull && draftId === stored.id) {
-          initial = draft;
-        } else {
-          await shelter();
-          initial = stored.data;
-        }
+        initial = draftFull && draftId === stored.id ? draft : stored.data;
         id = stored.id;
         // Depuis le compte, on arrive sur la vue d'ensemble : le CV, son
         // score, et de quoi modifier la partie voulue sans tout reparcourir.
@@ -267,6 +275,18 @@ export function ResumeEditor({
   const closeDialog = useCallback(() => setDownloaded(null), []);
 
   const score = useMemo(() => (resume === null ? null : scoreResume(resume)), [resume]);
+
+  // Mesure (brief v2) : « CV commencé » au premier champ rempli, « score 80 »
+  // la première fois qu'il est atteint. Une fois par navigateur.
+  const started = resume !== null && hasContent(resume);
+  const templateId = resume?.templateId;
+  useEffect(() => {
+    if (started) trackOnce('cv_started', 'cv_started', { modele: templateId ?? null });
+  }, [started, templateId]);
+  const reached80 = (score?.total ?? 0) >= 80;
+  useEffect(() => {
+    if (reached80) trackOnce('cv_score_80', 'cv_score_80');
+  }, [reached80]);
 
   if (resume === null || score === null) {
     return <p className="p-8 text-sm text-muted">Chargement de votre CV…</p>;
@@ -398,6 +418,10 @@ export function ResumeEditor({
       revealFirstError();
       return;
     }
+    // Une section est « complète » quand on la quitte valide et remplie.
+    if (step !== 'modele' && !isStepEmpty(step, resume)) {
+      trackOnce(`section:${step}`, 'cv_section_completed', { section: step });
+    }
     goTo(returnToFinal ? 'final' : nextStep);
   };
 
@@ -420,13 +444,6 @@ export function ResumeEditor({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(resume),
       });
-      if (response.status === 401) {
-        // Le compte n'est exigé qu'ici : le brouillon et l'étape sont déjà en
-        // local, on renvoie vers l'inscription et l'utilisateur revient sur
-        // cet écran, prêt à télécharger.
-        window.location.href = '/connexion?suite=telechargement';
-        return;
-      }
       if (!response.ok) throw new Error(`export ${response.status}`);
       const blob = await response.blob();
       const encodedName = response.headers.get('x-filename');
@@ -438,6 +455,11 @@ export function ResumeEditor({
       const saved = platform !== 'ios';
       if (saved) saveToDownloads(url, name);
       setDownloaded({ file, url, platform, saved });
+      track('cv_pdf_downloaded', {
+        modele: resume.templateId,
+        score: scoreResume(resume).total,
+        premier: firstTime('cv_pdf_downloaded'),
+      });
     } catch {
       setExportError(
         navigator.onLine
@@ -614,6 +636,7 @@ export function ResumeEditor({
           justSignedIn={justSignedIn}
           reviewing={target === 'open'}
           onGoTo={(target) => goTo(target, true)}
+          aside={focus === null ? null : <TargetKeywords target={focus} resume={resume} />}
         />
       ) : null}
 

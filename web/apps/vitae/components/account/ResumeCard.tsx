@@ -28,7 +28,16 @@ export function ResumeCard({ resume: r }: { resume: StoredResume }) {
         <p className="text-sm text-muted">
           Modèle {getTemplate(r.data.templateId).name} · modifié le {formatLongDate(r.updatedAt)}
         </p>
-        <p className="mt-1">
+        <p className="mt-1 flex flex-wrap gap-1.5">
+          {/* Lot B : le CV gratuit et les versions ciblées se distinguent
+              d'un coup d'œil. */}
+          {r.isPrimary ? (
+            <span className="rounded-full bg-header px-2.5 py-0.5 text-xs font-semibold text-white">CV gratuit</span>
+          ) : r.targetTitle === null ? null : (
+            <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-semibold">
+              Version : {r.targetTitle}
+            </span>
+          )}
           <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-header">
             Score {score.total}/100 · {GRADE_LABEL[score.grade]}
           </span>

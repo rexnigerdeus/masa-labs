@@ -23,12 +23,14 @@ const GRADE_SENTENCE = {
   moyen: 'Vous pouvez déjà le télécharger, mais quelques ajouts le rendront bien plus convaincant.',
 } as const;
 
-export function FinalStep({ resume, score, signedIn, justSignedIn, reviewing, onGoTo }: {
+export function FinalStep({ resume, score, signedIn, justSignedIn, reviewing, onGoTo, aside = null }: {
   resume: Resume;
   score: ScoreResult;
   signedIn: boolean;
-  /** Retour de la page de connexion, lancée par un premier essai de téléchargement. */
+  /** Retour de la page de connexion. */
   justSignedIn: boolean;
+  /** Encart propre à une version ciblée (mots de l'offre), au-dessus du score. */
+  aside?: React.ReactNode;
   /** Ouvert depuis l'espace compte : la liste des parties à modifier est dépliée. */
   reviewing: boolean;
   onGoTo: (step: StepId) => void;
@@ -42,7 +44,7 @@ export function FinalStep({ resume, score, signedIn, justSignedIn, reviewing, on
     <div className="flex flex-col gap-6">
       {justSignedIn && signedIn ? (
         <p role="status" className="rounded-xl bg-accent-soft px-4 py-3 text-sm font-medium text-header">
-          Votre compte est prêt. Touchez « Télécharger mon CV » en bas de l’écran.
+          Vous êtes connecté. Votre CV est enregistré dans votre compte.
         </p>
       ) : null}
 
@@ -82,6 +84,7 @@ export function FinalStep({ resume, score, signedIn, justSignedIn, reviewing, on
         </figure>
 
         <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-4">
+          {aside}
           <section className="card flex flex-col gap-4 p-4" aria-labelledby="score-titre">
             <div className="flex items-center gap-4">
               <ScoreRing score={score.total} className="h-24 w-24 shrink-0" />
@@ -150,9 +153,9 @@ export function FinalStep({ resume, score, signedIn, justSignedIn, reviewing, on
 
           {signedIn ? null : (
             <p className="text-sm text-muted">
-              Au moment de télécharger, un compte gratuit vous sera demandé. Votre CV
-              est déjà enregistré sur cet appareil : vous reviendrez ici
-              directement.
+              Votre CV est enregistré sur cet appareil. Vous pouvez le
+              télécharger maintenant, sans compte, et revenir le modifier quand
+              vous voulez.
             </p>
           )}
         </div>
