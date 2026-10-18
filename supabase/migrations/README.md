@@ -75,3 +75,31 @@ autres. On le lit par des fonctions qui vérifient le droit de le voir
 (`rondo_telephones`, `hive_telephones_commandes`), et son propre numéro se
 relit dans le pseudo-email. La fermeture de la colonne elle-même attend la
 mise en ligne des apps : voir [../en-attente/README.md](../en-attente/README.md).
+
+## Vitae, brief v2 (18/10/2026)
+
+Deux migrations, à appliquer dans l'ordre, **après relecture par Daniel** :
+
+1. `20261018120000_vitae_lot_a.sql` — mesure (`vitae_events` complétée,
+   `vitae_ambassadors`, `vitae_funnel`), listes d'attente (`waitlist`,
+   partagée avec Hive), sources et tri des offres (`vitae_job_sources`,
+   niveau/secteur/ville/statut, déclencheur `vitae_job_offers_prepare`),
+   dépôt d'offres, suppression de compte, rôle admin (`vitae_admins`).
+2. `20261018120100_vitae_lot_b.sql` — CV principal et versions, droits,
+   paiements Wave, lettres de motivation.
+
+La migration Hive `en-attente/20261018100000_hive_pause.sql` crée aussi
+`waitlist` : les deux sont compatibles dans les deux ordres. Si elle passe
+après celles-ci, `db push` demandera `--include-all` (version antérieure).
+
+Après la migration du lot A, se donner le rôle admin :
+
+```sql
+insert into public.vitae_admins (user_id)
+select id from auth.users where email = '<adresse ou 0700000000@everyday.co>';
+```
+
+Puis, seulement après : déployer la nouvelle Edge Function
+`scrape-job-offers` (LinkedIn retiré, sources lues dans `vitae_job_sources`).
+Novojob n'est collecté qu'une fois `terms_checked_at` renseigné et `active`
+à `true` pour sa ligne.

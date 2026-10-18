@@ -9,15 +9,21 @@
 // (supabase/migrations/20260827_scrape_job_offers_scheduler.sql).
 // Peut aussi être appelé manuellement via HTTP POST.
 //
-// Sources VÉRIFIÉES (2026-08-30) :
-//   1. LinkedIn Guest API — /jobs-guest/jobs/api/seeMoreJobPostings/search
-//      (publique, 10 offres/page, pagination start=0,25,50,75,100)
-//      Chaque offre → lien direct linkedin.com/jobs/view/<id> réel.
-//   2. LinkedIn Guest API "stage" — même recherche avec keyword=stage
-//   3. Novojob CI — /cote-d-ivoire/offres-d-emploi (50 offres/page)
-//      + pagination ?tmpl=dynamic&layout=default_results&start=50
-//      Chaque offre → lien direct novojob.com/.../offre-d-emploi/.../ID-titre
-//   4. Novojob CI stages — /cote-d-ivoire/offres-d-emploi/stages
+// SOURCES — brief Vitae v2 (18/10/2026) :
+//   Une source n'est collectée que si sa ligne dans public.vitae_job_sources
+//   est `active` ET porte une date `terms_checked_at` (conditions
+//   d'utilisation et robots.txt lus et favorables). La fonction lit cette
+//   table à chaque passage ; le déclencheur SQL de vitae_job_offers refuse en
+//   plus toute offre d'une source non vérifiée (double verrou).
+//
+//   - Novojob CI — /cote-d-ivoire/offres-d-emploi (50 offres/page)
+//     + pagination ?tmpl=dynamic&layout=default_results&start=50,
+//     et /cote-d-ivoire/offres-d-emploi/stages. Collectée seulement une fois
+//     ses conditions vérifiées par Daniel.
+//
+//   LinkedIn : collecte ARRÊTÉE le 18/10/2026. Ses conditions d'utilisation
+//   interdisent la collecte automatisée (brief v2). Le code a été retiré, pas
+//   seulement désactivé.
 //
 // Sources ABANDONNÉES (cassées/fake, vérifié 2026-08-30) :
 //   - jobivoire.com : SPA React, les offres sont des données de DÉMO
@@ -157,7 +163,7 @@ Deno.serve(async (req: Request) => {
   // avec `verify_jwt = false` (pg_net n'a pas de jeton utilisateur) : sans
   // cette vérification, n'importe qui sur Internet pouvait la déclencher en
   // boucle — elle écrit en base avec la clé service_role, et des rafales de
-  // requêtes vers LinkedIn feraient bannir nos adresses.
+  // requêtes vers une source feraient bannir nos adresses.
   //
   // Le secret vit dans Supabase Vault (`scraper_secret`) ; le cron l'envoie
   // dans `x-scraper-secret` (public.vitae_scrape_jobs). Ici, on ne le
@@ -189,55 +195,20 @@ Deno.serve(async (req: Request) => {
     rejected: number;
   }> = [];
 
-  // ---------- SOURCES 1+2: LinkedIn Guest API (emplois + stages) ----------
-  // URL vérifiée : /jobs-guest/jobs/api/seeMoreJobPostings/search
-  // 10 offres/page, pagination start=0,25,50,75,100 → ~50 offres/run.
-  for (const variant of [
-    { name: "linkedin-ci", keywords: "" },
-    { name: "linkedin-ci-stages", keywords: "stage" },
-  ]) {
-    const offers: RawJobOffer[] = [];
-    try {
-      for (const start of [0, 25, 50, 75, 100]) {
-        const url =
-          `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search` +
-          `?keywords=${encodeURIComponent(variant.keywords)}` +
-          `&location=${encodeURIComponent("Cote d'Ivoire")}` +
-          `&f_TPR=r2592000&start=${start}`;
-        const html = await fetchHtml(url);
-        const parsed = parseLinkedInGuest(html);
-        offers.push(...parsed);
-        if (parsed.length === 0) break; // plus de résultats
-      }
-      console.log(
-        `[scrape-job-offers] ${variant.name}: ${offers.length} offres brutes`,
-      );
-    } catch (err) {
-      const msg = `Erreur source ${variant.name}: ${err.message}`;
-      console.error(`[scrape-job-offers] ${msg}`);
-      errors.push(msg);
-    }
+  // ---------- Sources autorisées (vitae_job_sources) ----------
+  const { data: allowedRows } = await supabase
+    .from("vitae_job_sources")
+    .select("host")
+    .eq("active", true)
+    .not("terms_checked_at", "is", null);
+  const allowed = new Set((allowedRows ?? []).map((r: { host: string | null }) => r.host));
 
-    const { inserted, skipped, rejected } = await processOffers(
-      supabase,
-      offers.map(mapOffer).map((o) => enforceRealOffer(o)),
-      variant.name,
-    );
-    totalInserted += inserted;
-    totalSkipped += skipped;
-    totalRejected += rejected;
-    sourceStats.push({
-      source: variant.name,
-      found: offers.length,
-      inserted,
-      skipped,
-      rejected,
-    });
-  }
-
-  // ---------- SOURCES 3+4: Novojob CI (emplois + stages) ----------
+  // ---------- Novojob CI (emplois + stages) ----------
   // Pages vérifiées : 50 cartes/page avec URL directe de l'offre.
-  for (const variant of [
+  if (!allowed.has("www.novojob.com")) {
+    console.log("[scrape-job-offers] Novojob : conditions non vérifiées, source ignorée.");
+  }
+  for (const variant of allowed.has("www.novojob.com") ? [
     {
       name: "novojob-ci",
       url: "https://www.novojob.com/cote-d-ivoire/offres-d-emploi",
@@ -248,7 +219,7 @@ Deno.serve(async (req: Request) => {
       url: "https://www.novojob.com/cote-d-ivoire/offres-d-emploi/stages",
       isStage: true,
     },
-  ]) {
+  ] : []) {
     const offers: RawJobOffer[] = [];
     try {
       const html = await fetchHtml(variant.url);
@@ -362,7 +333,6 @@ function enforceRealOffer(offer: ParsedJobOffer): ParsedJobOffer | null {
  * Un lien est "direct" s'il pointe vers la page de CETTE offre,
  * avec un identifiant unique — pas vers une page de listing générique.
  * Patterns vérifiés:
- *   - linkedin.com/jobs/view/<slug>-<jobId>  (ex: -4447210705)
  *   - novojob.com/.../offre-d-emploi/<region>/<ville>/<id>-<slug>
  */
 function isDirectOfferUrl(url: string): boolean {
@@ -383,11 +353,8 @@ function isDirectOfferUrl(url: string): boolean {
     if (re.test(cleanHref)) return false;
   }
 
-  // LinkedIn: lien direct → /jobs/view/...-<jobId numérique>
-  if (parsed.hostname.includes("linkedin.com")) {
-    return /\/jobs\/view\/[^?#]+-\d+/.test(parsed.pathname) ||
-      /\/jobs\/view\/\d+/.test(parsed.pathname);
-  }
+  // LinkedIn : plus collecté (brief Vitae v2).
+  if (parsed.hostname.includes("linkedin.com")) return false;
 
   // Novojob: lien direct → /offre-d-emploi/.../<id>-<slug>
   if (parsed.hostname.includes("novojob.com")) {
@@ -397,117 +364,6 @@ function isDirectOfferUrl(url: string): boolean {
   // Autre domaine: exiger un chemin profond (identifiant plausible)
   const segments = parsed.pathname.split("/").filter(Boolean);
   return segments.length >= 3;
-}
-
-// ============================================================
-// Parser LinkedIn Guest API — structure HTML vérifiée:
-//   <li>
-//     <a class="base-card__full-link" href="https://ci.linkedin.com/jobs/view/<slug>-<id>?...">
-//     <h3 class="base-search-card__title">Titre</h3>
-//     <h4 class="base-search-card__subtitle"><a href="/company/...">Entreprise</a></h4>
-//     <span class="job-search-card__location">Côte d'Ivoire</span>
-//     <time class="job-search-card__listdate" datetime="2026-08-20">Il y a 10 jours</time>
-//   </li>
-// ============================================================
-
-function parseLinkedInGuest(html: string): RawJobOffer[] {
-  const offers: RawJobOffer[] = [];
-
-  // Chaque carte commence par data-entity-urn="urn:li:jobPosting:<id>"
-  const cardPattern =
-    /data-entity-urn="urn:li:jobPosting:(\d+)"[\s\S]*?(?=<li\b|<\/ul>|$)/g;
-
-  let match;
-  while ((match = cardPattern.exec(html)) !== null) {
-    const block = match[0];
-
-    // Lien direct de l'offre — le vrai applyUrl
-    const hrefMatch = block.match(
-      /href="(https:\/\/[a-z]+\.linkedin\.com\/jobs\/view\/[^"]+)"/i,
-    );
-    if (!hrefMatch) continue;
-    // Retirer les tracking params → URL canonique de l'offre
-    const cleanUrl = cleanLinkedInUrl(hrefMatch[1]);
-    if (!isDirectOfferUrl(cleanUrl)) continue;
-
-    // Titre (h3 base-search-card__title)
-    const titleMatch = block.match(
-      /<h3[^>]*class="[^"]*base-search-card__title[^"]*"[^>]*>([\s\S]*?)<\/h3>/i,
-    );
-    const title = titleMatch ? cleanText(stripTags(titleMatch[1])) : "";
-    if (!title) continue;
-
-    // Entreprise (h4 base-search-card__subtitle > a)
-    const companyMatch = block.match(
-      /<h4[^>]*class="[^"]*base-search-card__subtitle[^"]*"[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/i,
-    ) ||
-      block.match(
-        /<h4[^>]*class="[^"]*base-search-card__subtitle[^"]*"[^>]*>([\s\S]*?)<\/h4>/i,
-      );
-    const company = companyMatch ? cleanText(stripTags(companyMatch[1])) : "";
-
-    // Localisation (span job-search-card__location)
-    const locationMatch = block.match(
-      /<span[^>]*class="[^"]*job-search-card__location[^"]*"[^>]*>([\s\S]*?)<\/span>/i,
-    );
-    const location = locationMatch
-      ? cleanText(stripTags(locationMatch[1]))
-      : undefined;
-
-    // Date de publication (time datetime="..." ou texte "Il y a X jours")
-    const timeMatch = block.match(
-      /<time[^>]*datetime="([^"]*)"[^>]*>([\s\S]*?)<\/time>/i,
-    );
-    let postedAt: string | undefined;
-    if (timeMatch) {
-      const iso = timeMatch[1];
-      if (iso && /^\d{4}-\d{2}-\d{2}/.test(iso)) {
-        postedAt = new Date(iso).toISOString();
-      } else {
-        postedAt = parseTimeAgo(cleanText(stripTags(timeMatch[2] || "")));
-      }
-    }
-
-    // Badge de type de poste ("JobPostingEnabled" / "Actively Hiring" etc.)
-    const stateMatch = block.match(
-      /<span[^>]*class="[^"]*job-search-card__job-state[^"]*"[^>]*>([\s\S]*?)<\/span>/i,
-    );
-    const jobState = stateMatch ? cleanText(stripTags(stateMatch[1])) : undefined;
-
-    const isStage = /stage|stagiaire|intern/i.test(title) ||
-      (jobState ? /stage|intern/i.test(jobState) : false);
-
-    offers.push({
-      title,
-      company: company || "Entreprise non précisée",
-      location: location && location.length > 0 ? location : "Côte d'Ivoire",
-      contractType: jobState,
-      applyUrl: cleanUrl,
-      isStage,
-      postedAt,
-    });
-  }
-
-  // Dédupliquer par jobId (les pages peuvent se chevaucher)
-  const seen = new Set<string>();
-  return offers.filter((o) => {
-    const idMatch = o.applyUrl.match(/-(\d+)$/) ||
-      o.applyUrl.match(/\/jobs\/view\/(\d+)/);
-    const key = idMatch ? idMatch[1] : o.applyUrl;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function cleanLinkedInUrl(raw: string): string {
-  try {
-    const url = new URL(raw.replace(/&amp;/g, "&"));
-    // URL canonique de l'offre, sans tracking params
-    return `https://www.linkedin.com${url.pathname}`;
-  } catch {
-    return raw.replace(/&amp;/g, "&").split("?")[0];
-  }
 }
 
 // ============================================================
@@ -626,16 +482,15 @@ function parseNovojobDate(dateStr: string): string | undefined {
 }
 
 // ============================================================
-// Enrichissement LinkedIn: fetch de la page détail pour
-// description + deadline (JSON-LD JobPosting) — best effort,
-// limité aux 12 premières nouvelles offres par run pour rester
-// léger sur les sources.
-// (Vérifié: les pages linkedin.com/jobs/view/... sont publiques
-// et contiennent un JSON-LD complet avec validThrough → deadline.)
+// Enrichissement : fetch de la page détail pour description +
+// date limite (JSON-LD JobPosting, `validThrough`) — best effort,
+// limité aux 12 premières nouvelles offres par passage pour rester
+// léger sur les sources. Les pages Novojob portent ce JSON-LD.
+// La description sert au calcul du niveau (« 0 à 2 ans »).
 // ============================================================
 
 async function enrichFromDetailPage(offer: ParsedJobOffer): Promise<ParsedJobOffer> {
-  if (offer.description || !offer.applyUrl.includes("linkedin.com")) {
+  if (offer.description || offer.applyUrl.startsWith("mailto:")) {
     return offer;
   }
   try {
@@ -769,7 +624,7 @@ async function upsertOffers(
       continue;
     }
 
-    // Enrichir depuis la page détail (LinkedIn: description+deadline)
+    // Enrichir depuis la page détail (description + date limite)
     // — limité aux 12 premières nouvelles offres par run pour rester léger.
     if (inserted < 12) {
       Object.assign(offer, await enrichFromDetailPage(offer));
@@ -818,18 +673,20 @@ async function cleanupExpiredOffers(
   supabase: ReturnType<typeof createClient>,
 ): Promise<number> {
   // Supprimer les offres dont la deadline est dépassée de plus de 7 jours
-  // OU qui n'ont pas de deadline mais datent de plus de 30 jours
-  // (les offres CI tournent vite — 30j au lieu de 60j pour rester actuel)
+  // OU qui n'ont pas de deadline mais datent de plus de 45 jours (brief
+  // Vitae v2 : l'app les masque déjà à 45 jours). Les offres déposées en
+  // attente de validation ne sont jamais supprimées ici.
   const sevenDaysAgo = new Date(
     Date.now() - 7 * 24 * 60 * 60 * 1000,
   ).toISOString();
   const thirtyDaysAgo = new Date(
-    Date.now() - 30 * 24 * 60 * 60 * 1000,
+    Date.now() - 45 * 24 * 60 * 60 * 1000,
   ).toISOString();
 
   const { data: deleted, error } = await supabase
     .from("vitae_job_offers")
     .delete()
+    .neq("status", "pending")
     .or(
       `deadline.lt.${sevenDaysAgo},and(deadline.is.null,posted_at.lt.${thirtyDaysAgo})`,
     )
