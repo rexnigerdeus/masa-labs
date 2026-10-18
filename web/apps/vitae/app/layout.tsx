@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { InstallBanner } from '../components/pwa/InstallBanner';
 import { ServiceWorkerRegistration } from '../components/pwa/ServiceWorkerRegistration';
@@ -74,11 +75,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-canvas text-ink">
         <ServiceWorkerRegistration />
         <header className="bg-header text-white">
-          <nav className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
-            <Link href="/" className="text-lg font-bold tracking-tight">
-              Vitae
+          <nav className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:gap-6">
+            {/* Logo sticker (scripts/logo-sticker.cjs) : la grammaire du logo
+                The Everyday Co. dans le vert de Vitae. SVG de 3 Ko, aucune
+                police à charger ; Next ne réencode pas les SVG. */}
+            <Link href="/" className="shrink-0">
+              <Image
+                src="/logo-ligne.svg"
+                alt="Vitae"
+                width={367}
+                height={163}
+                priority
+                unoptimized
+                className="block h-7 w-auto sm:h-8"
+              />
             </Link>
-            <ul className="flex flex-1 gap-5 text-sm">
+            <ul className="flex flex-1 gap-3.5 whitespace-nowrap text-sm sm:gap-5">
               {NAV.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className="hover:text-accent">

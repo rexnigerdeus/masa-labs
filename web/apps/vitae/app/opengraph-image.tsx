@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
 
 /**
@@ -12,7 +14,12 @@ export const alt = 'Vitae — Le CV qui passe les filtres';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-export default function Image() {
+export default async function Image() {
+  // Le V sticker de l'app (public/logo-v.svg), passé en data URI : le
+  // moteur de rendu de l'image ne lit pas les fichiers publics lui-même.
+  const logo = await readFile(join(process.cwd(), 'public/logo-v.svg'));
+  const logoSrc = `data:image/svg+xml;base64,${logo.toString('base64')}`;
+
   return new ImageResponse(
     (
       <div
@@ -29,22 +36,8 @@ export default function Image() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#6FAE2E',
-              color: '#17210C',
-              borderRadius: 14,
-              fontSize: 38,
-              fontWeight: 700,
-            }}
-          >
-            V
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoSrc} width={84} height={83} alt="" />
           <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -1 }}>Vitae</div>
         </div>
 
