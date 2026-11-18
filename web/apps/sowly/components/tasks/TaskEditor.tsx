@@ -108,14 +108,14 @@ export function TaskEditor({ task, today, onClose }: {
               enterKeyHint="done"
               maxLength={200}
               aria-label="Titre de la tâche"
-              className={`min-w-0 flex-1 bg-transparent py-1 font-display text-[1.35rem] leading-snug font-semibold tracking-tight focus:outline-none ${
+              className={`display titre-tiroir min-w-0 flex-1 bg-transparent py-1 !leading-[1.1] focus:outline-none ${
                 done ? 'text-muted line-through decoration-faint' : 'text-ink'
               }`}
             />
           </div>
 
           {hasDescription ? (
-            <label className="flex items-start gap-3 rounded-2xl bg-raised px-3.5 py-3 focus-within:ring-2 focus-within:ring-primary/40">
+            <label className="saisie flex items-start gap-3 !py-3">
               <NoteIcon className="mt-0.5 h-5 w-5 shrink-0 text-faint" />
               <AutoTextarea
                 value={description}
@@ -124,13 +124,13 @@ export function TaskEditor({ task, today, onClose }: {
                 maxLength={2000}
                 placeholder="Ajouter une description…"
                 aria-label="Description"
-                className="min-h-[3rem] min-w-0 flex-1 bg-transparent text-[15px] leading-relaxed text-ink placeholder:text-faint focus:outline-none"
+                className="min-h-[3rem] min-w-0 flex-1 bg-transparent text-[15px] leading-relaxed text-ink focus:outline-none"
               />
             </label>
           ) : null}
 
           {/* ------------------------------------------ Propriétés */}
-          <div className="flex flex-col divide-y divide-line rounded-2xl border border-line">
+          <div className="flex flex-col divide-y divide-line rounded-[16px] bg-raised">
             <div className="flex items-center gap-3 px-3.5 py-3">
               <SunIcon className="h-5 w-5 shrink-0 text-muted" />
               <span className="flex-1 text-[15px]">Ma journée</span>
@@ -145,7 +145,7 @@ export function TaskEditor({ task, today, onClose }: {
               <div className="flex items-center gap-3">
                 <CalendarIcon className="h-5 w-5 shrink-0 text-muted" />
                 <span className="flex-1 text-[15px]">Échéance</span>
-                <span className="text-sm text-muted">{due === null ? 'Aucune' : formatRelative(due, today)}</span>
+                <span className="mono text-muted">{due === null ? 'Aucune' : formatRelative(due, today)}</span>
               </div>
               <div className="flex flex-wrap gap-2 pl-8">
                 <Chip active={due === today} onClick={() => setDue(due === today ? null : today)}>Aujourd’hui</Chip>
@@ -161,7 +161,7 @@ export function TaskEditor({ task, today, onClose }: {
                   <Chip active={customDue} as="span">{customDue && due !== null ? formatRelative(due, today) : 'Date…'}</Chip>
                 </label>
                 {due !== null ? (
-                  <button type="button" onClick={() => setDue(null)} className="px-2 text-sm font-medium text-muted hover:text-ink">
+                  <button type="button" onClick={() => setDue(null)} className="btn btn--fantome btn--petit text-muted">
                     Retirer
                   </button>
                 ) : null}
@@ -203,9 +203,7 @@ export function TaskEditor({ task, today, onClose }: {
                 onClose();
               }}
               aria-label={confirmDelete ? 'Confirmer la suppression' : 'Supprimer la tâche'}
-              className={`inline-flex h-10 items-center gap-1.5 rounded-full text-sm font-medium text-clay-ink transition hover:bg-raised ${
-                confirmDelete ? 'bg-raised px-3.5' : 'w-10 justify-center'
-              }`}
+              className={`btn btn--fantome btn--danger ${confirmDelete ? '' : 'w-10 !px-0'}`}
             >
               <TrashIcon className="h-5 w-5" />
               {confirmDelete ? 'Supprimer ?' : null}

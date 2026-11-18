@@ -1,23 +1,52 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { AppShell } from '../components/AppShell';
 import { ServiceWorkerRegistration } from '../components/pwa/ServiceWorkerRegistration';
 import { APP_URL } from '../lib/config';
-import { THEME_KEY } from '../lib/theme';
+import { APPEARANCE_SCRIPT } from '../lib/theme';
 import './globals.css';
 
-// next/font télécharge Inter au build et la sert depuis notre domaine : pas
-// de requête vers Google à l'exécution, ni de police manquante hors-ligne.
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
-
-// General Sans (Fontshare, licence ITF FFL — voir app/fonts/) : version
-// variable réduite au latin français par `pyftsubset`, 25 Ko au lieu de 38.
-const general = localFont({
-  src: './fonts/GeneralSans-Variable-latin.woff2',
-  variable: '--font-general',
-  weight: '200 700',
+/*
+ * Les quatre polices du hub (brief design), hébergées chez nous par
+ * next/font : aucune requête tierce, fichiers versionnés et mis en cache
+ * par le service worker avec le reste de `/_next/static/`.
+ *
+ *   Bricolage Grotesque  titres, gros chiffres (variable 200–800, largeur 75–100 %)
+ *   Instrument Serif     le mot en italique des titres, les accroches
+ *   Hanken Grotesk       texte courant, boutons, libellés
+ *   IBM Plex Mono        compteurs, dates, séries
+ */
+const bricolage = localFont({
+  src: './fonts/hub/bricolage.woff2',
+  variable: '--font-bricolage',
+  weight: '200 800',
   display: 'swap',
+  declarations: [{ prop: 'font-stretch', value: '75% 100%' }],
+});
+const instrument = localFont({
+  src: [
+    { path: './fonts/hub/instrument-serif-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/hub/instrument-serif-latin-400-italic.woff2', weight: '400', style: 'italic' },
+  ],
+  variable: '--font-instrument',
+  display: 'swap',
+});
+const hanken = localFont({
+  src: [
+    { path: './fonts/hub/hanken-grotesk-latin-400-normal.woff2', weight: '400' },
+    { path: './fonts/hub/hanken-grotesk-latin-500-normal.woff2', weight: '500' },
+    { path: './fonts/hub/hanken-grotesk-latin-600-normal.woff2', weight: '600' },
+  ],
+  variable: '--font-hanken',
+  display: 'swap',
+});
+const plexMono = localFont({
+  src: './fonts/hub/ibm-plex-mono-latin-500-normal.woff2',
+  variable: '--font-plex-mono',
+  weight: '500',
+  display: 'swap',
+  // Chiffres seulement, rarement au-dessus de la ligne de flottaison.
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -69,26 +98,23 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fafaf7' },
-    { media: '(prefers-color-scheme: dark)', color: '#171411' },
+    { media: '(prefers-color-scheme: light)', color: '#ECEAF4' },
+    { media: '(prefers-color-scheme: dark)', color: '#0E0C18' },
   ],
 };
 
 /**
- * Thème posé avant le premier rendu : sans ce script, un utilisateur en
- * mode sombre verrait un éclair blanc à chaque ouverture. Écrit en ES5 et
- * enveloppé d'un `try` : il s'exécute avant tout le reste, rien ne doit
- * pouvoir le faire échouer.
+ * Apparence posée avant le premier rendu (mode, palette, densité, titres) :
+ * sans ce script, un utilisateur en mode sombre verrait un éclair clair à
+ * chaque ouverture. Voir `lib/theme.ts`.
  */
-const THEME_SCRIPT = `try{var t=localStorage.getItem('${THEME_KEY}');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme='light'}`;
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${inter.variable} ${general.variable}`} suppressHydrationWarning>
+    <html lang="fr" className={`${bricolage.variable} ${instrument.variable} ${hanken.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: APPEARANCE_SCRIPT }} />
       </head>
-      <body className="bg-canvas text-ink antialiased">
+      <body>
         <ServiceWorkerRegistration />
         <AppShell>{children}</AppShell>
       </body>

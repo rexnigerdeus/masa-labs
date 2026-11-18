@@ -51,16 +51,16 @@ export function InstallCard({ variant }: { variant: 'card' | 'settings' }) {
   if (variant === 'settings') return body;
 
   return (
-    <aside className="card flex items-start gap-3 p-4">
-      <div className="flex flex-1 flex-col gap-1">
-        <p className="font-display text-[15px] font-semibold">Installer Sowly</p>
+    <aside className="carte span-6 !flex-row items-start gap-3">
+      <div className="flex flex-1 flex-col gap-2">
+        <p className="titre-carte display">Sowly sur ton <em className="s">écran d’accueil</em></p>
         {body}
       </div>
       <button
         type="button"
         onClick={() => { dismissInstall(APP); setDismissed(true); }}
         aria-label="Ne plus proposer pour le moment"
-        className="-m-1 p-1 text-faint hover:text-muted"
+        className="-m-2 grid h-10 w-10 place-items-center rounded-[12px] text-muted hover:bg-raised hover:text-ink"
       >
         <CloseIcon className="h-4 w-4" />
       </button>

@@ -30,7 +30,7 @@ export function completeTask(task: Task, today: Day, origin: Element | null): vo
   const myDay = task.myDay === today ? myDayTasks(getState().data, today) : [];
   const dayDone = myDay.length > 1 && myDay.every((t) => t.doneAt !== null);
   reward(dayDone ? 'complete' : 'task');
-  burst(origin, dayDone ? { count: 22, spread: 1.7 } : undefined);
+  burst(origin, dayDone ? 'day' : 'task');
 }
 
 export function completeHabit(habitId: string, done: boolean, today: Day, origin: Element | null): void {
@@ -44,5 +44,5 @@ export function completeHabit(habitId: string, done: boolean, today: Day, origin
   const planned = habitsForDay(data, today);
   const dayDone = planned.length > 1 && planned.every((h) => checked.has(h.id));
   reward(dayDone ? 'complete' : 'habit');
-  burst(origin, dayDone ? { count: 22, spread: 1.7 } : { count: 10 });
+  burst(origin, dayDone ? 'day' : 'habit');
 }

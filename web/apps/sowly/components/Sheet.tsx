@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { AnimatePresence, motion, type PanInfo } from 'motion/react';
 
 /**
- * Panneau qui monte du bas de l'écran, refermable par glissement vers le bas,
- * par Échap ou en touchant le fond. Le geste naturel au pouce sur mobile,
- * et une boîte de dialogue ordinaire au clavier.
+ * Panneau (le « Tiroir » du hub) : sur téléphone, il monte du bas de
+ * l'écran et se referme par glissement vers le bas ; sur ordinateur, il
+ * glisse depuis la droite. Échap ou un toucher sur le voile le ferment.
  *
  * `keepMounted` garde le panneau dans le DOM une fois fermé : c'est ce qui
  * permet de donner le focus à un champ *pendant* le toucher qui l'ouvre —
@@ -45,6 +45,22 @@ function useKeyboardInset(active: boolean): { inset: number; visible: number | n
   return state;
 }
 
+/** Ordinateur (≥ 860 px, comme la barre latérale) : tiroir à droite. */
+const WIDE = '(min-width: 860px)';
+function useWide(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const m = matchMedia(WIDE);
+      m.addEventListener('change', onChange);
+      return () => m.removeEventListener('change', onChange);
+    },
+    () => matchMedia(WIDE).matches,
+    () => false,
+  );
+}
+
+const ENTREE = [0.2, 0.9, 0.3, 1] as const;
+
 export function Sheet({ open, onClose, label, children, keepMounted = false, panelRef }: {
   open: boolean;
   onClose: () => void;
@@ -55,7 +71,8 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
 }) {
   const localRef = useRef<HTMLDivElement>(null);
   const ref = panelRef ?? localRef;
-  const keyboard = useKeyboardInset(open);
+  const wide = useWide();
+  const keyboard = useKeyboardInset(open && !wide);
 
   useEffect(() => {
     if (!open) return;
@@ -68,7 +85,26 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
     if (info.offset.y > 90 || info.velocity.y > 500) onClose();
   };
 
-  const panel = (
+  // Tiroir du hub sur ordinateur : décollé de 10 px des bords, rayon
+  // `--r` + 4, glisse de 40 px depuis la droite. Feuille du bas au doigt.
+  const panel = wide ? (
+    <motion.div
+      key="panel"
+      ref={ref}
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      inert={!open}
+      className="fixed top-2.5 right-2.5 bottom-2.5 z-50 flex w-[min(560px,calc(100vw-20px))] flex-col overflow-y-auto rounded-[calc(var(--r)+4px)] bg-card p-[22px] shadow-[0_30px_80px_-20px_rgba(0,0,0,.5)]"
+      initial={{ x: 40, opacity: 0 }}
+      animate={open ? { x: 0, opacity: 1 } : { x: 40, opacity: 0 }}
+      exit={{ x: 40, opacity: 0 }}
+      transition={{ duration: 0.32, ease: ENTREE }}
+      style={{ pointerEvents: open ? 'auto' : 'none' }}
+    >
+      {children}
+    </motion.div>
+  ) : (
     <motion.div
       key="panel"
       ref={ref}
@@ -77,7 +113,7 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
       aria-label={label}
       // Fermé, le panneau reste dans le DOM mais sort de l'arbre focalisable.
       inert={!open}
-      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-xl rounded-t-[28px] border border-b-0 border-line bg-card px-5 pt-3 shadow-[0_-12px_40px_-12px_rgb(0_0_0/0.25)]"
+      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-xl rounded-t-[calc(var(--r)+4px)] bg-card px-5 pt-3 shadow-[0_30px_80px_-20px_rgba(0,0,0,.5)]"
       style={{
         // Clavier ouvert : le panneau se pose sur le clavier, et la marge de
         // l'encoche (qui est sous le clavier) n'a plus lieu d'être.
@@ -90,7 +126,7 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
       initial={{ y: '110%' }}
       animate={{ y: open ? 0 : '110%' }}
       exit={{ y: '110%' }}
-      transition={{ type: 'spring', stiffness: 520, damping: 44 }}
+      transition={{ duration: 0.32, ease: ENTREE }}
       drag="y"
       dragConstraints={{ top: 0, bottom: 0 }}
       dragElastic={{ top: 0, bottom: 0.6 }}
@@ -105,10 +141,11 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
     <motion.div
       key="backdrop"
       aria-hidden
-      className="fixed inset-0 z-40 bg-creme-950/40"
+      className="voile fixed inset-0 z-40"
       initial={{ opacity: 0 }}
       animate={{ opacity: open ? 1 : 0 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       style={{ pointerEvents: open ? 'auto' : 'none' }}
       onClick={onClose}
     />

@@ -3,20 +3,20 @@
 import { useSyncExternalStore } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  applyTheme, readThemeChoice, resolvedTheme, THEME_EVENT,
-  type ResolvedTheme, type ThemeChoice,
+  applyTheme, DEFAULT_APPEARANCE, readAppearance, readThemeChoice, resolvedTheme, THEME_EVENT,
+  type Appearance, type ResolvedTheme, type ThemeChoice,
 } from '../lib/theme';
 import { MoonIcon, SunIcon } from './icons';
 
 /**
- * Abonnement au thème : l'événement de `applyTheme` (choix fait dans l'app)
- * et un observateur sur `data-theme` (thème « système » qui bascule pendant
- * la session, posé par l'écouteur de l'AppShell).
+ * Abonnement à l'apparence : l'événement de `applyTheme` / `setAppearance`
+ * (choix fait dans l'app) et un observateur sur les attributs de <html>
+ * (mode « système » qui bascule pendant la session, posé par l'AppShell).
  */
 function subscribe(onChange: () => void): () => void {
   window.addEventListener(THEME_EVENT, onChange);
   const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode', 'data-theme', 'data-densite', 'data-titres'] });
   return () => {
     window.removeEventListener(THEME_EVENT, onChange);
     observer.disconnect();
@@ -28,9 +28,14 @@ export function useResolvedTheme(): ResolvedTheme | null {
   return useSyncExternalStore(subscribe, resolvedTheme, () => null);
 }
 
-/** Choix enregistré (Système / Clair / Sombre), pour les Réglages. */
+/** Choix enregistré (Système / Clair / Sombre), pour Personnaliser. */
 export function useThemeChoice(): ThemeChoice {
   return useSyncExternalStore(subscribe, readThemeChoice, () => 'system' as const);
+}
+
+/** Palette, densité et police des titres, pour Personnaliser. */
+export function useAppearance(): Appearance {
+  return useSyncExternalStore(subscribe, readAppearance, () => DEFAULT_APPEARANCE);
 }
 
 /**
@@ -58,9 +63,9 @@ export function switchTheme(next: ResolvedTheme, origin?: HTMLElement | null): v
 }
 
 /**
- * Bouton clair / sombre, présent sur la page d'entrée, la connexion et en
- * tête de chaque onglet. Il force le thème opposé à celui affiché ; revenir
- * à « Système » se fait dans les Réglages.
+ * Bouton clair / sombre, présent sur la page d'entrée, la connexion, en
+ * tête de chaque onglet et dans la barre latérale. Il force le mode opposé
+ * à celui affiché ; revenir à « Système » se fait dans Personnaliser.
  */
 export function ThemeToggle({ className = '' }: { className?: string }) {
   const theme = useResolvedTheme();
@@ -73,7 +78,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       aria-label={label}
       title={label}
       onClick={(e) => switchTheme(dark ? 'light' : 'dark', e.currentTarget)}
-      className={`relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-line bg-card text-ink transition hover:bg-raised active:scale-95 ${className}`}
+      className={`btn relative h-10 w-10 shrink-0 overflow-hidden !p-0 ${className}`}
     >
       {/* Rien avant l'hydratation : le serveur ne sait pas quel pictogramme montrer. */}
       <AnimatePresence initial={false} mode="popLayout">

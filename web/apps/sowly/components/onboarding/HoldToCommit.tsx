@@ -58,10 +58,10 @@ export function HoldToCommit({ onCommit, label = 'Maintiens pour t’engager' }:
       // Pas de menu contextuel ni de sélection de texte pendant l'appui long.
       onContextMenu={(e) => e.preventDefault()}
       aria-label={`${label} (maintenir appuyé)`}
-      className="relative h-16 w-full touch-none overflow-hidden rounded-full border-2 border-primary bg-card select-none [-webkit-touch-callout:none]"
+      className="relative h-16 w-full touch-none overflow-hidden rounded-[16px] border-[1.5px] border-encre bg-card select-none [-webkit-touch-callout:none]"
     >
-      <motion.span aria-hidden style={{ width }} className="absolute inset-y-0 left-0 bg-primary" />
-      <span className={`relative font-display text-lg font-semibold ${done ? 'text-on-primary' : 'text-primary-ink'}`}>
+      <motion.span aria-hidden style={{ width }} className="absolute inset-y-0 left-0 bg-lagune" />
+      <span className={`display relative text-[19px] ${done ? 'text-[var(--sur-lagune)]' : 'text-ink'}`}>
         {done ? 'Engagement pris' : label}
       </span>
     </button>

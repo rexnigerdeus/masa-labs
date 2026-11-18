@@ -42,19 +42,15 @@ export function HabitForm({ value, onChange, identities, showWhy = true }: {
   return (
     <div className="flex flex-col gap-5">
       <fieldset className="flex min-w-0 flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium">Cette habitude fait de moi…</legend>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        <legend className="mb-2 text-[13px] font-semibold text-muted">Cette habitude fait de moi…</legend>
+        <div className="flex flex-wrap gap-1.5">
           {ordered.map((i) => (
             <button
               key={i.id}
               type="button"
               aria-pressed={value.identity === i.id}
               onClick={() => set({ identity: value.identity === i.id ? null : i.id })}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                value.identity === i.id
-                  ? 'border-primary bg-done-soft text-primary-ink'
-                  : 'border-line text-muted hover:text-ink'
-              }`}
+              className="puce"
             >
               {i.label}
             </button>
@@ -64,14 +60,14 @@ export function HabitForm({ value, onChange, identities, showWhy = true }: {
 
       {suggestions.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted">Idées, à la bonne taille :</p>
+          <p className="text-[13px] font-semibold text-muted">Idées, à la bonne taille</p>
           <div className="flex flex-wrap gap-2">
             {suggestions.map((s) => (
               <button
                 key={s.action}
                 type="button"
                 onClick={() => set({ action: s.action, moment: s.moment, cue: s.cue })}
-                className="rounded-xl bg-raised px-3 py-2 text-left text-sm text-ink hover:bg-line"
+                className="rounded-[14px] bg-raised px-3 py-2 text-left text-sm font-medium text-ink transition duration-150 ease-[var(--ressort)] hover:-translate-y-0.5 hover:-rotate-[0.4deg]"
               >
                 {s.action}
               </button>
@@ -91,7 +87,7 @@ export function HabitForm({ value, onChange, identities, showWhy = true }: {
       </Field>
 
       <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium">Moment de la journée</span>
+        <span className="text-[13px] font-semibold text-muted">Moment de la journée</span>
         <Segmented label="Moment de la journée" value={value.moment} options={MOMENTS} onChange={(moment) => set({ moment })} />
       </div>
 
@@ -105,7 +101,7 @@ export function HabitForm({ value, onChange, identities, showWhy = true }: {
       </div>
 
       <fieldset className="flex min-w-0 flex-col gap-1.5">
-        <legend className="mb-1.5 text-sm font-medium">Jours</legend>
+        <legend className="mb-1.5 text-[13px] font-semibold text-muted">Jours</legend>
         <div className="flex justify-between gap-1">
           {WEEK_FR.map((d) => {
             const on = value.days.includes(d.value);
@@ -120,8 +116,8 @@ export function HabitForm({ value, onChange, identities, showWhy = true }: {
                   // Au moins un jour : une habitude jamais prévue n'existe pas.
                   if (days.length > 0) set({ days });
                 }}
-                className={`h-10 flex-1 rounded-full text-sm font-semibold transition ${
-                  on ? 'bg-primary text-on-primary' : 'bg-raised text-muted'
+                className={`h-10 flex-1 rounded-[12px] text-sm font-semibold transition duration-150 ease-[var(--ressort)] active:scale-95 ${
+                  on ? 'bg-encre text-[var(--fond)]' : 'bg-raised text-muted'
                 }`}
               >
                 {d.short}
@@ -138,7 +134,7 @@ export function HabitForm({ value, onChange, identities, showWhy = true }: {
       ) : null}
 
       {value.action.trim() !== '' ? (
-        <p className="rounded-2xl bg-done-soft px-4 py-3 font-display text-[17px] leading-snug text-primary-ink">
+        <p className="carte carte--lagune accroche !shadow-none">
           {intention(value)}
         </p>
       ) : null}

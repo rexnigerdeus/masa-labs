@@ -84,12 +84,12 @@ export function GrowingSprout({ className = '' }: { className?: string }) {
   );
 }
 
-/** Le soleil jaune de l'icône (le jaune du logo The Everyday Co.), qui se lève. */
+/** Le soleil mangue de l'icône, qui se lève — un aplat, sans halo. */
 export function RisingSun({ className = '' }: { className?: string }) {
   return (
     <motion.span
       aria-hidden
-      className={`pointer-events-none rounded-full bg-soleil-300 shadow-[0_0_48px_8px_rgb(253_241_80/0.25)] ${className}`}
+      className={`pointer-events-none rounded-full bg-mangue ${className}`}
       initial={{ y: 28, opacity: 0, scale: 0.7 }}
       animate={{ y: 0, opacity: 1, scale: 1 }}
       transition={{ duration: 1, ease: EASE, delay: 1.1 }}
@@ -124,32 +124,25 @@ export function TodayDemo() {
     // La vraie récompense de l'app : vibration, son et gerbe.
     const all = next.every(Boolean);
     reward(all ? 'complete' : 'habit');
-    burst(origin, all ? { count: 22, spread: 1.7 } : { count: 10 });
+    burst(origin, all ? 'day' : 'habit');
   };
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between px-1">
-        <p className="font-display text-lg font-semibold">
+        <p className="display text-[22px]">
           Habitudes{' '}
-          <span className="text-base font-medium text-muted">
+          <span className="mono text-[14px] font-medium tracking-normal text-muted">
             {done.filter(Boolean).length}/{DEMO_HABITS.length}
           </span>
         </p>
-        <span className="rounded-full bg-done-soft px-2.5 py-1 text-xs font-medium text-primary-ink">
-          Essaie, c’est cliquable
+        <span className="mono rounded-[6px] bg-citron px-2 py-0.5 text-[11px] text-[#18122B]">
+          essaie, c’est cliquable
         </span>
       </div>
 
       <motion.div
-        className="overflow-hidden rounded-[20px] border"
-        initial={false}
-        animate={{
-          backgroundColor: complete ? 'var(--reward)' : 'var(--canvas)',
-          borderColor: complete ? 'var(--reward-glow)' : 'var(--line)',
-          boxShadow: complete ? '0 0 0 6px var(--reward-halo)' : '0 0 0 0px var(--reward-halo)',
-        }}
-        transition={{ duration: 0.4 }}
+        className={`overflow-hidden rounded-[16px] transition-colors duration-300 ${complete ? 'carte--mangue' : 'bg-raised'}`}
       >
         <ul className="divide-y divide-line">
           {DEMO_HABITS.map((h, i) => (
@@ -158,7 +151,7 @@ export function TodayDemo() {
                 type="button"
                 aria-pressed={done[i]}
                 onClick={(e) => toggle(i, e.currentTarget.querySelector('span'))}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-raised/60"
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-line"
               >
                 <span className="relative">
                   <CheckMark checked={done[i] ?? false} />
@@ -177,8 +170,8 @@ export function TodayDemo() {
                   </span>
                   <span className="text-[13px] text-muted">{h.when}</span>
                 </span>
-                <span className="flex items-baseline gap-1 font-display text-sm text-muted">
-                  <span className="relative inline-flex h-5 min-w-[1.4rem] justify-end overflow-hidden font-semibold text-ink">
+                <span className="mono flex items-baseline gap-1 text-muted">
+                  <span className="relative inline-flex h-5 min-w-[1.4rem] justify-end overflow-hidden text-ink">
                     <AnimatePresence initial={false} mode="popLayout">
                       <motion.span
                         key={h.streak + (done[i] ? 1 : 0)}
@@ -203,7 +196,7 @@ export function TodayDemo() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-t border-reward-glow/40 px-4 text-sm font-medium text-reward-ink"
+              className="overflow-hidden border-t border-line px-4 text-sm font-semibold"
             >
               <span className="block py-3">Journée complète. Ta graine a pris un jour de plus.</span>
             </motion.p>
@@ -220,17 +213,17 @@ export function TodayDemo() {
             return (
               <div key={i} className="flex flex-col items-center gap-1.5">
                 <motion.span
-                  className={`h-8 w-full max-w-10 rounded-full ${today ? 'ring-2 ring-primary-ink ring-offset-2 ring-offset-card' : ''}`}
+                  className={`h-8 w-full max-w-10 rounded-[10px] ${today ? 'ring-2 ring-indigo ring-offset-2 ring-offset-card' : ''}`}
                   initial={false}
                   animate={{ backgroundColor: full ? 'var(--reward-glow)' : 'var(--raised)', scale: today && complete ? [1, 1.12, 1] : 1 }}
                   transition={{ duration: 0.4 }}
                 />
-                <span className={`text-xs ${today ? 'font-semibold text-ink' : 'text-faint'}`}>{d.day}</span>
+                <span className={`mono text-[11px] ${today ? 'text-ink' : 'text-muted'}`}>{d.day}</span>
               </div>
             );
           })}
         </div>
-        <p className="text-xs text-muted">Une pastille dorée par journée complète. Valide les trois pour allumer aujourd’hui.</p>
+        <p className="text-[12.5px] text-muted">Une pastille mangue par journée complète. Valide les trois pour allumer aujourd’hui.</p>
       </div>
     </div>
   );
@@ -263,7 +256,7 @@ export function IdentityCycle() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '-100%', opacity: 0 }}
               transition={{ duration: 0.45, ease: EASE }}
-              className="font-display text-[1.6rem] leading-tight font-semibold tracking-tight text-primary-ink sm:text-[1.85rem]"
+              className="display text-[1.7rem] !leading-[1.15] sm:text-[2rem]"
             >
               {identity.label}
             </motion.p>
@@ -278,7 +271,7 @@ export function IdentityCycle() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 8 }}
           transition={{ duration: 0.3 }}
-          className="flex items-center gap-3 self-start rounded-2xl border border-line bg-canvas px-3.5 py-2.5"
+          className="flex items-center gap-3 self-start rounded-[14px] bg-[rgba(255,255,255,.5)] px-3.5 py-2.5"
         >
           <CheckMark checked={false} size="sm" />
           <span className="text-[15px]">
@@ -295,9 +288,7 @@ export function IdentityCycle() {
             type="button"
             aria-pressed={k === index}
             onClick={() => setIndex(k)}
-            className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
-              k === index ? 'border-primary bg-done-soft text-primary-ink' : 'border-line text-muted hover:text-ink'
-            }`}
+            className="puce !text-[12px]"
           >
             {i.short}
           </button>
@@ -328,7 +319,7 @@ export function HistoryDemo() {
             return (
               <motion.span
                 key={d}
-                className={`aspect-square rounded-[6px] ${on ? 'bg-done' : 'bg-raised'} ${today ? 'ring-2 ring-primary-ink ring-offset-2 ring-offset-card' : ''}`}
+                className={`aspect-square rounded-[6px] ${on ? 'bg-done' : 'bg-raised'} ${today ? 'ring-2 ring-indigo ring-offset-2 ring-offset-card' : ''}`}
                 initial={{ opacity: 0, scale: 0.4 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, amount: 0.3 }}
@@ -339,7 +330,7 @@ export function HistoryDemo() {
         </div>
       ))}
     </div>
-      <div className="flex gap-4 text-xs text-muted">
+      <div className="flex gap-4 text-[12.5px] text-muted">
         <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-[4px] bg-done" /> Validé</span>
         <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-[4px] bg-raised" /> Pas ce jour-là</span>
       </div>
@@ -372,15 +363,15 @@ export function TasksDemo() {
 
   return (
     <div ref={ref} aria-hidden className="flex flex-col gap-2.5">
-      <div className="flex items-center gap-2 rounded-xl border border-line bg-canvas px-3 py-2.5 text-[14px]">
-        <PlusIcon className="h-4 w-4 text-primary-ink" />
+      <div className="saisie flex items-center gap-2 text-[14px]">
+        <PlusIcon className="h-4 w-4 text-indigo" />
         {chars === 0 ? (
-          <span className="text-faint">Ajouter à Ma journée…</span>
+          <span className="text-muted">Ajouter à Ma journée…</span>
         ) : (
           <span>
             {word.slice(0, chars)}
             <motion.span
-              className="ml-px inline-block h-4 w-[2px] translate-y-[3px] bg-primary"
+              className="ml-px inline-block h-4 w-[2px] translate-y-[3px] bg-indigo"
               animate={{ opacity: [1, 0] }}
               transition={{ duration: 0.6, repeat: Infinity, repeatType: 'mirror' }}
             />
@@ -419,7 +410,7 @@ export function OfflineDemo() {
 
   return (
     <div ref={ref} aria-hidden className="flex flex-col items-start gap-3">
-      <div className="relative grid h-14 w-14 place-items-center rounded-2xl bg-raised text-ink">
+      <div className="relative grid h-14 w-14 place-items-center rounded-[16px] bg-[rgba(255,255,255,.45)]">
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
             key={String(online)}
@@ -428,15 +419,15 @@ export function OfflineDemo() {
             exit={{ scale: 0.6, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}
           >
-            {online ? <CloudIcon className="h-7 w-7 text-primary-ink" /> : <CloudOffIcon className="h-7 w-7 text-muted" />}
+            {online ? <CloudIcon className="h-7 w-7" /> : <CloudOffIcon className="h-7 w-7 opacity-70" />}
           </motion.span>
         </AnimatePresence>
       </div>
       <motion.span
         layout
-        className="inline-flex items-center gap-2 rounded-full border border-line bg-canvas px-3 py-1.5 text-xs font-medium"
+        className="inline-flex items-center gap-2 rounded-full bg-[rgba(255,255,255,.5)] px-3 py-1.5 text-[12.5px] font-semibold"
       >
-        <span className={`h-2 w-2 rounded-full transition-colors ${online ? 'bg-done' : 'bg-faint'}`} />
+        <span className={`h-[7px] w-[7px] rounded-full transition-colors ${online ? 'bg-[#08765F]' : 'bg-[#18122B] opacity-40'}`} />
         {online ? 'À jour · synchronisé' : 'Hors connexion · 2 modifications gardées'}
       </motion.span>
     </div>
@@ -448,7 +439,7 @@ export function OfflineDemo() {
 /** Le signe infini qui se dessine. */
 export function InfinityDraw() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-20 w-20 text-primary-ink">
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-20 w-20">
       <motion.path
         d="M12 12c-2-2.5-3.5-4-5.5-4a4 4 0 000 8c2 0 3.5-1.5 5.5-4zm0 0c2 2.5 3.5 4 5.5 4a4 4 0 000-8c-2 0-3.5 1.5-5.5 4z"
         stroke="currentColor"
@@ -476,12 +467,12 @@ export function ThemeSwitch() {
       aria-checked={dark}
       aria-label="Mode sombre"
       onClick={(e) => switchTheme(dark ? 'light' : 'dark', e.currentTarget)}
-      className={`flex h-16 w-32 items-center rounded-full border border-line bg-raised p-1.5 ${dark ? 'justify-end' : 'justify-start'}`}
+      className={`flex h-16 w-32 items-center rounded-[20px] bg-raised p-1.5 ${dark ? 'justify-end' : 'justify-start'}`}
     >
       <motion.span
         layout
         transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-        className="grid h-12 w-12 place-items-center rounded-full bg-card text-ink shadow-md shadow-creme-900/15"
+        className="grid h-12 w-12 place-items-center rounded-[15px] bg-card text-ink shadow-[var(--ombre)]"
       >
         {theme === null ? null : dark ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
       </motion.span>

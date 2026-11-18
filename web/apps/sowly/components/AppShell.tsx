@@ -6,22 +6,32 @@ import { usePathname } from 'next/navigation';
 import { MotionConfig } from 'motion/react';
 import { startSync } from '../lib/sync';
 import { applyTheme, readThemeChoice, syncThemeColor } from '../lib/theme';
-import { ListIcon, PlusIcon, SettingsIcon, SproutIcon } from './icons';
+import { AppBadge, ListIcon, PlusIcon, SettingsIcon, SproutIcon } from './icons';
 import { QuickAdd, type QuickAddHandle } from './tasks/QuickAdd';
+import { ThemeToggle } from './ThemeToggle';
 
 const TABS = [
   { href: '/', label: 'Aujourd’hui', Icon: SproutIcon },
   { href: '/taches', label: 'Tâches', Icon: ListIcon },
-  { href: '/reglages', label: 'Réglages', Icon: SettingsIcon },
+  // « Personnaliser » : le terme commun aux apps de la maison (brief design).
+  { href: '/reglages', label: 'Personnaliser', Icon: SettingsIcon },
 ] as const;
 
-/** Écrans plein cadre, sans onglets ni bouton d'ajout. */
+/** Écrans plein cadre, sans navigation ni bouton d'ajout. */
 const BARE = ['/bienvenue', '/premiers-pas', '/connexion'];
 
+/** Largeur du contenu : bento large pour les tableaux de bord, colonne ailleurs. */
+function widthFor(pathname: string): string {
+  if (pathname === '/') return 'max-w-6xl';
+  if (pathname === '/reglages') return 'max-w-5xl';
+  return 'max-w-2xl';
+}
+
 /**
- * Coque de l'application : barre d'onglets, bouton d'ajout rapide et mise en
- * route de la synchronisation. Une seule fois pour toutes les pages, pour
- * que l'ajout rapide soit « accessible partout » (brief §8.B.3).
+ * Coque de l'application, celle du hub : barre latérale collante de 232 px
+ * sur ordinateur, barre flottante en bas (fond encre, rayon 20 px) sous
+ * 860 px. Ajout rapide « accessible partout » (brief §8.B.3) et mise en
+ * route de la synchronisation, une seule fois pour toutes les pages.
  *
  * `MotionConfig reducedMotion="user"` : toutes les animations Motion
  * respectent le réglage « réduire les animations » du système, sans que
@@ -31,14 +41,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const quickAdd = useRef<QuickAddHandle>(null);
   const bare = BARE.includes(pathname);
-  // La page d'entrée est une grille bento : elle prend la largeur d'un écran
-  // d'ordinateur, là où l'app reste une colonne de téléphone.
-  const wide = pathname === '/bienvenue';
 
   useEffect(() => {
     startSync();
     syncThemeColor();
-    // Thème « système » : suivre le système s'il change pendant la session.
+    // Mode « système » : suivre le système s'il change pendant la session.
     const media = matchMedia('(prefers-color-scheme: dark)');
     const onChange = (): void => { if (readThemeChoice() === 'system') applyTheme('system'); };
     media.addEventListener('change', onChange);
@@ -55,54 +62,64 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     });
   };
 
+  if (bare) {
+    return (
+      <MotionConfig reducedMotion="user">
+        <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[99] focus:rounded-[10px] focus:bg-card focus:px-3 focus:py-2">
+          Aller au contenu
+        </a>
+        <main id="contenu" className={`mx-auto w-full px-4 ${pathname === '/bienvenue' ? 'max-w-6xl sm:px-6' : 'max-w-xl'}`}>
+          {children}
+        </main>
+      </MotionConfig>
+    );
+  }
+
   return (
     <MotionConfig reducedMotion="user">
-      <main className={`mx-auto w-full px-4 ${wide ? 'max-w-6xl sm:px-6' : 'max-w-xl'} ${bare ? '' : 'pb-shell'}`}>{children}</main>
+      <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[99] focus:rounded-[10px] focus:bg-card focus:px-3 focus:py-2">
+        Aller au contenu
+      </a>
+      <div className="app">
+        <nav aria-label="Navigation principale" className="rail">
+          <Link href="/" className="rail__logo">
+            <AppBadge className="h-[34px] w-[34px]" />
+            <span className="flex flex-col gap-1">
+              <b>Sowly</b>
+              <span>graines d’habitudes</span>
+            </span>
+          </Link>
+          {TABS.map(({ href, label, Icon }) => {
+            const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+            return (
+              <Link key={href} href={href} aria-current={active ? 'page' : undefined} className="lien">
+                <Icon />
+                {label}
+              </Link>
+            );
+          })}
+          <div className="rail__bas">
+            <button type="button" onClick={openQuickAdd} className="btn btn--plein w-full">
+              <PlusIcon className="h-4 w-4" /> Ajouter une tâche
+            </button>
+            <div className="flex items-center justify-between gap-2 px-2">
+              <span className="text-[13px] text-muted">Clair ou sombre</span>
+              <ThemeToggle />
+            </div>
+          </div>
+        </nav>
 
-      {bare ? null : (
-        <>
-          <button
-            type="button"
-            onClick={openQuickAdd}
-            aria-label="Ajouter une tâche"
-            className="fixed z-30 grid h-14 w-14 place-items-center rounded-full bg-primary text-on-primary shadow-lg shadow-pousse-900/20 transition active:scale-95"
-            style={{
-              bottom: 'calc(env(safe-area-inset-bottom) + 5.25rem)',
-              right: 'max(1rem, calc((100vw - 36rem) / 2 + 1rem))',
-            }}
-          >
-            <PlusIcon className="h-7 w-7" />
-          </button>
+        <main id="contenu" tabIndex={-1} className="vue">
+          {/* La clé rejoue l'entrée (le contenu monte de 8 px) à chaque page. */}
+          <div key={pathname} className={`mx-auto w-full ${widthFor(pathname)}`}>{children}</div>
+        </main>
+      </div>
 
-          <nav
-            aria-label="Navigation principale"
-            className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-canvas/90 backdrop-blur-md"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-          >
-            <ul className="mx-auto flex max-w-xl">
-              {TABS.map(({ href, label, Icon }) => {
-                const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
-                return (
-                  <li key={href} className="flex-1">
-                    <Link
-                      href={href}
-                      aria-current={active ? 'page' : undefined}
-                      className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition ${
-                        active ? 'text-primary-ink' : 'text-muted hover:text-ink'
-                      }`}
-                    >
-                      <Icon className="h-6 w-6" />
-                      {label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+      <button type="button" onClick={openQuickAdd} aria-label="Ajouter une tâche" className="fab">
+        <PlusIcon className="h-7 w-7" />
+      </button>
 
-          <QuickAdd ref={quickAdd} />
-        </>
-      )}
+      <QuickAdd ref={quickAdd} />
     </MotionConfig>
   );
 }

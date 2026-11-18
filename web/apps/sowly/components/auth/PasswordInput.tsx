@@ -21,7 +21,7 @@ export function PasswordInput({ value, onChange, autoComplete }: {
   return (
     <span className="relative block">
       <input
-        className="w-full rounded-xl border border-line bg-card py-2.5 pl-3.5 pr-28 text-[15px] text-ink placeholder:text-faint focus:border-primary focus:outline-none"
+        className="saisie !pr-28"
         type={visible ? 'text' : 'password'}
         value={value}
         autoComplete={autoComplete}
@@ -37,7 +37,7 @@ export function PasswordInput({ value, onChange, autoComplete }: {
         onClick={() => setVisible(!visible)}
         aria-pressed={visible}
         aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-        className="absolute inset-y-0.5 right-0.5 inline-flex items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted hover:bg-raised hover:text-ink"
+        className="absolute inset-y-1 right-1 inline-flex items-center gap-1.5 rounded-[10px] px-3 text-[13px] font-semibold text-muted hover:bg-line hover:text-ink"
       >
         {visible ? (
           <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">

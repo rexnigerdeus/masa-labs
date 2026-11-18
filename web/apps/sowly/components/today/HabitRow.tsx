@@ -22,15 +22,15 @@ export function HabitRow({ line, today }: { line: HabitLine; today: Day }) {
   const pastille = useRef<HTMLButtonElement>(null);
 
   return (
-    <li className="flex items-center gap-3 py-2.5 pr-1 pl-4">
+    <li className="flex items-center gap-3 rounded-[12px] py-1.5 pr-0.5 pl-2.5 transition-colors hover:bg-line">
       <Link href={`/habitude?id=${habit.id}`} className="flex min-w-0 flex-1 flex-col">
-        <span className={`truncate text-[16px] font-medium transition-colors ${done ? 'text-muted' : 'text-ink'}`}>
+        <span className={`truncate text-[16px] font-semibold transition-colors ${done ? 'text-muted' : 'text-ink'}`}>
           {habit.action}
         </span>
         {detail !== '' || streak.current >= 2 ? (
-          <span className="flex items-center gap-2 text-[13px] text-muted">
+          <span className="flex items-center gap-2 text-[12.5px] text-muted">
             {streak.current >= 2 ? (
-              <span className="font-display font-semibold text-primary-ink">{streak.current} j</span>
+              <span className="mono font-medium text-ok">{streak.current} j<span className="sr-only"> de série</span></span>
             ) : null}
             {detail !== '' ? <span className="truncate">{detail}</span> : null}
           </span>

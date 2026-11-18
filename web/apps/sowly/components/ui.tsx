@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * Primitives d'interface, dans l'esprit de Kokonut UI (brief §7) sans en
- * importer le registre : une poignée de composants, minces et sans état,
- * sur les rôles de couleur de `globals.css`. Le registre shadcn aurait fait
- * entrer Radix et une couche de configuration pour cinq composants.
+ * Primitives d'interface, sur le vocabulaire du hub (brief design) : `.btn`,
+ * `.puce`, `.segment`, `.champ`, `.carte`… définis dans `globals.css`. Les
+ * composants ne font que poser ces classes : une autre app de la maison lit
+ * le même code et retrouve les mêmes noms.
  *
  * Les formulaires composent ces pièces plutôt que des `<input>` nus
  * (patterns architecturaux §10).
@@ -14,52 +14,42 @@ import { useLayoutEffect, useRef } from 'react';
 import type React from 'react';
 import { ThemeToggle } from './ThemeToggle';
 
-const inputClass =
-  'w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-[15px] text-ink '
-  + 'placeholder:text-faint focus:border-primary focus:outline-none';
-
 export function Field({ label, hint, children }: {
   label: string; hint?: React.ReactNode; children: React.ReactNode;
 }) {
   return (
-    <label className="flex min-w-0 flex-col gap-1.5">
-      <span className="text-sm font-medium text-ink">{label}</span>
+    <label className="champ">
+      <span>{label}</span>
       {children}
-      {hint !== undefined ? <span className="text-xs text-muted">{hint}</span> : null}
+      {hint !== undefined ? <span className="aide">{hint}</span> : null}
     </label>
   );
 }
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`${inputClass} ${props.className ?? ''}`} />;
+  return <input {...props} className={`saisie ${props.className ?? ''}`} />;
 }
 
 export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea rows={3} {...props} className={`${inputClass} ${props.className ?? ''}`} />;
+  return <textarea rows={3} {...props} className={`saisie resize-y ${props.className ?? ''}`} />;
 }
 
 const BUTTON = {
-  primary: 'bg-primary text-on-primary hover:brightness-110 active:brightness-95',
-  secondary: 'border border-line bg-card text-ink hover:bg-raised',
-  ghost: 'text-muted hover:bg-raised hover:text-ink',
-  danger: 'text-clay-ink hover:bg-raised',
+  primary: 'btn--plein',
+  secondary: '',
+  ghost: 'btn--fantome',
+  danger: 'btn--fantome btn--danger',
 } as const;
 
 export function Button({ variant = 'secondary', size = 'md', className = '', ...props }:
 React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: keyof typeof BUTTON; size?: 'md' | 'lg';
+  variant?: keyof typeof BUTTON; size?: 'sm' | 'md' | 'lg';
 }) {
-  const sizing = size === 'lg' ? 'h-12 px-6 text-base' : 'h-10 px-4 text-sm';
-  return (
-    <button
-      type="button"
-      {...props}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-medium transition disabled:opacity-50 ${sizing} ${BUTTON[variant]} ${className}`}
-    />
-  );
+  const sizing = size === 'lg' ? 'btn--grand' : size === 'sm' ? 'btn--petit' : '';
+  return <button type="button" {...props} className={`btn ${BUTTON[variant]} ${sizing} ${className}`} />;
 }
 
-/** Sélecteur à pastilles (moment de la journée, regroupement, thème). */
+/** Sélecteur `.segment`, pour 2 à 4 choix (moment, regroupement, mode…). */
 export function Segmented<T extends string>({ value, options, onChange, label }: {
   value: T;
   options: ReadonlyArray<{ id: T; label: string }>;
@@ -67,7 +57,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   label: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex gap-1 rounded-full bg-raised p-1">
+    <div role="radiogroup" aria-label={label} className="segment">
       {options.map((o) => (
         <button
           key={o.id}
@@ -75,9 +65,6 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
           role="radio"
           aria-checked={value === o.id}
           onClick={() => onChange(o.id)}
-          className={`flex-1 rounded-full px-3 py-1.5 text-sm font-medium transition ${
-            value === o.id ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink'
-          }`}
         >
           {o.label}
         </button>
@@ -86,51 +73,56 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   );
 }
 
+/** Message d'erreur ou d'information : un point et un mot, jamais la couleur seule. */
 export function Notice({ tone = 'error', children }: {
   tone?: 'error' | 'info'; children: React.ReactNode;
 }) {
   return (
     <p
       role={tone === 'error' ? 'alert' : 'status'}
-      className={`rounded-xl px-3.5 py-2.5 text-sm ${
-        tone === 'error' ? 'bg-raised text-clay-ink' : 'bg-done-soft text-primary-ink'
+      className={`flex items-start gap-2 rounded-[14px] bg-raised px-3.5 py-2.5 text-sm font-medium ${
+        tone === 'error' ? 'text-urgent' : 'text-ok'
       }`}
     >
-      {children}
+      <span aria-hidden className="mt-[7px] h-[7px] w-[7px] shrink-0 rounded-full bg-current" />
+      <span>{children}</span>
     </p>
   );
 }
 
-export function SectionTitle({ children, action }: {
-  children: React.ReactNode; action?: React.ReactNode;
+/** Titre de section (30 px), compteur et lien d'action à droite. */
+export function SectionTitle({ children, action, id }: {
+  children: React.ReactNode; action?: React.ReactNode; id?: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 px-1">
-      <h2 className="font-display text-lg font-semibold tracking-tight">{children}</h2>
+    <div className="flex items-end justify-between gap-3">
+      <h2 id={id} className="titre-section">{children}</h2>
       {action}
     </div>
   );
 }
 
 /**
- * Titre d'écran : même taille et même rythme partout, avec le bouton
- * clair / sombre à portée de pouce sur chaque onglet.
+ * Titre d'écran : un surtitre chiffré, puis une promesse avec un mot en
+ * serif italique (`<em className="s">`). Le bouton clair / sombre reste à
+ * portée de pouce sur téléphone ; sur ordinateur, il est dans la barre
+ * latérale.
  */
-export function ScreenTitle({ kicker, children }: { kicker?: string; children: React.ReactNode }) {
+export function ScreenTitle({ kicker, children, aside }: {
+  kicker?: React.ReactNode; children: React.ReactNode; aside?: React.ReactNode;
+}) {
   return (
-    <header className="flex items-end justify-between gap-3 px-1 pt-6">
-      <div className="flex min-w-0 flex-col gap-0.5">
-        {kicker !== undefined ? (
-          <p className="text-sm font-medium text-muted first-letter:uppercase">{kicker}</p>
-        ) : null}
-        <h1 className="font-display text-[2rem] leading-tight font-semibold tracking-tight">{children}</h1>
+    <header className="flex items-end justify-between gap-3 pt-2">
+      <div className="flex min-w-0 flex-col gap-2">
+        {kicker !== undefined ? <p className="sur first-letter:uppercase">{kicker}</p> : null}
+        <h1 className="titre-page">{children}</h1>
       </div>
-      <ThemeToggle className="mb-1" />
+      {aside ?? <ThemeToggle className="mb-1 min-[860px]:hidden" />}
     </header>
   );
 }
 
-/** Pastille cliquable (raccourcis d'échéance, choix de liste). */
+/** Puce cliquable (raccourcis d'échéance, choix de liste, identités). */
 export function Chip({ active, onClick, children, as = 'button', radio = false }: {
   active: boolean;
   onClick?: () => void;
@@ -138,15 +130,12 @@ export function Chip({ active, onClick, children, as = 'button', radio = false }
   as?: 'button' | 'span';
   radio?: boolean;
 }) {
-  const className = `inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-    active ? 'border-primary bg-done-soft text-primary-ink' : 'border-line text-muted hover:text-ink'
-  }`;
-  if (as === 'span') return <span className={className}>{children}</span>;
+  if (as === 'span') return <span className={`puce ${active ? 'active' : ''}`}>{children}</span>;
   return (
     <button
       type="button"
       onClick={onClick}
-      className={className}
+      className="puce"
       {...(radio ? { role: 'radio', 'aria-checked': active } : { 'aria-pressed': active })}
     >
       {children}
@@ -154,7 +143,7 @@ export function Chip({ active, onClick, children, as = 'button', radio = false }
   );
 }
 
-/** Interrupteur on / off, pour les réglages et le détail d'une tâche. */
+/** Interrupteur on / off, pour Personnaliser et le détail d'une tâche. */
 export function Switch({ checked, onChange, label }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -168,15 +157,46 @@ export function Switch({ checked, onChange, label }: {
       aria-label={label}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors ${
-        checked ? 'bg-primary' : 'bg-creme-300 dark:bg-creme-700'
+        checked ? 'bg-encre' : 'bg-[color-mix(in_srgb,var(--doux)_40%,transparent)]'
       }`}
     >
       <span
         aria-hidden
-        className={`h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200 ${checked ? 'translate-x-5' : ''}`}
+        className={`h-6 w-6 rounded-full bg-card shadow-sm transition-transform duration-200 ease-[var(--ressort)] ${checked ? 'translate-x-5' : ''}`}
       />
     </button>
   );
+}
+
+/**
+ * Anneau d'avancement (`.anneau`) : trait de 11, bout arrondi, fond du
+ * cercle à 16 %, pourcentage au centre en Bricolage. Se remplit en 1 s.
+ */
+export function Ring({ value, size = 112, label }: { value: number; size?: number; label: string }) {
+  const pct = Math.max(0, Math.min(100, Math.round(value)));
+  const r = 44;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="anneau" role="img" aria-label={`${label} ${pct} %`} style={{ '--t': `${size}px` } as React.CSSProperties}>
+      <svg viewBox="0 0 100 100" aria-hidden>
+        <circle className="fond" cx="50" cy="50" r={r} />
+        <circle className="trace" cx="50" cy="50" r={r} strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} />
+      </svg>
+      <b aria-hidden>{pct}<small>%</small></b>
+    </div>
+  );
+}
+
+/**
+ * Met le dernier mot d'un texte libre (nom de liste, d'habitude) en serif
+ * italique : la signature du style tient aussi sur un titre écrit par
+ * l'utilisateur.
+ */
+export function Accent({ text }: { text: string }) {
+  const trimmed = text.trim();
+  const at = trimmed.lastIndexOf(' ');
+  if (at === -1) return <em className="s">{trimmed}</em>;
+  return <>{trimmed.slice(0, at)} <em className="s">{trimmed.slice(at + 1)}</em></>;
 }
 
 /**

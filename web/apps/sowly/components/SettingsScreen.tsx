@@ -11,10 +11,10 @@ import { useGate } from '../lib/gate';
 import { commit, setPrefs } from '../lib/store';
 import { pendingCount, signOut, syncNow, useSyncStatus } from '../lib/sync';
 import { useInstallPrompt } from '@everyday/pwa';
-import { applyTheme } from '../lib/theme';
+import { applyTheme, PALETTES, setAppearance, type Palette } from '../lib/theme';
 import { InstallCard } from './pwa/InstallCard';
 import { RemindersSettings } from './Reminders';
-import { useThemeChoice } from './ThemeToggle';
+import { useAppearance, useThemeChoice } from './ThemeToggle';
 import { Button, ScreenTitle, Segmented, Switch } from './ui';
 import { play, haptic, readFeedbackPrefs, writeFeedbackPrefs, type FeedbackPrefs } from '../lib/feedback';
 
@@ -26,9 +26,13 @@ const STATUS_LABEL = {
   error: 'Échec de la dernière synchronisation, nouvel essai automatique',
 } as const;
 
+const PALETTE_LABEL: Record<Palette, string> = { wax: 'Wax', sorbet: 'Sorbet', lagune: 'Lagune', neon: 'Néon' };
+
 /**
- * Réglages (brief §8.C) : compte, apparence, rappels, sons et vibrations,
- * identités, habitudes archivées, export.
+ * Personnaliser (brief §8.C, et terme commun aux apps de la maison) :
+ * compte, apparence — mode, palette, densité, titres, comme dans le hub —,
+ * rappels, sons et vibrations, identités, habitudes archivées, export.
+ * Un bento de cartes, deux par ligne sur ordinateur.
  */
 export function SettingsScreen() {
   const router = useRouter();
@@ -37,6 +41,7 @@ export function SettingsScreen() {
   const sync = useSyncStatus();
   const installState = useInstallPrompt().state;
   const theme = useThemeChoice();
+  const appearance = useAppearance();
   const [confirmOut, setConfirmOut] = useState(false);
   // Lu après l'hydratation : le serveur ne connaît pas le stockage local.
   const [feedback, setFeedback] = useState<FeedbackPrefs | null>(null);
@@ -67,8 +72,12 @@ export function SettingsScreen() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <ScreenTitle>Réglages</ScreenTitle>
+    <div className="flex flex-col gap-[calc(var(--pas)+8px)]">
+      <ScreenTitle kicker={`Personnaliser · ${data.profile.identities.length} identité${data.profile.identities.length > 1 ? 's' : ''} · ${archived.length} archivée${archived.length > 1 ? 's' : ''}`}>
+        Sowly, <em className="s">à ta façon</em>
+      </ScreenTitle>
+
+      <div className="bento">
 
       <Section title="Compte">
         {account === undefined ? null : account === null ? (
@@ -77,19 +86,16 @@ export function SettingsScreen() {
               Ta session a expiré. Tes habitudes et tes tâches sont toujours sur cet appareil ;
               reconnecte-toi pour reprendre la synchronisation.
             </p>
-            <Link
-              href="/connexion?reconnexion=1"
-              className="inline-flex h-10 items-center self-start rounded-full bg-primary px-4 text-sm font-medium text-on-primary hover:brightness-110"
-            >
+            <Link href="/connexion?reconnexion=1" className="btn btn--plein self-start">
               Me reconnecter
             </Link>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             <p className="text-[15px]">
-              Connecté avec le <span className="font-medium">{account.phone}</span>
+              Connecté avec le <span className="mono text-[15px]">{account.phone}</span>
             </p>
-            <p className="text-sm text-muted">
+            <p className={`etat self-start !whitespace-normal ${sync === 'idle' ? 'etat--ok' : sync === 'error' || sync === 'anonymous' ? 'etat--urgent' : sync === 'offline' ? 'etat--chaud' : 'etat--neutre'}`}>
               {STATUS_LABEL[sync]}
               {pending > 0 && sync !== 'syncing' ? ` · ${pending} modification${pending > 1 ? 's' : ''} en attente` : ''}
               {meta.lastSyncAt !== null && sync === 'idle'
@@ -110,13 +116,13 @@ export function SettingsScreen() {
               </Button>
             </div>
             {confirmOut ? (
-              <p className="text-sm text-clay-ink">
+              <p className="text-sm font-medium text-urgent">
                 {pending} modification{pending > 1 ? 's' : ''} n’{pending > 1 ? 'ont' : 'a'} pas encore
                 été envoyée{pending > 1 ? 's' : ''}. Se déconnecter efface les données de cet appareil :
                 elles seraient perdues.
               </p>
             ) : (
-              <p className="text-xs text-muted">Se déconnecter efface les données de cet appareil ; elles restent sur ton compte.</p>
+              <p className="text-[12.5px] text-muted">Se déconnecter efface les données de cet appareil ; elles restent sur ton compte.</p>
             )}
           </div>
         )}
@@ -128,19 +134,59 @@ export function SettingsScreen() {
         </Section>
       ) : null}
 
-      <Section title="Apparence">
-        <Segmented
-          label="Thème"
-          value={theme}
-          onChange={applyTheme}
-          options={[
-            { id: 'system', label: 'Système' },
-            { id: 'light', label: 'Clair' },
-            { id: 'dark', label: 'Sombre' },
-          ]}
-        />
+      <Section title="Apparence" wide>
+        <Labeled label="Mode">
+          <Segmented
+            label="Mode"
+            value={theme}
+            onChange={applyTheme}
+            options={[
+              { id: 'system', label: 'Système' },
+              { id: 'light', label: 'Clair' },
+              { id: 'dark', label: 'Sombre' },
+            ]}
+          />
+        </Labeled>
+        <Labeled label="Thème">
+          <div role="radiogroup" aria-label="Thème" className="nuancier">
+            {PALETTES.map((p) => (
+              <button
+                key={p}
+                type="button"
+                role="radio"
+                aria-checked={appearance.palette === p}
+                onClick={() => setAppearance({ palette: p })}
+                className="nuance"
+              >
+                {/* L'aperçu porte sa propre palette : aucune couleur recopiée ici. */}
+                <span aria-hidden data-theme={p}>
+                  <i className="bg-mangue" /><i className="bg-hibiscus" /><i className="bg-lagune" />
+                </span>
+                {PALETTE_LABEL[p]}
+              </button>
+            ))}
+          </div>
+        </Labeled>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Labeled label="Densité">
+            <Segmented
+              label="Densité"
+              value={appearance.densite}
+              onChange={(densite) => setAppearance({ densite })}
+              options={[{ id: 'aeree', label: 'Aérée' }, { id: 'compacte', label: 'Compacte' }]}
+            />
+          </Labeled>
+          <Labeled label="Titres">
+            <Segmented
+              label="Police des titres"
+              value={appearance.titres}
+              onChange={(titres) => setAppearance({ titres })}
+              options={[{ id: 'bricolage', label: 'Bricolage' }, { id: 'serif', label: 'Instrument' }]}
+            />
+          </Labeled>
+        </div>
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm text-muted">Regrouper les habitudes du jour par</span>
+          <span className="text-[13px] font-semibold text-muted">Regrouper les habitudes du jour par</span>
           <Segmented
             label="Regroupement"
             value={prefs.groupBy}
@@ -187,8 +233,8 @@ export function SettingsScreen() {
       ) : null}
 
       <Section title="Qui je deviens">
-        <p className="text-sm text-muted">Jusqu’à {MAX_IDENTITIES} identités.</p>
-        <div className="flex flex-wrap gap-2">
+        <p className="text-sm text-muted">Jusqu’à <span className="mono">{MAX_IDENTITIES}</span> identités. Chaque habitude en est une preuve.</p>
+        <div className="flex flex-wrap gap-1.5">
           {IDENTITIES.map((i) => {
             const on = data.profile.identities.includes(i.id);
             return (
@@ -197,9 +243,7 @@ export function SettingsScreen() {
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggleIdentity(i.id)}
-                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                  on ? 'border-primary bg-done-soft text-primary-ink' : 'border-line text-muted hover:text-ink'
-                }`}
+                className="puce"
               >
                 {i.label}
               </button>
@@ -210,10 +254,10 @@ export function SettingsScreen() {
 
       {archived.length > 0 ? (
         <Section title="Habitudes archivées">
-          <ul className="flex flex-col divide-y divide-line">
+          <ul className="liste -mx-2.5">
             {archived.map((h) => (
               <li key={h.id}>
-                <Link href={`/habitude?id=${h.id}`} className="block py-2.5 text-[15px] hover:text-primary-ink">
+                <Link href={`/habitude?id=${h.id}`} className="block rounded-[12px] px-2.5 py-2 text-[15px] font-semibold transition-colors hover:bg-line">
                   {h.action}
                 </Link>
               </li>
@@ -227,17 +271,30 @@ export function SettingsScreen() {
         <Button onClick={exportData} className="self-start">Exporter mes données</Button>
       </Section>
 
-      <p className="px-1 text-xs text-faint">Sowly — Graines d’Habitudes · The Everyday Co.</p>
+      </div>
+
+      <p className="px-1 text-[12.5px] text-muted">
+        Sowly — <em className="s text-[15px]">Graines d’Habitudes</em> · The Everyday Co.
+      </p>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, wide = false }: { title: string; children: React.ReactNode; wide?: boolean }) {
   return (
-    <section className="card flex flex-col gap-3 p-4">
-      <h2 className="font-display text-base font-semibold">{title}</h2>
+    <section className={`carte reglage ${wide ? '' : 'span-6'}`}>
+      <h2>{title}</h2>
       {children}
     </section>
+  );
+}
+
+function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[13px] font-semibold text-muted">{label}</span>
+      {children}
+    </div>
   );
 }
 

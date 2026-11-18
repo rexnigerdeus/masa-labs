@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useMotionValue, useTransform, type PanInfo } from 'motion/react';
-import { formatRelative, type Day } from '../../lib/dates';
+import { addDays, formatRelative, type Day } from '../../lib/dates';
 import type { Task } from '../../lib/model';
 import { completeTask } from '../../lib/complete';
 import { postponeTask, toggleMyDay } from '../../lib/mutations';
@@ -25,7 +25,7 @@ const SWIPE = 84;
  * reportée → sortie de la vue), Motion anime le déplacement au lieu de la
  * faire sauter.
  */
-export function TaskRow({ task, today, listName, context, onOpen, handle, nested = false }: {
+export function TaskRow({ task, today, listName, context, onOpen, handle, nested = false, surface = 'carte' }: {
   task: Task;
   today: Day;
   listName?: string | null;
@@ -35,6 +35,8 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
   handle?: React.ReactNode;
   /** Déjà dans un `<li>` (élément de `Reorder`) : on rend un simple bloc. */
   nested?: boolean;
+  /** `carte` : fiche posée sur le fond, avec ombre ; `creux` : dans une carte. */
+  surface?: 'carte' | 'creux';
 }) {
   const x = useMotionValue(0);
   const box = useRef<HTMLButtonElement>(null);
@@ -57,10 +59,13 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
     meta.push(<NoteIcon key="n" className="h-3.5 w-3.5" />);
   }
   if (task.dueDay !== null) {
+    // Date en mono sur `--creux` ; proche = mangue, en retard = hibiscus —
+    // la date reste écrite, la couleur n'est jamais seule.
+    const soon = !overdue && task.dueDay <= addDays(today, 1);
     meta.push(
-      <span key="e" className={`inline-flex items-center gap-1 ${overdue ? 'text-clay-ink' : ''}`}>
-        <CalendarIcon className="h-3.5 w-3.5" />
-        {formatRelative(task.dueDay, today)}
+      <span key="e" className={`date ${overdue ? 'retard' : soon ? 'proche' : ''} ${surface === 'creux' && !overdue && !soon ? '!bg-card' : ''}`}>
+        <CalendarIcon className="h-3 w-3" />
+        {overdue ? `En retard · ${formatRelative(task.dueDay, today)}` : formatRelative(task.dueDay, today)}
       </span>,
     );
   }
@@ -73,14 +78,14 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
       initial={nested ? false : { opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -40, transition: { duration: 0.18 } }}
-      className="relative overflow-hidden rounded-2xl"
+      className={`relative overflow-hidden rounded-[14px] ${surface === 'carte' && !nested ? 'shadow-[var(--ombre)]' : ''}`}
     >
       {/* Ce que le glissement va faire, révélé sous la ligne. */}
-      <motion.div aria-hidden style={{ opacity: doneHint }} className="absolute inset-0 flex items-center bg-done-soft pl-5 text-sm font-medium text-primary-ink">
+      <motion.div aria-hidden style={{ opacity: doneHint }} className="absolute inset-0 flex items-center bg-lagune pl-5 text-sm font-semibold text-[var(--sur-lagune)]">
         {done ? 'À refaire' : 'Faite'}
       </motion.div>
       {canPostpone ? (
-        <motion.div aria-hidden style={{ opacity: laterHint }} className="absolute inset-0 flex items-center justify-end bg-raised pr-5 text-sm font-medium text-muted">
+        <motion.div aria-hidden style={{ opacity: laterHint }} className="absolute inset-0 flex items-center justify-end bg-mangue pr-5 text-sm font-semibold text-[#18122B]">
           Demain →
         </motion.div>
       ) : null}
@@ -92,7 +97,7 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: canPostpone ? 0.5 : 0.05, right: 0.5 }}
         onDragEnd={onDragEnd}
-        className="relative flex items-center gap-3 bg-card px-3 py-2.5"
+        className={`relative flex items-center gap-3 px-3 py-2.5 ${surface === 'creux' ? 'bg-raised' : 'bg-card'}`}
       >
         {handle}
         <button
@@ -111,11 +116,11 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
           onClick={() => onOpen(task)}
           className="flex min-w-0 flex-1 flex-col items-start text-left"
         >
-          <span className={`w-full truncate text-[15px] ${done ? 'text-muted line-through decoration-faint' : 'text-ink'}`}>
+          <span className={`w-full truncate text-[15px] font-medium ${done ? 'text-muted line-through decoration-faint' : 'text-ink'}`}>
             {task.title}
           </span>
           {meta.length > 0 ? (
-            <span className="flex flex-wrap gap-x-3 text-xs text-muted">{meta}</span>
+            <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12.5px] text-muted">{meta}</span>
           ) : null}
         </button>
 
@@ -125,7 +130,7 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
             onClick={() => commit((d) => toggleMyDay(d, task.id, today))}
             aria-label={task.myDay === today ? 'Retirer de Ma journée' : 'Ajouter à Ma journée'}
             aria-pressed={task.myDay === today}
-            className={`-m-1 rounded-full p-1.5 ${task.myDay === today ? 'text-primary-ink' : 'text-faint hover:text-muted'}`}
+            className={`-m-1 grid h-10 w-10 place-items-center rounded-[12px] transition ${task.myDay === today ? 'bg-mangue text-[#18122B]' : 'text-faint hover:bg-raised hover:text-muted'}`}
           >
             <SunIcon className="h-5 w-5" />
           </button>

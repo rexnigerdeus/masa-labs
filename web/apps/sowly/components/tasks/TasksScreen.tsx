@@ -14,7 +14,7 @@ import { useGate } from '../../lib/gate';
 import { commit, newId, nowIso, useToday } from '../../lib/store';
 import { Sheet } from '../Sheet';
 import { GripIcon, PlusIcon } from '../icons';
-import { Button, Field, Input, ScreenTitle } from '../ui';
+import { Accent, Button, Field, Input, ScreenTitle } from '../ui';
 import { TaskEditor } from './TaskEditor';
 import { TaskRow } from './TaskRow';
 
@@ -68,12 +68,19 @@ export function TasksScreen() {
     vue === 'ma-journee' ? 'myday' : vue === 'planifie' ? 'planned' : 'list';
   const title = mode === 'myday' ? 'Ma journée' : mode === 'planned' ? 'Planifiées' : view.current?.name ?? 'Tâches';
   const listName = (id: string | null): string | null => (id === null ? 'Tâches' : view.names.get(id) ?? null);
+  const open = mode === 'myday' ? view.counts.myDay : mode === 'planned' ? view.counts.planned
+    : view.inList.filter((t) => t.doneAt === null).length;
+  const kicker = `${title === 'Tâches' ? 'Toutes tes tâches' : 'Tâches'} · ${open} à faire`;
 
   return (
-    <div className="flex flex-col gap-5">
-      <ScreenTitle kicker={title === 'Tâches' ? undefined : 'Tâches'}>{title}</ScreenTitle>
+    <div className="flex flex-col gap-[calc(var(--pas)+4px)]">
+      <ScreenTitle kicker={kicker}>
+        {mode === 'myday' ? <>Ma <em className="s">journée</em></>
+          : mode === 'planned' ? <>Tâches <em className="s">planifiées</em></>
+            : view.current === null ? <>Tes <em className="s">tâches</em></> : <Accent text={title} />}
+      </ScreenTitle>
 
-      <nav aria-label="Listes" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+      <nav aria-label="Listes" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pt-1 pb-1">
         <ListChip href="/taches?vue=ma-journee" active={mode === 'myday'} count={view.counts.myDay}>Ma journée</ListChip>
         <ListChip href="/taches?vue=planifie" active={mode === 'planned'} count={view.counts.planned}>Planifiées</ListChip>
         <ListChip href="/taches" active={mode === 'list' && view.current === null} count={view.counts.inbox}>Tâches</ListChip>
@@ -82,11 +89,7 @@ export function TasksScreen() {
             {l.name}
           </ListChip>
         ))}
-        <button
-          type="button"
-          onClick={() => setListSheet('new')}
-          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-line px-3 py-1.5 text-sm font-medium text-muted hover:text-ink"
-        >
+        <button type="button" onClick={() => setListSheet('new')} className="puce puce--ajout">
           <PlusIcon className="h-4 w-4" /> Liste
         </button>
       </nav>
@@ -97,9 +100,9 @@ export function TasksScreen() {
             <button
               type="button"
               onClick={() => commit((d) => bringBack(d, view.leftovers.map((t) => t.id), today))}
-              className="self-start rounded-full border border-line px-3 py-1.5 text-sm text-muted hover:text-ink"
+              className="btn btn--petit self-start"
             >
-              Reprendre {view.leftovers.length} tâche{view.leftovers.length > 1 ? 's' : ''} des jours précédents
+              Reprendre <span className="mono">{view.leftovers.length}</span> tâche{view.leftovers.length > 1 ? 's' : ''} des jours précédents
             </button>
           ) : null}
           <SimpleList tasks={view.myDay} today={today} context="myday" listName={listName} onOpen={setEditing}
@@ -117,7 +120,7 @@ export function TasksScreen() {
           />
           <DoneList tasks={view.inList.filter((t) => t.doneAt !== null)} today={today} onOpen={setEditing} />
           {view.current !== null ? (
-            <button type="button" onClick={() => setListSheet('edit')} className="self-start px-1 text-sm font-medium text-muted hover:text-ink">
+            <button type="button" onClick={() => setListSheet('edit')} className="btn btn--fantome btn--petit self-start text-muted">
               Renommer ou supprimer la liste
             </button>
           ) : null}
@@ -140,16 +143,9 @@ function ListChip({ href, active, count, children }: {
   href: string; active: boolean; count: number; children: React.ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      replace
-      aria-current={active ? 'page' : undefined}
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition ${
-        active ? 'bg-ink text-canvas' : 'bg-raised text-muted hover:text-ink'
-      }`}
-    >
+    <Link href={href} replace aria-current={active ? 'page' : undefined} className="puce">
       {children}
-      {count > 0 ? <span className={`font-display text-xs ${active ? 'opacity-70' : 'text-faint'}`}>{count}</span> : null}
+      {count > 0 ? <b>{count}</b> : null}
     </Link>
   );
 }
@@ -158,7 +154,7 @@ function SimpleList({ tasks, today, context, listName, onOpen, empty }: {
   tasks: Task[]; today: Day; context: 'myday' | 'list';
   listName: (id: string | null) => string | null; onOpen: (t: Task) => void; empty: string;
 }) {
-  if (tasks.length === 0) return <p className="px-1 text-sm text-muted">{empty}</p>;
+  if (tasks.length === 0) return <p className="vide">{empty}</p>;
   return (
     <ul className="flex flex-col gap-1.5">
       <AnimatePresence initial={false}>
@@ -175,7 +171,7 @@ function PlannedList({ tasks, today, listName, onOpen }: {
   tasks: Task[]; today: Day; listName: (id: string | null) => string | null; onOpen: (t: Task) => void;
 }) {
   if (tasks.length === 0) {
-    return <p className="px-1 text-sm text-muted">Aucune tâche avec une échéance ou prévue pour demain.</p>;
+    return <p className="vide">Rien à l’horizon : aucune tâche avec une échéance ou prévue pour demain.</p>;
   }
   const groups = new Map<string, Task[]>();
   for (const t of tasks) {
@@ -187,8 +183,8 @@ function PlannedList({ tasks, today, listName, onOpen }: {
     <div className="flex flex-col gap-4">
       {[...groups].map(([label, items]) => (
         <section key={label} className="flex flex-col gap-1.5">
-          <h2 className={`px-1 text-xs font-semibold tracking-wide uppercase ${label === 'En retard' ? 'text-clay-ink' : 'text-muted'}`}>
-            {label}
+          <h2 className={`sur px-1 ${label === 'En retard' ? '!opacity-100 text-urgent' : ''}`}>
+            {label} · <span className="mono">{items.length}</span>
           </h2>
           <ul className="flex flex-col gap-1.5">
             <AnimatePresence initial={false}>
@@ -223,7 +219,7 @@ function ReorderableList({ tasks, today, onOpen }: {
   const visible = order.filter((id) => byId.has(id));
 
   if (tasks.length === 0) {
-    return <p className="px-1 text-sm text-muted">Tout est fait ici. Touche + pour ajouter une tâche.</p>;
+    return <p className="vide">Tout est fait ici. Touche + pour ajouter une tâche.</p>;
   }
 
   return (
@@ -240,7 +236,7 @@ function ReorderRow({ task, today, onOpen, onDrop }: {
 }) {
   const controls = useDragControls();
   return (
-    <Reorder.Item value={task.id} dragListener={false} dragControls={controls} onDragEnd={onDrop} className="relative">
+    <Reorder.Item value={task.id} dragListener={false} dragControls={controls} onDragEnd={onDrop} className="relative rounded-[14px] shadow-[var(--ombre)]">
       <TaskRow
         nested
         task={task}
@@ -266,8 +262,8 @@ function DoneList({ tasks, today, onOpen }: { tasks: Task[]; today: Day; onOpen:
   if (tasks.length === 0) return null;
   return (
     <section className="flex flex-col gap-1.5">
-      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="self-start px-1 text-sm font-medium text-muted hover:text-ink">
-        {open ? '▾' : '▸'} Terminées ({tasks.length})
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="puce self-start">
+        {open ? '−' : '+'} Terminées <b>{tasks.length}</b>
       </button>
       {open ? (
         <ul className="flex flex-col gap-1.5">
@@ -311,7 +307,10 @@ function ListSheet({ mode, list, onClose, onCreated, onDeleted }: {
   return (
     <Sheet open={mode !== null} onClose={onClose} label={mode === 'new' ? 'Nouvelle liste' : 'Modifier la liste'}>
       <form onSubmit={submit} className="flex flex-col gap-4">
-        <Field label={mode === 'new' ? 'Nouvelle liste' : 'Nom de la liste'}>
+        <h2 className="titre-tiroir">
+          {mode === 'new' ? <>Nouvelle <em className="s">liste</em></> : <>Modifier la <em className="s">liste</em></>}
+        </h2>
+        <Field label="Nom de la liste">
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Courses, Travail, Maison…" maxLength={60} />
         </Field>
         <div className="flex justify-between gap-2">
@@ -325,11 +324,11 @@ function ListSheet({ mode, list, onClose, onCreated, onDeleted }: {
                 onDeleted();
               }}
             >
-              {confirming ? 'Supprimer la liste et ses tâches' : 'Supprimer'}
+              {confirming ? 'Supprimer la liste et ses tâches ?' : 'Supprimer'}
             </Button>
           ) : <span />}
           <Button type="submit" variant="primary" disabled={name.trim() === ''}>
-            {mode === 'new' ? 'Créer' : 'Enregistrer'}
+            {mode === 'new' ? 'Créer la liste' : 'Renommer'}
           </Button>
         </div>
       </form>

@@ -74,8 +74,8 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
     <Sheet open={isOpen} onClose={close} label="Ajouter une tâche" keepMounted panelRef={panelRef}>
       <form onSubmit={submit} className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <label className="flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-line bg-canvas px-3.5 transition focus-within:border-primary">
-          <span aria-hidden className="h-5 w-5 shrink-0 rounded-[6px] border-2 border-faint" />
+          <label className="saisie flex !min-h-12 min-w-0 flex-1 items-center gap-2.5 !py-0">
+          <span aria-hidden className="h-5 w-5 shrink-0 rounded-[7px] border-2 border-[var(--doux)]" />
           <input
             ref={inputRef}
             value={title}
@@ -84,10 +84,10 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
             aria-label="Titre de la tâche"
             enterKeyHint="done"
             maxLength={200}
-            className="h-full min-w-0 flex-1 bg-transparent text-[17px] text-ink placeholder:text-faint focus:outline-none"
+            className="h-12 min-w-0 flex-1 bg-transparent text-[17px] text-ink focus:outline-none"
           />
           </label>
-          <Button type="submit" variant="primary" disabled={title.trim() === ''} className="h-12">
+          <Button type="submit" variant="primary" size="lg" disabled={title.trim() === ''}>
             Ajouter
           </Button>
         </div>
@@ -130,8 +130,8 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
           </div>
         ) : null}
 
-        <p className="min-h-5 text-xs text-muted" role="status">
-          {added > 0 ? `${added} tâche${added > 1 ? 's' : ''} ajoutée${added > 1 ? 's' : ''}.` : ''}
+        <p className="min-h-5 text-[12.5px] text-muted" role="status" aria-live="polite">
+          {added > 0 ? `${added} tâche${added > 1 ? 's' : ''} ajoutée${added > 1 ? 's' : ''}. Tu ${added > 1 ? 'les' : 'la'} retrouves dans ${listId === null ? 'Tâches' : lists.find((l) => l.id === listId)?.name ?? 'ta liste'}${myDay ? ' et Ma journée' : ''}.` : ''}
         </p>
       </form>
     </Sheet>

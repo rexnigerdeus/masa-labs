@@ -32,7 +32,7 @@ export function HistoryGrid({ habit, checked, today, onToggle }: {
 
   return (
     <div className="flex gap-2">
-      <div aria-hidden className="grid grid-rows-7 gap-1 pt-0.5 text-[10px] leading-none font-medium text-faint">
+      <div aria-hidden className="grid grid-rows-7 gap-1 pt-0.5 mono text-[10px] leading-none text-muted">
         {WEEK_FR.map((d) => <span key={d.value} className="grid h-[22px] place-items-center">{d.short}</span>)}
       </div>
       <div className="grid flex-1 grid-cols-12 gap-1" role="grid" aria-label="Historique des douze dernières semaines">
@@ -65,13 +65,13 @@ export function HistoryGrid({ habit, checked, today, onToggle }: {
                   aria-label={label}
                   aria-pressed={isChecked}
                   onClick={() => onToggle(day)}
-                  className={`aspect-square max-h-[22px] rounded-[6px] transition ${
+                  className={`aspect-square max-h-[22px] rounded-[6px] transition duration-150 ease-[var(--ressort)] hover:scale-110 ${
                     isChecked
                       ? 'bg-done'
                       : scheduled
-                        ? 'border border-line bg-card'
-                        : 'bg-raised/60'
-                  } ${day === today ? 'ring-2 ring-primary ring-offset-1 ring-offset-canvas' : ''}`}
+                        ? 'border-[1.5px] border-line bg-raised'
+                        : 'bg-raised/50'
+                  } ${day === today ? 'ring-2 ring-indigo ring-offset-1 ring-offset-card' : ''}`}
                 />
               );
             })}

@@ -142,14 +142,26 @@ export const CloudOffIcon = ({ className }: P) => (
  * sans son fond. Même tracé partout — écran d'accueil du téléphone, page
  * d'entrée, aperçu de partage.
  *
- * `sun` ajoute le soleil jaune de l'icône (le jaune du logo The Everyday
- * Co.), à réserver aux fonds verts ou sombres : sur fond clair, il disparaît.
+ * `sun` ajoute le soleil mangue de l'icône, à réserver aux fonds sombres ou
+ * colorés : sur fond clair, il se perd.
  */
 export const BrandMark = ({ className, sun = false }: P & { sun?: boolean }) => (
   <svg aria-hidden viewBox={sun ? '76 72 356 386' : '96 104 336 354'} fill="currentColor" className={className}>
-    {sun ? <circle cx="128" cy="124" r="44" fill="var(--color-soleil-300)" /> : null}
+    {sun ? <circle cx="128" cy="124" r="44" fill="var(--mangue)" /> : null}
     <path d="M214 440c-4-60 12-116 48-164h22c-26 52-38 110-34 164a18 18 0 01-36 0z" />
     <path d="M262 284c-6-104 50-172 160-172 6 108-54 170-160 172z" />
     <path d="M252 334c4-84-46-136-150-134-6 86 46 136 150 134z" />
   </svg>
+);
+
+/**
+ * Le logo en carré, comme l'icône d'app et le logo du hub : un aplat
+ * d'encre foncée arrondi (rayon 9 sur 32), la pousse en lagune et le soleil
+ * en mangue. L'encre reste foncée dans les deux modes : c'est une marque,
+ * pas une surface.
+ */
+export const AppBadge = ({ className = 'h-9 w-9' }: P) => (
+  <span aria-hidden className={`grid shrink-0 place-items-center rounded-[28.125%] bg-[#18122B] text-lagune ${className}`}>
+    <BrandMark sun className="h-[68%] w-[68%]" />
+  </span>
 );

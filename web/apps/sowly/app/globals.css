@@ -1,140 +1,101 @@
 @import 'tailwindcss';
 
 /*
- * Clair / sombre piloté par `data-theme` sur <html> (posé avant React par
- * le script du layout) plutôt que par la seule media query : le choix fait
- * dans Réglages doit pouvoir contredire celui du système.
+ * Mode clair / sombre piloté par `data-mode` sur <html> (posé avant React
+ * par le script du layout) plutôt que par la seule media query : le choix
+ * fait dans Personnaliser doit pouvoir contredire celui du système.
  */
-@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+@custom-variant dark (&:where([data-mode='sombre'], [data-mode='sombre'] *));
 
 /**
- * Design system Sowly — brief §5, aligné sur The Everyday Co.
+ * Design system Sowly — « Brief design — Hub side hustles » (18/11/2026).
  *
- * Sowly est une app de la maison The Everyday Co. : elle en reprend les
- * neutres (crème chaud `#fafaf7` / `#f4f2ec`, encre brun-noir `#171411`,
- * gris chauds `#5c5650`) et le jaune signal du logo (`#fdf150`), et garde
- * son propre accent, le vert de la pousse — plus frais que l'ancien vert
- * forêt, de la même famille vive que le vert de Vitae sans s'y confondre
- * (Vitae tire vers le jaune-vert, Sowly vers la feuille).
+ * Sowly prend l'air de famille du hub : un bento de cartes en aplats de
+ * couleurs franches, de grands titres serrés avec un mot en serif italique,
+ * les chiffres en mono, et de petites animations qui récompensent chaque
+ * geste. Les valeurs ci-dessous sont celles du kit de démarrage du brief,
+ * sans arrondi.
  *
- * Trois échelles 50 → 950, utilisables telles quelles (`bg-pousse-100`,
- * `text-soleil-800`), plus des rôles sémantiques (`bg-canvas`, `text-ink`,
- * `bg-primary`…) qui basculent en mode sombre. Les écrans n'emploient que
- * les rôles.
+ * Couleur de l'app : `--lagune` (le vert d'eau de la croissance), pour le
+ * hero et les validations. `--mangue` reste la récompense (journée
+ * complète), `--hibiscus` le retard.
  *
- *   pousse   l'accent : boutons, validations, liens
- *   creme    les neutres de The Everyday Co.
- *   soleil   le jaune du logo Everyday Co., réservé à la récompense (journée
- *            complète) et au soleil de l'icône : jamais un bouton, jamais un
- *            lien — c'est ce qui lui garde sa valeur.
+ * Réglages posés sur <html> (lus avant le premier affichage) :
+ *   data-theme    wax · sorbet · lagune · neon     (palette)
+ *   data-mode     clair · sombre
+ *   data-densite  aeree · compacte
+ *   data-titres   bricolage · serif
  *
- * Contrastes mesurés (WCAG) qui ont dicté les rôles :
- *   - bouton principal `pousse-600`, texte blanc : 5,0:1 ; en sombre,
- *     `pousse-400` sous un texte `creme-950` : 7,3:1.
- *   - `pousse-500` sur blanc : 3,5:1 — assez pour une pastille validée
- *     (élément graphique, seuil 3:1), pas pour du texte : l'encre verte est
- *     `pousse-700` (7,1:1).
- *   - le jaune signal tombe à 1,1:1 sur blanc : il n'écrit jamais. Le texte
- *     de récompense est `soleil-800` sur `soleil-50` (7,8:1).
- *   - L'argile (#C1694F) tombe à 3,65:1 en texte : l'échéance dépassée
- *     s'écrit avec une encre plus sombre (#9A4E39, 5,6:1).
+ * Règle : aucun composant ne code une couleur en dur, sauf l'encre foncée
+ * #18122B sur les couleurs vives (en sombre, `--encre` devient claire et
+ * disparaîtrait sur le jaune).
  */
-@theme {
-  --color-pousse-50: #effaf0;
-  --color-pousse-100: #d8f3dc;
-  --color-pousse-200: #b3e6bd;
-  --color-pousse-300: #80d193;
-  --color-pousse-400: #4fb86a;
-  --color-pousse-500: #2f9d4f;
-  --color-pousse-600: #237f3e;
-  --color-pousse-700: #1e6534;
-  --color-pousse-800: #1b502c;
-  --color-pousse-900: #174226;
-  --color-pousse-950: #082513;
 
-  --color-soleil-50: #fffde8;
-  --color-soleil-100: #fff8b8;
-  --color-soleil-200: #fff6a6;
-  --color-soleil-300: #fdf150;
-  --color-soleil-400: #f0dd25;
-  --color-soleil-500: #d4bf12;
-  --color-soleil-600: #a6940c;
-  --color-soleil-700: #7a6d0d;
-  --color-soleil-800: #5a510f;
-  --color-soleil-900: #3d370c;
-  --color-soleil-950: #25210a;
-
-  --color-creme-50: #fafaf7;
-  --color-creme-100: #f4f2ec;
-  --color-creme-200: #e8e4db;
-  --color-creme-300: #d4cec2;
-  --color-creme-400: #aaa398;
-  --color-creme-500: #8a8378;
-  --color-creme-600: #5c5650;
-  --color-creme-700: #46413b;
-  --color-creme-800: #36302a;
-  --color-creme-900: #26211c;
-  --color-creme-950: #171411;
-
-  --radius-card: 18px;
-
-  /* Polices auto-hébergées (next/font) : General Sans pour les titres et
-     les chiffres, Inter pour le reste (brief §6) — Inter est aussi la police
-     de The Everyday Co. Sous-ensemble latin uniquement, ~25 Ko chacune,
-     servies depuis notre domaine et mises en cache par le service worker :
-     aucune requête tierce, et rien à retélécharger hors-ligne. */
-  --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: var(--font-general), var(--font-inter), system-ui, sans-serif;
-}
-
-/* Rôles — clair */
+/* ===== Tokens (thème Wax, mode clair) ===== */
 :root {
-  --canvas: var(--color-creme-50);
-  --card: #ffffff;
-  --raised: var(--color-creme-100);
-  --line: var(--color-creme-200);
-  --ink: var(--color-creme-950);
-  --muted: var(--color-creme-600);
-  --faint: var(--color-creme-400);
-  --primary: var(--color-pousse-600);
-  --primary-ink: var(--color-pousse-700);
-  --on-primary: #ffffff;
-  --done: var(--color-pousse-500);
-  --done-soft: var(--color-pousse-100);
-  /* Surface sombre « Everyday » (hero de la page d'entrée) : l'encre de
-     la maison en clair, un cran au-dessus du fond en sombre. */
-  --night: var(--color-creme-950);
-  --reward: var(--color-soleil-50);
-  --reward-ink: var(--color-soleil-800);
-  --reward-glow: var(--color-soleil-400);
-  --reward-halo: var(--color-soleil-200);
-  --clay: #c1694f;
-  --clay-ink: #9a4e39;
+  --mangue: #FFB627; --hibiscus: #FF4F6E; --lagune: #10B5A5; --indigo: #4D3FE6; --citron: #C8F23A; --ciel: #8CCBFF;
+  --sur-mangue: #18122B; --sur-hibiscus: #18122B; --sur-lagune: #06231F; --sur-indigo: #fff; --sur-citron: #18122B; --sur-ciel: #18122B;
+  --fond: #ECEAF4; --carte: #fff; --creux: #F4F3F9; --encre: #18122B; --doux: #686380; --trait: rgba(24, 18, 43, .11);
+  --ok: #08765F; /* le hub utilise #0B8A6F, trop clair sur --creux */ --alerte: #C2410C; --urgent: #D11A4A;
+  --r: 22px; --pas: 16px; --pad: 22px;
+  --display: var(--font-bricolage), system-ui, sans-serif;
+  --serif: var(--font-instrument), Georgia, serif;
+  --texte: var(--font-hanken), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: var(--font-plex-mono), ui-monospace, Consolas, monospace;
+  --ombre: 0 1px 0 rgba(24, 18, 43, .04), 0 14px 30px -22px rgba(24, 18, 43, .35);
+  --ombre-haute: 0 1px 0 rgba(24, 18, 43, .04), 0 26px 40px -24px rgba(24, 18, 43, .5);
+  --ressort: cubic-bezier(.34, 1.56, .64, 1);
+  --entree: cubic-bezier(.2, .9, .3, 1);
   color-scheme: light;
 }
+/* Wax explicite : un aperçu de palette (`.nuance`) doit le retrouver même
+   quand <html> porte une autre palette. */
+[data-theme='wax'] { --mangue: #FFB627; --hibiscus: #FF4F6E; --lagune: #10B5A5; --indigo: #4D3FE6; --citron: #C8F23A; --ciel: #8CCBFF; }
+[data-theme='sorbet'] { --mangue: #FFD98A; --hibiscus: #FFA9B8; --lagune: #8FE0D6; --indigo: #B3ADFF; --citron: #DDF59B; --ciel: #BFE3FF; --sur-indigo: #18122B; --fond: #F5F0F7; }
+[data-theme='lagune'] { --mangue: #D9B77D; --hibiscus: #E8806A; --lagune: #2C9C8A; --indigo: #0F2B2C; --citron: #C5DBA4; --ciel: #A7CCD0; --sur-lagune: #fff; --fond: #E9EDE8; --encre: #132221; --doux: #5c6966; }
+[data-theme='neon'] { --mangue: #FFD60A; --hibiscus: #FF3D81; --lagune: #00E0BE; --indigo: #7357FF; --citron: #B6FF3C; --ciel: #5CC8FF; --fond: #E9E9F2; }
+[data-mode='sombre'] { color-scheme: dark; --fond: #0E0C18; --carte: #1A1730; --creux: #231F3D; --encre: #F3F1FA; --doux: #A39FBD; --trait: rgba(243, 241, 250, .13); --ok: #4ADEB5; --alerte: #FDBA74; --urgent: #FF7C9C; --ombre: 0 14px 30px -22px rgba(0, 0, 0, .8); --ombre-haute: 0 26px 40px -24px rgba(0, 0, 0, .9); }
+[data-mode='sombre'][data-theme='lagune'] { --fond: #0B1716; --carte: #132624; --creux: #1B3431; --indigo: #D9B77D; --sur-indigo: #132221; }
+[data-densite='compacte'] { --pas: 10px; --pad: 16px; }
+[data-titres='serif'] { --display: var(--font-instrument), Georgia, serif; }
 
-/* Rôles — sombre. Fond `creme-950`, l'encre de The Everyday Co. */
-:root[data-theme='dark'] {
-  --canvas: var(--color-creme-950);
-  --card: var(--color-creme-900);
-  --raised: var(--color-creme-800);
-  --line: var(--color-creme-800);
-  --ink: var(--color-creme-50);
-  --muted: var(--color-creme-400);
-  --faint: var(--color-creme-600);
-  --primary: var(--color-pousse-400);
-  --primary-ink: var(--color-pousse-300);
-  --on-primary: var(--color-creme-950);
-  --done: var(--color-pousse-400);
-  --done-soft: var(--color-pousse-950);
-  --night: var(--color-creme-900);
-  --reward: color-mix(in srgb, var(--color-soleil-950) 70%, var(--color-creme-900));
-  --reward-ink: var(--color-soleil-300);
-  --reward-glow: var(--color-soleil-500);
-  --reward-halo: var(--color-soleil-950);
-  --clay: #db8c73;
-  --clay-ink: #db8c73;
-  color-scheme: dark;
+/*
+ * Rôles des écrans Sowly, branchés sur les tokens du hub : les utilitaires
+ * existants (`bg-card`, `text-muted`…) suivent ainsi thème, mode et palette
+ * sans que chaque composant ait à les connaître.
+ */
+:root {
+  --canvas: var(--fond);
+  --card: var(--carte);
+  --raised: var(--creux);
+  --line: var(--trait);
+  --ink: var(--encre);
+  --muted: var(--doux);
+  /* Pictogrammes et textes indicatifs : le gris doux, un ton plus léger. */
+  --faint: color-mix(in srgb, var(--doux) 78%, transparent);
+  /* Bouton plein : l'encre, qui s'inverse en sombre (brief). */
+  --primary: var(--encre);
+  --primary-ink: var(--ok);
+  --on-primary: var(--fond);
+  /* Validations : la couleur de l'app, coche foncée dessus. */
+  --done: var(--lagune);
+  --on-done: var(--sur-lagune);
+  --done-soft: color-mix(in srgb, var(--lagune) 18%, var(--carte));
+  --night: var(--encre);
+  /* Récompense : la mangue, écrite en encre foncée fixe. */
+  --reward: var(--mangue);
+  --reward-ink: #18122B;
+  --reward-glow: var(--mangue);
+  --clay: var(--hibiscus);
+  --clay-ink: var(--urgent);
+}
+
+@theme {
+  --radius-card: 22px;
+  --font-sans: var(--texte);
+  --font-display: var(--display);
+  --font-serif: var(--serif);
+  --font-mono: var(--mono);
 }
 
 @theme inline {
@@ -149,6 +110,7 @@
   --color-primary-ink: var(--primary-ink);
   --color-on-primary: var(--on-primary);
   --color-done: var(--done);
+  --color-on-done: var(--on-done);
   --color-done-soft: var(--done-soft);
   --color-night: var(--night);
   --color-reward: var(--reward);
@@ -156,101 +118,313 @@
   --color-reward-glow: var(--reward-glow);
   --color-clay: var(--clay);
   --color-clay-ink: var(--clay-ink);
+  --color-mangue: var(--mangue);
+  --color-hibiscus: var(--hibiscus);
+  --color-lagune: var(--lagune);
+  --color-indigo: var(--indigo);
+  --color-citron: var(--citron);
+  --color-ciel: var(--ciel);
+  --color-encre: var(--encre);
+  --color-ok: var(--ok);
+  --color-alerte: var(--alerte);
+  --color-urgent: var(--urgent);
 }
 
-html {
-  background: var(--canvas);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
+/* ===== Base ===== */
+@layer base {
+  html {
+    background: var(--fond);
+    color: var(--encre);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--fond);
+    color: var(--encre);
+    font: 15px/1.5 var(--texte);
+    -webkit-font-smoothing: antialiased;
+    transition: background .3s;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  h1, h2, h3 {
+    font-family: var(--display);
+    font-stretch: 86%;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1.02;
+  }
+  :focus-visible { outline: 2.5px solid var(--indigo); outline-offset: 2px; border-radius: 8px; }
+  [data-mode='sombre'] :focus-visible { outline-color: var(--citron); }
+  ::placeholder { color: var(--doux); opacity: .75; }
 }
 
-body {
-  margin: 0;
-  min-height: 100dvh;
-  background: var(--canvas);
+/* ===== Typographie du hub ===== */
+@layer components {
+  .display {
+    font-family: var(--display);
+    font-stretch: 86%;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1.02;
+  }
+  /* Le mot en serif italique : la signature du style. */
+  em.s, .s {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  .mono { font-family: var(--mono); font-size: .86em; font-weight: 500; letter-spacing: .01em; }
+  .doux { color: var(--doux); }
+  .sur { font: 600 11.5px/1.2 var(--texte); letter-spacing: .13em; text-transform: uppercase; opacity: .72; }
+
+  /* Titre de page : une promesse avec un mot en serif. */
+  .titre-page { font-size: clamp(40px, 5vw, 68px); font-stretch: 78%; }
+  .titre-page em.s { font-size: 1.06em; }
+  .titre-hero { font-size: clamp(44px, 6vw, 86px); font-stretch: 76%; }
+  .titre-section { font-size: 30px; font-stretch: 86%; }
+  .titre-tiroir { font-size: 28px; font-stretch: 86%; }
+  .titre-carte { font-size: 25px; font-stretch: 84%; }
+  .accroche { font: italic 400 26px/1.1 var(--serif); letter-spacing: 0; }
+  .chiffre { font: 700 clamp(40px, 4vw, 58px)/.95 var(--display); font-stretch: 75%; letter-spacing: -.03em; }
+}
+@layer base {
+  /* Option « Titres : Instrument » : tous les titres en serif droit. */
+  [data-titres='serif'] :is(h1, h2, h3, .display, .chiffre) { font-weight: 400; letter-spacing: -.01em; }
 }
 
-/* Chiffres de même largeur : un compteur de série qui passe de 9 à 10 ne
-   doit pas faire sauter la ligne. */
-.font-display {
-  font-feature-settings: 'tnum' 1;
+/* ===== Bento et cartes ===== */
+@layer components {
+  .bento { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-flow: dense; gap: var(--pas); }
+  .bento > * { grid-column: span 12; min-width: 0; }
+  @media (min-width: 720px) {
+    .bento > .span-4 { grid-column: span 6; }
+    .bento > .span-5, .bento > .span-6, .bento > .span-7 { grid-column: span 6; }
+  }
+  @media (min-width: 1180px) {
+    .bento > .span-4 { grid-column: span 4; }
+    .bento > .span-5 { grid-column: span 5; }
+    .bento > .span-6 { grid-column: span 6; }
+    .bento > .span-7 { grid-column: span 7; }
+    .bento > .span-8 { grid-column: span 8; }
+  }
+
+  .carte {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: var(--pad);
+    border-radius: var(--r);
+    background: var(--carte);
+    box-shadow: var(--ombre);
+    min-width: 0;
+    transition: transform .25s ease, box-shadow .25s, background .3s, color .3s;
+  }
+  .carte.penche:hover { transform: translateY(-3px); box-shadow: var(--ombre-haute); }
+  /* Tuile animée par Motion : la transition CSS du transform la freinerait. */
+  .carte.tuile { transition: box-shadow .25s, background .3s, color .3s; }
+  .carte.tuile:hover { box-shadow: var(--ombre-haute); }
+  .carte--mangue { background: var(--mangue); color: var(--sur-mangue); }
+  .carte--hibiscus { background: var(--hibiscus); color: var(--sur-hibiscus); }
+  .carte--lagune { background: var(--lagune); color: var(--sur-lagune); }
+  .carte--indigo { background: var(--indigo); color: var(--sur-indigo); }
+  .carte--citron { background: var(--citron); color: var(--sur-citron); }
+  .carte--ciel { background: var(--ciel); color: var(--sur-ciel); }
+  .carte--encre { background: var(--encre); color: var(--fond); }
+  .carte__tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .carte__tete a, .carte__tete .lien { font-size: 13px; font-weight: 600; text-decoration: none; opacity: .75; }
+  .carte__tete a:hover, .carte__tete .lien:hover { opacity: 1; text-decoration: underline; }
+
+
+  /* Hero : le grand bloc coloré de l'écran. */
+  .hero { border-radius: calc(var(--r) + 6px); padding: 30px; }
+  @media (max-width: 720px) { .hero { padding: 22px; } }
+
+  .vide { padding: 22px; border: 1.5px dashed var(--trait); border-radius: var(--r); color: var(--doux); text-align: center; }
 }
+
+/*
+ * Sur une couleur vive, le texte secondaire passe à l'opacité au lieu du
+ * gris, et les traits prennent la couleur du texte (piège du mode sombre :
+ * cibler `[class*="carte--"]`, pas `.carte[…]`). Hors couche exprès : les
+ * utilitaires Tailwind (`text-muted`…) vivent dans une couche supérieure à
+ * `components` et l'emporteraient sinon.
+ */
+[class*='carte--'] :is(.doux, .text-muted, .text-faint) { color: inherit; opacity: .72; }
+[class*='carte--'] :is(.text-ink, .text-primary-ink, .text-ok) { color: inherit; }
+[class*='carte--'] :is(.border-line, .divide-line > *) { border-color: color-mix(in srgb, currentColor 16%, transparent); }
+
+/* ===== Boutons, puces, états, champs ===== */
+@layer components {
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 40px; padding: 8px 16px;
+    border: 1.5px solid var(--trait); border-radius: 13px;
+    background: var(--carte); font-weight: 600; text-decoration: none; white-space: nowrap;
+    transition: transform .15s var(--ressort), background .15s, border-color .15s, color .15s;
+  }
+  .btn:hover { border-color: currentColor; transform: translateY(-1px); }
+  .btn:active { transform: scale(.96); }
+  .btn:disabled, .btn[aria-disabled='true'] { opacity: .5; pointer-events: none; }
+  .btn--plein { background: var(--encre); color: var(--fond); border-color: var(--encre); }
+  .btn--plein:hover { border-color: var(--encre); }
+  .btn--grand { min-height: 48px; padding: 10px 22px; font-size: 16px; }
+  .btn--petit { min-height: 32px; padding: 4px 11px; border-radius: 10px; font-size: 13px; }
+  .btn--fantome { background: transparent; }
+  .btn--danger { color: var(--urgent); }
+  [class*='carte--'] .btn:not(.btn--plein) { background: rgba(255, 255, 255, .32); border-color: transparent; color: inherit; }
+  :is(.carte--indigo, .carte--encre) .btn:not(.btn--plein) { background: rgba(255, 255, 255, .16); }
+  [class*='carte--'] .btn--plein { background: #18122B; color: #fff; border-color: #18122B; }
+  :is(.carte--indigo, .carte--encre) .btn--plein { background: #fff; color: #18122B; border-color: #fff; }
+  [data-mode='sombre'] .carte--encre .btn--plein { background: #18122B; color: #fff; border-color: #18122B; }
+
+  .puce {
+    display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+    padding: 5px 11px; border-radius: 999px; border: 1.5px solid var(--trait);
+    background: transparent; font-size: 13px; font-weight: 500; white-space: nowrap; text-decoration: none;
+    transition: transform .15s var(--ressort), background .15s, border-color .15s;
+  }
+  :is(button, a, label).puce:hover { transform: translateY(-1px); border-color: currentColor; }
+  .puce:active { transform: scale(.96); }
+  .puce[aria-pressed='true'], .puce[aria-checked='true'], .puce[aria-current='page'], .puce.active {
+    background: var(--encre); color: var(--fond); border-color: var(--encre);
+  }
+  .puce b { font: 500 12px var(--mono); opacity: .75; }
+  .puce--ajout { border-style: dashed; color: var(--doux); }
+
+  .etat {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 600; background: var(--creux); white-space: nowrap;
+  }
+  .etat::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .etat--ok { color: var(--ok); } .etat--chaud { color: var(--alerte); } .etat--urgent { color: var(--urgent); } .etat--neutre { color: var(--doux); } .etat--froid { color: var(--doux); opacity: .8; }
+
+  .champ { display: grid; gap: 5px; font-size: 13px; font-weight: 600; min-width: 0; }
+  .champ > span:first-child { color: var(--doux); }
+  .saisie, .champ :is(input, select, textarea) {
+    width: 100%; min-height: 42px; padding: 9px 12px;
+    border: 1.5px solid var(--trait); border-radius: 12px;
+    background: var(--creux); color: var(--encre); font-weight: 400; font-size: 15px;
+  }
+  .saisie:focus, .champ :is(input, select, textarea):focus, .saisie:focus-within {
+    outline: none; border-color: var(--indigo);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--indigo) 22%, transparent);
+  }
+  .champ .aide { color: var(--doux); font-size: 12.5px; font-weight: 400; }
+
+  .segment { display: flex; padding: 4px; border-radius: 13px; background: var(--creux); }
+  .segment button { flex: 1; border: 0; background: none; padding: 8px; border-radius: 10px; font-weight: 600; font-size: 14px; white-space: nowrap; color: var(--doux); transition: background .15s, color .15s; }
+  .segment button[aria-checked='true'], .segment button[aria-pressed='true'] { background: var(--carte); color: var(--encre); box-shadow: var(--ombre); }
+
+  .date {
+    display: inline-flex; align-items: center; gap: 4px;
+    font: 500 12px var(--mono); padding: 2px 7px; border-radius: 7px; background: var(--creux); white-space: nowrap;
+  }
+  .date.proche { background: var(--mangue); color: #18122B; }
+  .date.retard { background: var(--hibiscus); color: #18122B; }
+
+  .liste { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+
+  .toast {
+    padding: 11px 18px; border-radius: 14px; background: var(--encre); color: var(--fond);
+    font-weight: 500; animation: monte .35s var(--ressort) both;
+  }
+}
+
+/* ===== Personnaliser ===== */
+@layer components {
+  .nuancier { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .nuance { display: grid; gap: 6px; padding: 10px; border-radius: 16px; border: 2px solid var(--trait); background: none; text-align: center; font-size: 13px; font-weight: 600; transition: transform .2s var(--ressort), border-color .15s; }
+  .nuance:hover { transform: translateY(-2px); }
+  .nuance[aria-checked='true'] { border-color: var(--encre); }
+  .nuance > span { display: grid; grid-template-columns: repeat(3, 1fr); height: 34px; border-radius: 10px; overflow: hidden; }
+  .reglage h2 { font-size: 17px; font-stretch: 90%; }
+}
+
+/* ===== Navigation : barre latérale, barre flottante sous 860 px ===== */
+@layer components {
+  .app { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100dvh; }
+  .rail { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; gap: 4px; padding: 20px 14px; overflow-y: auto; }
+  .rail__logo { display: flex; align-items: center; gap: 10px; padding: 6px 10px 18px; text-decoration: none; }
+  .rail__logo b { display: block; font: 700 19px/1 var(--display); font-stretch: 80%; letter-spacing: -.02em; }
+  .rail__logo span { display: block; font: italic 400 15px/1 var(--serif); color: var(--doux); }
+  .rail .lien { display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 12px; border: 0; background: none; border-radius: 14px; text-decoration: none; font-weight: 500; text-align: left; transition: background .15s, transform .15s; }
+  .rail .lien:hover { background: var(--trait); }
+  .rail .lien:active { transform: scale(.97); }
+  .rail .lien[aria-current='page'] { background: var(--encre); color: var(--fond); }
+  .rail .lien svg { width: 19px; height: 19px; flex: none; }
+  .rail .lien .cpt { margin-left: auto; font: 500 12px var(--mono); padding: 1px 7px; border-radius: 8px; background: var(--hibiscus); color: var(--sur-hibiscus); }
+  .rail__bas { margin-top: auto; padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .vue { padding: 26px 30px 80px 12px; min-width: 0; outline: none; }
+  .vue > * { animation: entree .35s ease both; }
+
+  .fab {
+    position: fixed; z-index: 30; display: none; place-items: center;
+    width: 56px; height: 56px; border-radius: 20px;
+    background: var(--indigo); color: var(--sur-indigo); box-shadow: 0 18px 34px -16px rgba(24, 18, 43, .6);
+    transition: transform .15s var(--ressort);
+  }
+  .fab:hover { transform: translateY(-2px) rotate(-3deg); }
+  .fab:active { transform: scale(.94); }
+
+  @media (max-width: 859px) {
+    .app { grid-template-columns: 1fr; }
+    .rail {
+      position: fixed; z-index: 30; inset: auto 10px calc(env(safe-area-inset-bottom) + 10px) 10px;
+      height: auto; flex-direction: row; align-items: center; gap: 2px; padding: 6px;
+      border-radius: 20px; background: var(--encre); overflow-x: auto;
+      box-shadow: 0 18px 40px -16px rgba(0, 0, 0, .45);
+    }
+    .rail__logo, .rail__bas, .rail .lien .cpt { display: none; }
+    .rail .lien { flex: 1; flex-direction: column; gap: 3px; padding: 8px 10px; font-size: 11px; color: var(--fond); justify-content: center; text-align: center; white-space: nowrap; }
+    .rail .lien:hover { background: rgba(255, 255, 255, .08); }
+    [data-mode='sombre'] .rail .lien:hover { background: rgba(0, 0, 0, .06); }
+    .rail .lien[aria-current='page'] { background: var(--fond); color: var(--encre); }
+    .vue { padding: 16px 16px calc(env(safe-area-inset-bottom) + 150px); }
+    .fab { display: grid; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 86px); }
+  }
+}
+
+/* ===== Tiroir / panneau ===== */
+@layer components {
+  .voile { background: rgba(14, 12, 24, .45); }
+}
+
+/* ===== Anneau d'avancement ===== */
+@layer components {
+  .anneau { position: relative; width: var(--t, 112px); height: var(--t, 112px); flex: none; }
+  .anneau svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .anneau circle { fill: none; stroke-width: 11; }
+  .anneau .fond { stroke: currentColor; opacity: .16; }
+  .anneau .trace { stroke: currentColor; stroke-linecap: round; transition: stroke-dashoffset 1s var(--entree); }
+  .anneau b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 calc(var(--t, 112px) * .3)/1 var(--display); font-stretch: 78%; letter-spacing: -.03em; }
+  .anneau b small { font-size: .45em; margin-left: 1px; opacity: .7; }
+}
+
+/* ===== Mouvement ===== */
+@keyframes entree { from { opacity: 0; transform: translateY(8px); } }
+@keyframes monte { from { transform: translateY(16px) scale(.94); opacity: 0; } }
 
 /* Champs à 16 px sur mobile : en dessous, Safari iOS zoome sur chaque
-   saisie et ne redescend jamais (même règle que Hive). Hors couche, elle
-   l'emporte sur les utilitaires Tailwind sans `!important`. */
+   saisie et ne redescend jamais (même règle que Hive). */
 @media (max-width: 640px) {
-  input,
-  select,
-  textarea {
-    font-size: 16px;
-  }
+  input, select, textarea { font-size: 16px !important; }
 }
 
-/* En couche `base` : hors couche, cette règle l'emportait sur les
-   `focus:outline-none` des champs, qui recevaient en plus de leur bordure
-   verte un contour carré par-dessus leurs coins arrondis. */
-@layer base {
-  :focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-}
-
+/* ===== Mouvement réduit ===== */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .carte { transform: none !important; }
 }
 
-/* Bascule de thème : `ThemeToggle` ouvre le nouveau thème en cercle depuis
+/* Bascule de mode : `ThemeToggle` ouvre le nouveau mode en cercle depuis
    le bouton ; on coupe le fondu croisé par défaut du navigateur. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
-}
-
-/* Tuiles de la page d'entrée : un halo suit le pointeur (variables posées
-   par `Tile`), invisible au doigt où il n'y a pas de survol. */
-@utility bento-spot {
-  position: relative;
-  isolation: isolate;
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s;
-    background: radial-gradient(
-      320px circle at var(--spot-x, 50%) var(--spot-y, 50%),
-      color-mix(in srgb, var(--done) 16%, transparent),
-      transparent 70%
-    );
-  }
-  @media (hover: hover) {
-    &:hover::before {
-      opacity: 1;
-    }
-  }
-}
-
-@utility card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-}
-
-/* Réserve la place de la barre d'onglets et du bouton d'ajout, plus
-   l'encoche basse des iPhone en mode installé. */
-@utility pb-shell {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 9rem);
 }

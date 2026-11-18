@@ -125,8 +125,15 @@ Copier `.env.example` en `.env.local` dans chaque app.
 - Sowly est déployé sur Vercel (projet `sowly`, racine `web/apps/sowly`) : https://sowly-one.vercel.app. Toutes ses icônes sortent de `public/icon.svg` via `npm run icons --workspace apps/sowly`.
 - Le détail d'une habitude est `/habitude?id=…` et non une route dynamique : c'est ce
   qui lui permet de s'ouvrir hors-ligne — [apps/sowly/components/habits/HabitDetail.tsx:1](apps/sowly/components/habits/HabitDetail.tsx#L1).
-- Sowly charge deux polices (General Sans sous-ensemblée + Inter via `next/font`), seule
-  exception à la règle « aucune police téléchargée », décidée pour le brief Sowly §6.
+- Sowly suit le **brief design « Hub side hustles »** (18/11/2026) : tokens, quatre
+  palettes (`data-theme`), mode (`data-mode`), densité et police des titres posés sur
+  `<html>` avant le premier affichage, classes du hub (`.carte`, `.btn`, `.puce`, `.etat`,
+  `.segment`, `.champ`…) — [apps/sowly/app/globals.css](apps/sowly/app/globals.css#L1),
+  [apps/sowly/lib/theme.ts](apps/sowly/lib/theme.ts#L1). Les rôles historiques
+  (`bg-card`, `text-muted`…) sont branchés sur ces tokens. Ses quatre polices
+  (Bricolage, Instrument Serif, Hanken Grotesk, Plex Mono, woff2 du hub dans
+  `app/fonts/hub/`, via `next/font/local`) sont l'exception à la règle « aucune police
+  téléchargée » ; l'image de partage utilise trois TTF statiques qui en sont tirés.
   Le brief Sowly vit hors du dépôt (`Graines_dHabitudes_Sowly_Brief_v2.md`).
 - **Le téléphone ne se lit jamais dans `profiles`** : son propre numéro se relit dans le
   pseudo-email (`phoneFromEmail`), celui d'une contrepartie passe par une fonction qui

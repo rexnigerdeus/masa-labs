@@ -19,7 +19,7 @@
  * deux fois le poids de ce fichier pour les mêmes trois règles.
  */
 
-const VERSION = 'sowly-v3';
+const VERSION = 'sowly-v4';
 const PAGES = [
   '/',
   '/bienvenue',

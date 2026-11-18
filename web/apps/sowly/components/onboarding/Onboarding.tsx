@@ -76,16 +76,16 @@ export function Onboarding() {
           type="button"
           onClick={back}
           aria-label="Étape précédente"
-          className={`-ml-2 rounded-full p-2 text-muted hover:text-ink ${index === 0 ? 'invisible' : ''}`}
+          className={`btn btn--fantome -ml-2 h-10 w-10 !p-0 text-muted ${index === 0 ? 'invisible' : ''}`}
         >
           <ChevronLeftIcon className="h-5 w-5" />
         </button>
         <div className="flex flex-1 gap-1.5" aria-hidden>
           {STEPS.map((s, i) => (
-            <span key={s} className={`h-1 flex-1 rounded-full transition-colors ${i <= index ? 'bg-primary' : 'bg-line'}`} />
+            <span key={s} className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${i <= index ? 'bg-lagune' : 'bg-line'}`} />
           ))}
         </div>
-        <span className="sr-only">Étape {index + 1} sur {STEPS.length}</span>
+        <span className="mono text-muted"><span className="sr-only">Étape </span>{index + 1}/{STEPS.length}</span>
       </div>
 
       <AnimatePresence mode="wait" custom={direction} initial={false}>
@@ -100,7 +100,7 @@ export function Onboarding() {
         >
           {step === 'identite' ? (
             <Screen
-              title="Qui veux-tu devenir ?"
+              title={<>Qui veux-tu <em className="s">devenir</em> ?</>}
               lead={`Choisis jusqu’à ${MAX_IDENTITIES} identités. Chaque habitude en sera une preuve, jour après jour.`}
               action={
                 <Button
@@ -126,8 +126,8 @@ export function Onboarding() {
                         aria-pressed={on}
                         disabled={full}
                         onClick={() => setIdentities(on ? identities.filter((x) => x !== i.id) : [...identities, i.id])}
-                        className={`w-full rounded-2xl border-2 px-4 py-3.5 text-left text-[16px] font-medium transition disabled:opacity-40 ${
-                          on ? 'border-primary bg-done-soft text-primary-ink' : 'border-line bg-card text-ink'
+                        className={`w-full rounded-[16px] px-4 py-3.5 text-left text-[16px] font-semibold shadow-[var(--ombre)] transition duration-150 ease-[var(--ressort)] hover:-translate-y-0.5 active:scale-[.98] disabled:opacity-40 ${
+                          on ? 'bg-lagune text-[var(--sur-lagune)]' : 'bg-card text-ink'
                         }`}
                       >
                         {i.label}
@@ -139,7 +139,7 @@ export function Onboarding() {
             </Screen>
           ) : step === 'habitude' ? (
             <Screen
-              title="Ta première graine"
+              title={<>Ta première <em className="s">graine</em></>}
               lead="Une seule habitude pour commencer. Assez petite pour ne jamais avoir d’excuse."
               action={
                 <Button variant="primary" size="lg" className="w-full" disabled={habit.action.trim() === ''} onClick={() => go('contrat')}>
@@ -147,16 +147,19 @@ export function Onboarding() {
                 </Button>
               }
             >
-              <HabitForm value={habit} onChange={setHabit} identities={identities} showWhy={false} />
+              <div className="carte">
+                <HabitForm value={habit} onChange={setHabit} identities={identities} showWhy={false} />
+              </div>
             </Screen>
           ) : step === 'contrat' ? (
             <Screen
-              title="Ton engagement"
+              title={<>Ton <em className="s">engagement</em></>}
               lead="Pas une promesse d’être parfait. Une promesse de revenir, même après un jour manqué."
               action={<HoldToCommit onCommit={() => setTimeout(() => go('taches'), 450)} />}
             >
-              <blockquote className="card flex flex-col gap-3 p-5">
-                <p className="font-display text-xl leading-snug font-semibold">{intention(habit)}</p>
+              <blockquote className="carte carte--encre hero">
+                <p className="sur">Mon contrat</p>
+                <p className="accroche">{intention(habit)}</p>
                 <p className="text-[15px] text-muted">
                   Je commence petit. Je recommence quand je rate. Je deviens{' '}
                   {identities.map((id) => IDENTITIES.find((i) => i.id === id)?.label.replace(/^Quelqu’un/, 'quelqu’un'))
@@ -167,7 +170,7 @@ export function Onboarding() {
             </Screen>
           ) : (
             <Screen
-              title="Et aujourd’hui ?"
+              title={<>Et <em className="s">aujourd’hui</em> ?</>}
               lead="Les habitudes disent qui tu deviens. Les tâches, ce que tu as à faire aujourd’hui. Note-en deux ou trois."
               action={
                 <div className="flex flex-col gap-2">
@@ -198,13 +201,13 @@ export function Onboarding() {
 }
 
 function Screen({ title, lead, children, action }: {
-  title: string; lead: string; children: React.ReactNode; action: React.ReactNode;
+  title: React.ReactNode; lead: string; children: React.ReactNode; action: React.ReactNode;
 }) {
   return (
     <div className="flex flex-1 flex-col gap-6 pt-4">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-display text-[1.75rem] leading-tight font-semibold tracking-tight">{title}</h1>
-        <p className="text-[15px] text-muted">{lead}</p>
+      <header className="flex flex-col gap-3">
+        <h1 className="titre-page">{title}</h1>
+        <p className="text-[17px] text-muted">{lead}</p>
       </header>
       <div className="flex-1">{children}</div>
       <div className="sticky bottom-0 -mx-4 bg-canvas px-4 pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">{action}</div>

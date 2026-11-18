@@ -4,9 +4,10 @@ import { motion } from 'motion/react';
 import { haptic, readFeedbackPrefs } from '../lib/feedback';
 
 /**
- * Pastille de validation : le cercle se remplit, la coche se dessine
- * (brief §9). C'est le geste répété des dizaines de fois par jour ; il doit
- * être net et court — 280 ms, pas de rebond qui ferait attendre.
+ * Pastille de validation : elle se remplit de la couleur de l'app (lagune),
+ * la coche foncée se dessine et la case grossit de 8 % sur la courbe
+ * « ressort » du hub (brief design). C'est le geste répété des dizaines de
+ * fois par jour : 250 ms, pas plus.
  *
  * Motion plutôt qu'anime.js, contrairement au brief §7 : Motion est déjà
  * chargé pour les panneaux et les listes, et dessine un tracé SVG
@@ -24,7 +25,7 @@ export function CheckMark({ checked, shape = 'round', size = 'lg' }: {
   size?: 'lg' | 'sm';
 }) {
   const box = size === 'lg' ? 'h-9 w-9' : 'h-6 w-6';
-  const radius = shape === 'round' ? 'rounded-full' : 'rounded-[7px]';
+  const radius = shape === 'round' ? 'rounded-full' : 'rounded-[8px]';
   return (
     <motion.span
       aria-hidden
@@ -32,21 +33,21 @@ export function CheckMark({ checked, shape = 'round', size = 'lg' }: {
       initial={false}
       animate={{
         backgroundColor: checked ? 'var(--done)' : 'rgba(0,0,0,0)',
-        borderColor: checked ? 'var(--done)' : 'var(--faint)',
-        scale: checked ? [1, 0.88, 1] : 1,
+        borderColor: checked ? 'var(--done)' : 'var(--doux)',
+        scale: checked ? 1.08 : 1,
       }}
-      transition={{ duration: 0.28, ease: 'easeOut' }}
+      transition={{ duration: 0.25, ease: [0.34, 1.56, 0.64, 1] }}
     >
       <svg viewBox="0 0 24 24" className={size === 'lg' ? 'h-5 w-5' : 'h-3.5 w-3.5'} fill="none">
         <motion.path
           d="M5 12.5l4.5 4.5L19 7.5"
-          stroke="var(--card)"
+          stroke="var(--on-done)"
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
           initial={false}
           animate={{ pathLength: checked ? 1 : 0, opacity: checked ? 1 : 0 }}
-          transition={{ duration: 0.28, ease: 'easeOut', delay: checked ? 0.06 : 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut', delay: checked ? 0.05 : 0 }}
         />
       </svg>
     </motion.span>

@@ -104,7 +104,7 @@ export function AuthForm({ initialMode, lockMode = false }: {
         {busy ? 'Un instant…' : mode === 'inscription' ? 'Créer mon compte' : 'Me connecter'}
       </Button>
 
-      <p className="text-xs text-muted">
+      <p className="text-[12.5px] text-muted">
         Aucun SMS ne te sera envoyé : ton numéro sert d’identifiant. Le même compte ouvre aussi
         les autres apps The Everyday Co.
       </p>

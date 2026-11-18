@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useInView } from 'motion/react';
 import { useInstallPrompt } from '@everyday/pwa';
 import { redirectFor } from '../lib/routing';
 import { useStore } from '../lib/store';
-import { BrandMark } from './icons';
+import { AppBadge } from './icons';
 import {
   GrowingSprout, HistoryDemo, RisingSun, IdentityCycle, InfinityDraw, OfflineDemo, TasksDemo, ThemeSwitch, TodayDemo,
 } from './landing/demos';
@@ -17,6 +17,13 @@ import { Button } from './ui';
 
 const SIGN_UP = '/connexion?mode=inscription';
 const SIGN_IN = '/connexion?mode=connexion';
+
+/** Les pastilles des trois étapes : trois aplats de la palette. */
+const STEP_COLORS = [
+  'bg-mangue text-[var(--sur-mangue)]',
+  'bg-hibiscus text-[var(--sur-hibiscus)]',
+  'bg-lagune text-[var(--sur-lagune)]',
+];
 
 const STEPS = [
   {
@@ -69,39 +76,36 @@ export function Landing() {
     <div className="flex min-h-dvh flex-col gap-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:gap-6">
       <header className="flex items-center justify-between gap-3 py-1">
         <span className="flex items-center gap-2.5">
-          <AppBadge className="h-10 w-10 rounded-xl" mark="h-7 w-7" />
-          <span className="font-display text-xl font-semibold tracking-tight">Sowly</span>
+          <AppBadge className="h-10 w-10" />
+          <span className="flex flex-col gap-1">
+            <span className="display text-[21px] !leading-none [font-stretch:80%]">Sowly</span>
+            <span className="s text-[15px] leading-none text-muted">graines d’habitudes</span>
+          </span>
         </span>
         <span className="flex items-center gap-2">
-          <Link
-            href={SIGN_IN}
-            className="hidden h-10 items-center rounded-full px-4 text-sm font-medium text-muted hover:bg-raised hover:text-ink sm:inline-flex"
-          >
+          <Link href={SIGN_IN} className="btn btn--fantome hidden sm:inline-flex">
             Se connecter
           </Link>
           <ThemeToggle />
         </span>
       </header>
 
-      <div className="grid grid-flow-row-dense grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+      <div className="grid grid-flow-row-dense grid-cols-1 gap-[var(--pas)] sm:grid-cols-2 lg:grid-cols-4">
         {/* ------------------------------------------------------ Promesse */}
         <Tile
           label="Sowly, Graines d’Habitudes"
-          className="relative min-h-[26rem] border-line bg-night text-creme-50 sm:col-span-2 lg:row-span-2 lg:min-h-[34rem]"
+          className="carte--lagune hero relative min-h-[26rem] sm:col-span-2 lg:row-span-2 lg:min-h-[34rem]"
         >
-          {/* Le langage du hero de The Everyday Co. : fond encre, pastille à
-              point jaune, dernière ligne dans le vert lumineux du produit. */}
-          <GrowingSprout className="absolute -right-10 -bottom-4 h-60 w-60 text-pousse-400 opacity-30 sm:h-72 sm:w-72" />
+          {/* Le hero du hub : un aplat de la couleur de l'app, le grand titre
+              serré et sa fin en serif italique. */}
+          <GrowingSprout className="absolute -right-10 -bottom-4 h-60 w-60 opacity-20 sm:h-72 sm:w-72" />
           <RisingSun className="absolute top-6 right-6 h-9 w-9 sm:top-8 sm:right-8 sm:h-11 sm:w-11" />
-          <p className="relative inline-flex items-center gap-2 self-start rounded-full border border-creme-50/20 px-3 py-1.5 text-xs font-semibold tracking-[0.12em] uppercase">
-            <span aria-hidden className="h-2 w-2 rounded-full bg-soleil-300" />
-            Graines d’Habitudes
-          </p>
-          <h1 className="relative mt-4 font-display text-[2.5rem] leading-[1.02] font-semibold tracking-tight sm:text-[3.4rem]">
+          <p className="sur relative">Graines d’habitudes · 0 F · sans réseau</p>
+          <h1 className="titre-hero relative mt-4">
             {['Suis tes habitudes.', 'Gère tes tâches.', 'Sans limite.'].map((line, i) => (
-              <span key={line} className="block overflow-hidden pb-[0.06em]">
+              <span key={line} className="block overflow-hidden pb-[0.08em]">
                 <motion.span
-                  className={`block ${i === 2 ? 'text-pousse-300' : ''}`}
+                  className={`block ${i === 2 ? 's' : ''}`}
                   initial={{ y: '105%' }}
                   animate={{ y: 0 }}
                   transition={{ duration: 0.7, ease: EASE, delay: 0.1 + i * 0.12 }}
@@ -111,45 +115,39 @@ export function Landing() {
               </span>
             ))}
           </h1>
-          <p className="relative mt-4 max-w-sm text-[16px] leading-relaxed text-creme-300">
+          <p className="relative mt-4 max-w-sm text-[17px] leading-relaxed opacity-85">
             De petites graines, de vraies habitudes. Gratuit, illimité, et ça marche même sans réseau.
           </p>
           <div ref={heroCta} className="relative mt-auto flex flex-wrap items-center gap-2 pt-8">
-            <Link
-              href={SIGN_UP}
-              className="inline-flex h-12 items-center justify-center rounded-full bg-creme-50 px-6 text-base font-semibold text-creme-950 transition hover:scale-[1.03] active:scale-95"
-            >
+            <Link href={SIGN_UP} className="btn btn--plein btn--grand">
               Créer mon compte
             </Link>
-            <Link
-              href={SIGN_IN}
-              className="inline-flex h-12 items-center rounded-full border border-creme-50/30 px-5 text-[15px] font-semibold transition hover:bg-creme-50/10"
-            >
+            <Link href={SIGN_IN} className="btn btn--grand">
               J’ai déjà un compte
             </Link>
           </div>
         </Tile>
 
         {/* ------------------------------------------------------- L'essai */}
-        <Tile delay={0.1} className="border-line bg-card sm:col-span-2 lg:row-span-2">
+        <Tile delay={0.1} className="sm:col-span-2 lg:row-span-2">
           <TodayDemo />
-          <TileText title="Un écran, un geste par jour">
+          <TileText title={<>Un écran, <em className="s">un geste</em> par jour</>}>
             « Aujourd’hui » rassemble tes habitudes du matin, de la journée et du soir. Touche une
             pastille pour valider : ta série grandit d’un jour.
           </TileText>
         </Tile>
 
         {/* ------------------------------------------------ Trois étapes */}
-        <Tile className="border-line bg-card sm:col-span-2 lg:col-span-4">
+        <Tile className="sm:col-span-2 lg:col-span-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-display text-2xl font-semibold tracking-tight">Se lancer en 3 étapes</h2>
+            <h2 className="titre-section">Se lancer en <em className="s">3 étapes</em></h2>
             <p className="text-sm text-muted">Moins de deux minutes avant ta première graine.</p>
           </div>
           <ol className="relative mt-6 grid gap-5 sm:grid-cols-3 sm:gap-6">
             {/* Le fil qui relie les étapes se trace à l'arrivée de la tuile. */}
             <motion.span
               aria-hidden
-              className="absolute top-5 right-[16%] left-[16%] hidden h-0.5 origin-left bg-line sm:block"
+              className="absolute top-[30px] right-[16%] left-[16%] hidden h-0 origin-left border-t-[1.5px] border-dashed border-line sm:block"
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
               viewport={{ once: true, amount: 0.6 }}
@@ -164,13 +162,13 @@ export function Landing() {
                 viewport={{ once: true, amount: 0.6 }}
                 transition={{ duration: 0.5, ease: EASE, delay: 0.3 + i * 0.25 }}
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary font-display text-lg font-semibold text-on-primary ring-4 ring-card">
+                <span className={`display grid h-[62px] w-[62px] shrink-0 rotate-[4deg] place-items-center rounded-[20px] text-[26px] [font-stretch:75%] transition duration-300 ease-[var(--ressort)] hover:-rotate-3 hover:scale-[1.08] ${STEP_COLORS[i]}`}>
                   {i + 1}
                 </span>
                 <span className="flex flex-col gap-1">
-                  <span className="font-display text-lg font-semibold">{s.title}</span>
+                  <span className="display text-[21px]">{s.title}</span>
                   <span className="text-[15px] leading-relaxed text-muted">{s.text}</span>
-                  <span className="mt-1 self-start rounded-full bg-raised px-2.5 py-0.5 text-xs font-medium text-muted sm:self-center">
+                  <span className="mono mt-1 self-start rounded-[7px] bg-raised px-2 py-0.5 text-muted sm:self-center">
                     {s.time}
                   </span>
                 </span>
@@ -180,103 +178,103 @@ export function Landing() {
         </Tile>
 
         {/* ------------------------------------------------------ Identité */}
-        <Tile className="border-line bg-card sm:col-span-2">
+        <Tile className="carte--citron sm:col-span-2">
           <IdentityCycle />
-          <TileText title="Commence par qui tu veux devenir">
+          <TileText title={<>Commence par qui tu veux <em className="s">devenir</em></>}>
             Chaque habitude est la preuve quotidienne d’une identité. Et elle commence minuscule : une
             page, cinq pompes, deux minutes. Le but des premières semaines, c’est de ne jamais rater.
           </TileText>
         </Tile>
 
         {/* ---------------------------------------------------- Historique */}
-        <Tile delay={0.1} className="border-line bg-card lg:row-span-2">
+        <Tile delay={0.1} className="lg:row-span-2">
           <HistoryDemo />
-          <TileText title="Jamais culpabilisant">
+          <TileText title={<>Jamais <em className="s">culpabilisant</em></>}>
             Un jour manqué reste une case vide : ni rouge, ni reproche. Ce qui compte, c’est de revenir
             le lendemain. Oublié de cocher hier soir ? Touche la case, c’est rattrapé.
           </TileText>
         </Tile>
 
         {/* -------------------------------------------------------- Tâches */}
-        <Tile delay={0.2} className="border-line bg-card">
+        <Tile delay={0.2}>
           <TasksDemo />
-          <TileText title="Tes tâches, à côté">
+          <TileText title={<>Tes tâches, <em className="s">à côté</em></>}>
             « Ma journée », tes listes, et le bouton + depuis n’importe quel écran.
           </TileText>
         </Tile>
 
         {/* ---------------------------------------------------- Hors réseau */}
-        <Tile className="border-line bg-card">
+        <Tile className="carte--ciel">
           <OfflineDemo />
-          <TileText title="Même sans réseau">
+          <TileText title={<>Même <em className="s">sans réseau</em></>}>
             Tout est gardé sur ton téléphone et repart vers ton compte au retour du réseau.
           </TileText>
         </Tile>
 
         {/* ------------------------------------------------------- Illimité */}
-        <Tile delay={0.1} className="border-line bg-done-soft">
+        <Tile delay={0.1} className="carte--hibiscus">
           <div className="flex items-end gap-3">
             <InfinityDraw />
-            <p className="pb-3 font-display text-3xl font-semibold tracking-tight text-primary-ink">0 F</p>
+            <p className="chiffre pb-2">0 F</p>
           </div>
-          <TileText title="Sans limite, gratuit">
+          <TileText title={<>Sans limite, <em className="s">gratuit</em></>}>
             Habitudes et tâches illimitées. Pas d’abonnement, pas de publicité.
           </TileText>
         </Tile>
 
         {/* ---------------------------------------------------------- Thème */}
-        <Tile delay={0.2} className="border-line bg-card">
+        <Tile delay={0.2}>
           <ThemeSwitch />
-          <TileText title="Clair ou sombre">
-            Bascule ici ou en haut de chaque écran. Dans Réglages, Sowly peut aussi suivre ton téléphone.
+          <TileText title={<>Clair ou <em className="s">sombre</em></>}>
+            Bascule ici ou en haut de chaque écran. Dans Personnaliser, choisis aussi ta palette, ta densité et
+            la police des titres.
           </TileText>
         </Tile>
 
         {/* --------------------------------------------------------- Compte */}
-        <Tile className="border-line bg-card sm:col-span-2">
+        <Tile className="sm:col-span-2">
           <div aria-hidden className="flex flex-col gap-2">
             <FakeField label="Numéro de téléphone" value="07 •• •• •• 12" />
             <FakeField label="Mot de passe" value="••••••••••" />
           </div>
           <div className="mt-4 flex flex-wrap gap-1.5">
             {['Aucun SMS', 'Aucun email', 'Tous tes appareils', 'Même compte que les apps The Everyday Co.'].map((c) => (
-              <span key={c} className="rounded-full bg-raised px-2.5 py-1 text-xs font-medium text-muted">{c}</span>
+              <span key={c} className="puce">{c}</span>
             ))}
           </div>
-          <TileText title="Un compte, et c’est tout">
+          <TileText title={<>Un compte, <em className="s">et c’est tout</em></>}>
             Il garde tes habitudes et tes tâches en sécurité et les retrouve sur ton téléphone comme sur
             ton ordinateur.
           </TileText>
         </Tile>
 
         {/* ----------------------------------------------------- Installer */}
-        <Tile delay={0.1} className="border-line bg-card sm:col-span-2">
+        <Tile delay={0.1} className="carte--indigo sm:col-span-2">
           <InstallBlock />
         </Tile>
 
         {/* ------------------------------------------------------ Dernier mot */}
-        <Tile className="items-start border-transparent bg-raised sm:col-span-2 sm:flex-row sm:items-center sm:justify-between lg:col-span-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-              Plante ta première graine aujourd’hui.
+        <Tile className="carte--encre hero items-start sm:col-span-2 sm:flex-row sm:items-center sm:justify-between lg:col-span-4">
+          <div className="flex flex-col gap-2">
+            <h2 className="titre-page">
+              Plante ta première <em className="s">graine</em>
             </h2>
-            <p className="text-[15px] text-muted">Deux minutes suffisent. Le reste pousse tout seul.</p>
+            <p className="text-[17px] text-muted">Deux minutes suffisent. Le reste pousse tout seul.</p>
           </div>
           <div ref={endCta} className="mt-5 flex flex-wrap items-center gap-2 sm:mt-0">
-            <Link
-              href={SIGN_UP}
-              className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 text-base font-semibold text-on-primary transition hover:brightness-110 active:scale-95"
-            >
+            <Link href={SIGN_UP} className="btn btn--plein btn--grand">
               Créer mon compte
             </Link>
-            <Link href={SIGN_IN} className="inline-flex h-12 items-center px-3 text-sm font-medium text-muted hover:text-ink">
+            <Link href={SIGN_IN} className="btn btn--grand">
               J’ai déjà un compte
             </Link>
           </div>
         </Tile>
       </div>
 
-      <p className="px-1 text-center text-xs text-faint">Sowly — Graines d’Habitudes · The Everyday Co.</p>
+      <p className="px-1 text-center text-[12.5px] text-muted">
+        Sowly — <em className="s text-[15px]">Graines d’Habitudes</em> · The Everyday Co.
+      </p>
 
       <AnimatePresence>
         {showSticky ? (
@@ -285,12 +283,9 @@ export function Landing() {
             animate={{ y: 0 }}
             exit={{ y: '110%' }}
             transition={{ duration: 0.35, ease: EASE }}
-            className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-canvas/90 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden"
+            className="fixed inset-x-2.5 bottom-[calc(env(safe-area-inset-bottom)+10px)] z-20 rounded-[20px] bg-encre p-1.5 shadow-[0_18px_40px_-16px_rgba(0,0,0,.45)] sm:hidden"
           >
-            <Link
-              href={SIGN_UP}
-              className="flex h-12 items-center justify-center rounded-full bg-primary text-base font-semibold text-on-primary active:scale-95"
-            >
+            <Link href={SIGN_UP} className="btn btn--grand w-full !border-transparent !bg-[var(--fond)] !text-[var(--encre)]">
               Créer mon compte
             </Link>
           </motion.div>
@@ -302,9 +297,9 @@ export function Landing() {
 
 function FakeField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-canvas px-3.5 py-2.5">
+    <div className="saisie flex items-center justify-between gap-3">
       <span className="text-sm text-muted">{label}</span>
-      <span className="font-display text-[15px] tracking-wider">{value}</span>
+      <span className="mono text-[14px] tracking-wider">{value}</span>
     </div>
   );
 }
@@ -328,7 +323,7 @@ function InstallBlock() {
         <span className="font-medium text-ink">« Sur l’écran d’accueil »</span>.
       </p>
     ),
-    installed: <p className="text-[15px] font-medium text-primary-ink">Sowly est déjà installée sur cet appareil.</p>,
+    installed: <p className="etat etat--ok self-start">Sowly est déjà installée sur cet appareil</p>,
     unsupported: (
       <p className="text-[15px] text-muted">
         Ouvre Sowly dans Chrome ou Safari, puis choisis{' '}
@@ -343,7 +338,7 @@ function InstallBlock() {
         {[0, 1, 2, 3].map((i) => (
           <motion.span
             key={i}
-            className={`grid h-14 w-14 place-items-center rounded-2xl ${i === 1 ? '' : 'bg-raised'}`}
+            className={`grid h-14 w-14 place-items-center rounded-[16px] ${i === 1 ? '' : 'bg-[rgba(255,255,255,.16)]'}`}
             initial={{ y: 20, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0.5 }}
@@ -351,24 +346,15 @@ function InstallBlock() {
               ? { type: 'spring', stiffness: 260, damping: 14, delay: 0.55 }
               : { duration: 0.4, ease: EASE, delay: 0.15 + i * 0.08 }}
           >
-            {i === 1 ? <AppBadge className="h-14 w-14 rounded-2xl" mark="h-9 w-9" /> : null}
+            {i === 1 ? <AppBadge className="h-14 w-14" /> : null}
           </motion.span>
         ))}
       </div>
-      <TileText title="Sur ton écran d’accueil">
+      <TileText title={<>Sur ton <em className="s">écran d’accueil</em></>}>
         Sowly s’ouvre alors en un geste, comme une app, même sans réseau. C’est fait pour les
         quelques secondes de chaque jour.
       </TileText>
       <div className="pt-3">{body}</div>
     </>
-  );
-}
-
-/** La marque dans son carré vert, comme l'icône d'app — mêmes couleurs dans les deux thèmes. */
-function AppBadge({ className, mark }: { className: string; mark: string }) {
-  return (
-    <span className={`grid shrink-0 place-items-center bg-gradient-to-b from-pousse-500 to-pousse-700 text-creme-50 ${className}`}>
-      <BrandMark sun className={mark} />
-    </span>
   );
 }

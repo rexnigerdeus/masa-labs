@@ -33,23 +33,28 @@ export function ConnexionScreen() {
       <div className="flex items-center justify-between">
         <Link
           href={reconnect ? '/reglages' : '/bienvenue'}
-          className="-ml-2 inline-flex items-center gap-1 rounded-full py-1.5 pr-3 pl-1.5 text-sm font-medium text-muted hover:text-ink"
+          className="btn btn--fantome btn--petit -ml-2 !pl-1.5 text-muted"
         >
           <ChevronLeftIcon className="h-5 w-5" /> Retour
         </Link>
         <ThemeToggle />
       </div>
-      <header className="flex flex-col gap-2">
-        <h1 className="font-display text-[1.75rem] leading-tight font-semibold tracking-tight">
-          {reconnect ? 'Reconnecte-toi' : mode === 'inscription' ? 'Crée ton compte' : 'Content de te revoir'}
+      <header className="flex flex-col gap-3">
+        <p className="sur">{reconnect ? 'Session expirée' : 'Sowly · gratuit, sans limite'}</p>
+        <h1 className="titre-page">
+          {reconnect
+            ? <>Reconnecte-<em className="s">toi</em></>
+            : mode === 'inscription' ? <>Crée ton <em className="s">compte</em></> : <>Content de te <em className="s">revoir</em></>}
         </h1>
-        <p className="text-[15px] text-muted">
+        <p className="text-[17px] text-muted">
           {reconnect
             ? 'Avec le même numéro, tes modifications gardées sur cet appareil repartiront vers ton compte.'
             : 'Un numéro et un mot de passe : tes habitudes et tes tâches te suivent sur tous tes appareils.'}
         </p>
       </header>
-      <AuthForm initialMode={mode} lockMode={reconnect} />
+      <div className="carte">
+        <AuthForm initialMode={mode} lockMode={reconnect} />
+      </div>
     </div>
   );
 }

@@ -30,12 +30,17 @@ export function NewHabit() {
   if (store === null) return null;
 
   return (
-    <div className="flex flex-col gap-6 pt-4">
-      <Link href="/" className="-ml-2 inline-flex items-center gap-1 self-start rounded-full py-1.5 pr-3 pl-1.5 text-sm font-medium text-muted hover:text-ink">
+    <div className="flex flex-col gap-6 pt-2">
+      <Link href="/" className="btn btn--fantome btn--petit -ml-2 self-start !pl-1.5 text-muted">
         <ChevronLeftIcon className="h-5 w-5" /> Aujourd’hui
       </Link>
-      <h1 className="font-display text-[1.75rem] leading-tight font-semibold tracking-tight">Semer une habitude</h1>
-      <HabitForm value={draft} onChange={setDraft} identities={identities} />
+      <header className="flex flex-col gap-2">
+        <p className="sur">Nouvelle habitude · sans limite</p>
+        <h1 className="titre-page">Sème une <em className="s">graine</em></h1>
+      </header>
+      <div className="carte">
+        <HabitForm value={draft} onChange={setDraft} identities={identities} />
+      </div>
       <Button
         variant="primary"
         size="lg"

@@ -120,7 +120,7 @@ function ReminderRow({ label, hint, enabled, time, onToggle, onTime }: {
     <div className="flex items-center gap-3">
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="text-[15px]">{label}</span>
-        <span className="text-xs text-muted">{hint}</span>
+        <span className="text-[12.5px] text-muted">{hint}</span>
       </div>
       <input
         type="time"
@@ -128,7 +128,7 @@ function ReminderRow({ label, hint, enabled, time, onToggle, onTime }: {
         disabled={!enabled}
         aria-label={`Heure du rappel — ${label.toLowerCase()}`}
         onChange={(e) => { if (/^\d{2}:\d{2}$/.test(e.target.value)) onTime(e.target.value); }}
-        className="rounded-xl border border-line bg-card px-2.5 py-1.5 font-display text-[15px] text-ink focus:border-primary focus:outline-none disabled:opacity-40"
+        className="saisie mono !min-h-10 !w-auto !px-2.5 !py-1.5 !text-[14px] disabled:opacity-40"
       />
       <Switch label={`Rappel — ${label.toLowerCase()}`} checked={enabled} onChange={onToggle} />
     </div>
@@ -163,12 +163,12 @@ export function RemindersCard() {
   };
 
   return (
-    <aside className="card flex items-start gap-3 p-4">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-done-soft text-primary-ink">
+    <aside className="carte carte--ciel span-6 !flex-row items-start gap-3">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] bg-[rgba(255,255,255,.4)]">
         <BellIcon className="h-5 w-5" />
       </span>
       <div className="flex flex-1 flex-col gap-2">
-        <p className="font-display text-[15px] font-semibold">Un petit rappel ?</p>
+        <p className="titre-carte display">Un petit <em className="s">rappel</em> ?</p>
         <p className="text-sm text-muted">Le matin pour ta journée, le soir s’il reste une graine à arroser.</p>
         <Button
           variant="primary"
@@ -186,7 +186,7 @@ export function RemindersCard() {
         </Button>
         {error !== null ? <Notice>{error}</Notice> : null}
       </div>
-      <button type="button" onClick={dismiss} aria-label="Ne plus proposer pour le moment" className="-m-1 p-1 text-faint hover:text-muted">
+      <button type="button" onClick={dismiss} aria-label="Ne plus proposer pour le moment" className="-m-2 grid h-10 w-10 place-items-center rounded-[12px] opacity-70 hover:opacity-100">
         <CloseIcon className="h-4 w-4" />
       </button>
     </aside>
