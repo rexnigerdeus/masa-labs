@@ -155,13 +155,20 @@ export const BrandMark = ({ className, sun = false }: P & { sun?: boolean }) => 
 );
 
 /**
- * Le logo en carré, comme l'icône d'app et le logo du hub : un aplat
- * d'encre foncée arrondi (rayon 9 sur 32), la pousse en lagune et le soleil
- * en mangue. L'encre reste foncée dans les deux modes : c'est une marque,
- * pas une surface.
+ * Le logo en carré, comme l'icône d'app et le logo du hub (rayon 9 sur 32),
+ * en aplats :
+ *   clair   carré d'encre foncée, pousse lagune, soleil mangue — l'icône
+ *           installée sur le téléphone ;
+ *   sombre  l'encre se fondrait dans le fond de nuit : le carré passe en
+ *           lagune, la pousse en encre foncée, le soleil reste mangue.
+ * Couleurs de la palette choisie (`--lagune`, `--mangue`) ; l'encre reste
+ * #18122B fixe dans les deux modes, comme sur toute couleur vive.
  */
 export const AppBadge = ({ className = 'h-9 w-9' }: P) => (
-  <span aria-hidden className={`grid shrink-0 place-items-center rounded-[28.125%] bg-[#18122B] text-lagune ${className}`}>
+  <span
+    aria-hidden
+    className={`grid shrink-0 place-items-center rounded-[28.125%] bg-[#18122B] text-lagune transition-colors duration-300 dark:bg-lagune dark:text-[#18122B] ${className}`}
+  >
     <BrandMark sun className="h-[68%] w-[68%]" />
   </span>
 );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, type PanInfo } from 'motion/react';
 
 /**
@@ -73,6 +74,11 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
   const ref = panelRef ?? localRef;
   const wide = useWide();
   const keyboard = useKeyboardInset(open && !wide);
+  // Rendu dans <body> : posé dans la page, le panneau dépendrait de ses
+  // ancêtres (une transformation ou une animation en cours en fait le repère
+  // des éléments `fixed`), et passerait sous la barre de navigation.
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  useEffect(() => setHost(document.body), []);
 
   useEffect(() => {
     if (!open) return;
@@ -95,7 +101,7 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
       aria-modal="true"
       aria-label={label}
       inert={!open}
-      className="fixed top-2.5 right-2.5 bottom-2.5 z-50 flex w-[min(560px,calc(100vw-20px))] flex-col overflow-y-auto rounded-[calc(var(--r)+4px)] bg-card p-[22px] shadow-[0_30px_80px_-20px_rgba(0,0,0,.5)]"
+      className="tiroir fixed top-2.5 right-2.5 bottom-2.5 z-50 flex w-[min(560px,calc(100vw-20px))] flex-col overflow-hidden rounded-[calc(var(--r)+4px)] bg-card shadow-[0_30px_80px_-20px_rgba(0,0,0,.5)]"
       initial={{ x: 40, opacity: 0 }}
       animate={open ? { x: 0, opacity: 1 } : { x: 40, opacity: 0 }}
       exit={{ x: 40, opacity: 0 }}
@@ -113,14 +119,13 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
       aria-label={label}
       // Fermé, le panneau reste dans le DOM mais sort de l'arbre focalisable.
       inert={!open}
-      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-xl rounded-t-[calc(var(--r)+4px)] bg-card px-5 pt-3 shadow-[0_30px_80px_-20px_rgba(0,0,0,.5)]"
+      className="tiroir tiroir--bas fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full max-w-xl flex-col rounded-t-[calc(var(--r)+4px)] bg-card pt-2.5 shadow-[0_30px_80px_-20px_rgba(0,0,0,.5)]"
       style={{
         // Clavier ouvert : le panneau se pose sur le clavier, et la marge de
         // l'encoche (qui est sous le clavier) n'a plus lieu d'être.
         bottom: keyboard.inset,
-        paddingBottom: keyboard.inset > 0 ? '0.75rem' : 'calc(env(safe-area-inset-bottom) + 1.25rem)',
+        paddingBottom: keyboard.inset > 0 ? '0px' : 'env(safe-area-inset-bottom)',
         maxHeight: keyboard.visible === null ? '92dvh' : keyboard.visible - 12,
-        overflowY: 'auto',
         transition: 'bottom 0.2s ease-out',
       }}
       initial={{ y: '110%' }}
@@ -132,7 +137,7 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
       dragElastic={{ top: 0, bottom: 0.6 }}
       onDragEnd={onDragEnd}
     >
-      <div aria-hidden className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-line" />
+      <div aria-hidden className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-line" />
       {children}
     </motion.div>
   );
@@ -151,19 +156,52 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
     />
   );
 
+  if (host === null) return null;
+
   if (keepMounted) {
-    return (
-      <>
-        {backdrop}
-        {panel}
-      </>
-    );
+    return createPortal(<>{backdrop}{panel}</>, host);
   }
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open ? backdrop : null}
       {open ? panel : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    host,
   );
+}
+
+/*
+ * Les trois pièces du tiroir du hub : une tête (surtitre, titre, bouton
+ * fermer), un corps qui défile, un pied avec les boutons. Le pied reste
+ * collé en bas du tiroir sur ordinateur et sous le contenu sur téléphone.
+ */
+
+export function SheetHead({ kicker, title, onClose, closeLabel = 'Fermer' }: {
+  kicker?: React.ReactNode;
+  title?: React.ReactNode;
+  onClose: () => void;
+  closeLabel?: string;
+}) {
+  return (
+    <div className="tiroir__tete">
+      <div className="flex min-w-0 flex-col gap-1.5">
+        {kicker !== undefined ? <p className="sur">{kicker}</p> : null}
+        {title !== undefined ? <h2 className="titre-tiroir">{title}</h2> : null}
+      </div>
+      <button type="button" onClick={onClose} aria-label={closeLabel} className="fermer">
+        <svg aria-hidden viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+export function SheetBody({ children }: { children: React.ReactNode }) {
+  return <div className="tiroir__corps">{children}</div>;
+}
+
+export function SheetFoot({ children }: { children: React.ReactNode }) {
+  return <div className="tiroir__pied">{children}</div>;
 }

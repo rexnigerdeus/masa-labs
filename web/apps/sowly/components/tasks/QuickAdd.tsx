@@ -5,7 +5,7 @@ import { addDays, formatRelative, isDay } from '../../lib/dates';
 import { createTask } from '../../lib/mutations';
 import { liveLists } from '../../lib/selectors';
 import { commit, getState, newId, today as getToday } from '../../lib/store';
-import { Sheet } from '../Sheet';
+import { Sheet, SheetBody, SheetHead } from '../Sheet';
 import { CalendarIcon, SunIcon } from '../icons';
 import { Button, Chip } from '../ui';
 
@@ -72,6 +72,12 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
 
   return (
     <Sheet open={isOpen} onClose={close} label="Ajouter une tâche" keepMounted panelRef={panelRef}>
+      <SheetHead
+        kicker={<>Nouvelle tâche · {listId === null ? 'Tâches' : lists.find((l) => l.id === listId)?.name ?? 'Tâches'}{myDay ? ' · Ma journée' : ''}</>}
+        title={<>Ajouter une <em className="s">tâche</em></>}
+        onClose={close}
+      />
+      <SheetBody>
       <form onSubmit={submit} className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <label className="saisie flex !min-h-12 min-w-0 flex-1 items-center gap-2.5 !py-0">
@@ -134,6 +140,7 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
           {added > 0 ? `${added} tâche${added > 1 ? 's' : ''} ajoutée${added > 1 ? 's' : ''}. Tu ${added > 1 ? 'les' : 'la'} retrouves dans ${listId === null ? 'Tâches' : lists.find((l) => l.id === listId)?.name ?? 'ta liste'}${myDay ? ' et Ma journée' : ''}.` : ''}
         </p>
       </form>
+      </SheetBody>
     </Sheet>
   );
 });

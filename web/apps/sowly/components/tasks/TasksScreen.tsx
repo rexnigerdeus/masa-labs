@@ -12,7 +12,7 @@ import {
 } from '../../lib/selectors';
 import { useGate } from '../../lib/gate';
 import { commit, newId, nowIso, useToday } from '../../lib/store';
-import { Sheet } from '../Sheet';
+import { Sheet, SheetBody, SheetFoot, SheetHead } from '../Sheet';
 import { GripIcon, PlusIcon } from '../icons';
 import { Accent, Button, Field, Input, ScreenTitle } from '../ui';
 import { TaskEditor } from './TaskEditor';
@@ -306,14 +306,21 @@ function ListSheet({ mode, list, onClose, onCreated, onDeleted }: {
 
   return (
     <Sheet open={mode !== null} onClose={onClose} label={mode === 'new' ? 'Nouvelle liste' : 'Modifier la liste'}>
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <h2 className="titre-tiroir">
-          {mode === 'new' ? <>Nouvelle <em className="s">liste</em></> : <>Modifier la <em className="s">liste</em></>}
-        </h2>
+      <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+        <SheetHead
+          kicker={mode === 'new' ? 'Tâches · nouvelle liste' : `Tâches · ${list?.name ?? ''}`}
+          title={mode === 'new' ? <>Nouvelle <em className="s">liste</em></> : <>Modifier la <em className="s">liste</em></>}
+          onClose={onClose}
+        />
+        <SheetBody>
         <Field label="Nom de la liste">
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Courses, Travail, Maison…" maxLength={60} />
         </Field>
-        <div className="flex justify-between gap-2">
+        {confirming ? (
+          <p className="text-[13px] font-medium text-urgent">Ses tâches seront supprimées avec elle. Touche encore pour confirmer.</p>
+        ) : null}
+        </SheetBody>
+        <SheetFoot>
           {mode === 'edit' && list !== null ? (
             <Button
               variant="danger"
@@ -327,10 +334,11 @@ function ListSheet({ mode, list, onClose, onCreated, onDeleted }: {
               {confirming ? 'Supprimer la liste et ses tâches ?' : 'Supprimer'}
             </Button>
           ) : <span />}
+          <span className="flex-1" />
           <Button type="submit" variant="primary" disabled={name.trim() === ''}>
             {mode === 'new' ? 'Créer la liste' : 'Renommer'}
           </Button>
-        </div>
+        </SheetFoot>
       </form>
     </Sheet>
   );

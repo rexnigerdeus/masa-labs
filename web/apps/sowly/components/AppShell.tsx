@@ -84,9 +84,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <nav aria-label="Navigation principale" className="rail">
           <Link href="/" className="rail__logo">
             <AppBadge className="h-[34px] w-[34px]" />
-            <span className="flex flex-col gap-1">
+            <span className="rail__nom">
               <b>Sowly</b>
-              <span>graines d’habitudes</span>
+              <i>graines d’habitudes</i>
             </span>
           </Link>
           {TABS.map(({ href, label, Icon }) => {

@@ -10,7 +10,7 @@ import { commit, getState, nowIso, useStore } from '../../lib/store';
 import { useColumnAvailable } from '../../lib/sync';
 import { CheckMark } from '../CheckMark';
 import { CalendarIcon, ChevronRightIcon, ListIcon, NoteIcon, SunIcon, TrashIcon } from '../icons';
-import { Sheet } from '../Sheet';
+import { Sheet, SheetBody, SheetFoot, SheetHead } from '../Sheet';
 import { AutoTextarea, Button, Chip, Switch } from '../ui';
 
 /**
@@ -24,6 +24,9 @@ import { AutoTextarea, Button, Chip, Switch } from '../ui';
  *   Liste                                     Tâches ›
  *   ─────────────────────────────
  *   [corbeille]          Reporter à demain     Fermer
+ *
+ * Structure du tiroir du hub : tête (où vit la tâche, bouton fermer),
+ * corps qui défile, pied collé en bas avec les actions.
  *
  * « Fermer » et non « Terminé » : dans une app de tâches, « Terminé » se lit
  * comme « marquer la tâche faite ». Pour ça, il y a la case.
@@ -81,118 +84,133 @@ export function TaskEditor({ task, today, onClose }: {
   const due = current?.dueDay ?? null;
   const customDue = due !== null && due !== today && due !== tomorrow;
 
+  const listLabel = current === null ? '' : lists.find((l) => l.id === current.listId)?.name ?? 'Tâches';
+  const inMyDay = current?.myDay === today;
+
   return (
     <Sheet open={task !== null} onClose={close} label="Détail de la tâche">
       {current !== null ? (
-        <div className="flex flex-col gap-4">
-          {/* ------------------------------------------------ Titre */}
-          <div className="flex items-start gap-3">
-            <button
-              ref={box}
-              type="button"
-              onClick={() => completeTask(current, today, box.current)}
-              aria-label={done ? 'Rouvrir la tâche' : 'Terminer la tâche'}
-              aria-pressed={done}
-              className="mt-0.5 -ml-1 p-1"
-            >
-              <CheckMark checked={done} shape="square" />
-            </button>
-            <AutoTextarea
-              value={title}
-              onChange={(e) => setTitle(e.target.value.replace(/\n/g, ' '))}
-              onBlur={saveText}
-              onKeyDown={(e) => {
-                // Entrée valide le titre plutôt que d'y ajouter une ligne.
-                if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
-              }}
-              enterKeyHint="done"
-              maxLength={200}
-              aria-label="Titre de la tâche"
-              className={`display titre-tiroir min-w-0 flex-1 bg-transparent py-1 !leading-[1.1] focus:outline-none ${
-                done ? 'text-muted line-through decoration-faint' : 'text-ink'
-              }`}
-            />
-          </div>
+        <>
+          <SheetHead
+            kicker={<>{done ? 'Faite' : 'À faire'} · {listLabel}{inMyDay ? ' · Ma journée' : ''}</>}
+            onClose={close}
+            closeLabel="Fermer la tâche"
+          />
 
-          {hasDescription ? (
-            <label className="saisie flex items-start gap-3 !py-3">
-              <NoteIcon className="mt-0.5 h-5 w-5 shrink-0 text-faint" />
-              <AutoTextarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                onBlur={saveText}
-                maxLength={2000}
-                placeholder="Ajouter une description…"
-                aria-label="Description"
-                className="min-h-[3rem] min-w-0 flex-1 bg-transparent text-[15px] leading-relaxed text-ink focus:outline-none"
-              />
-            </label>
-          ) : null}
-
-          {/* ------------------------------------------ Propriétés */}
-          <div className="flex flex-col divide-y divide-line rounded-[16px] bg-raised">
-            <div className="flex items-center gap-3 px-3.5 py-3">
-              <SunIcon className="h-5 w-5 shrink-0 text-muted" />
-              <span className="flex-1 text-[15px]">Ma journée</span>
-              <Switch
-                label="Dans Ma journée"
-                checked={current.myDay === today}
-                onChange={(on) => commit((d) => patchTask(d, current.id, { myDay: on ? today : null }))}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2.5 px-3.5 py-3">
-              <div className="flex items-center gap-3">
-                <CalendarIcon className="h-5 w-5 shrink-0 text-muted" />
-                <span className="flex-1 text-[15px]">Échéance</span>
-                <span className="mono text-muted">{due === null ? 'Aucune' : formatRelative(due, today)}</span>
-              </div>
-              <div className="flex flex-wrap gap-2 pl-8">
-                <Chip active={due === today} onClick={() => setDue(due === today ? null : today)}>Aujourd’hui</Chip>
-                <Chip active={due === tomorrow} onClick={() => setDue(due === tomorrow ? null : tomorrow)}>Demain</Chip>
-                <label className="relative">
-                  <span className="sr-only">Choisir une date</span>
-                  <input
-                    type="date"
-                    value={due ?? ''}
-                    onChange={(e) => setDue(isDay(e.target.value) ? e.target.value : null)}
-                    className="absolute inset-0 opacity-0"
-                  />
-                  <Chip active={customDue} as="span">{customDue && due !== null ? formatRelative(due, today) : 'Date…'}</Chip>
-                </label>
-                {due !== null ? (
-                  <button type="button" onClick={() => setDue(null)} className="btn btn--fantome btn--petit text-muted">
-                    Retirer
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            <label className="relative flex items-center gap-3 px-3.5 py-3">
-              <ListIcon className="h-5 w-5 shrink-0 text-muted" />
-              <span className="flex-1 text-[15px]">Liste</span>
-              <span className="text-sm text-muted">
-                {lists.find((l) => l.id === current.listId)?.name ?? 'Tâches'}
-              </span>
-              <ChevronRightIcon className="h-4 w-4 text-faint" />
-              {/* Le sélecteur natif, invisible par-dessus la ligne : la roue
-                  d'iOS et la liste d'Android, sans en subir l'apparence. */}
-              <select
-                aria-label="Liste"
-                value={current.listId ?? ''}
-                onChange={(e) => commit((d) => patchTask(d, current.id, {
-                  listId: e.target.value === '' ? null : e.target.value,
-                }))}
-                className="absolute inset-0 cursor-pointer opacity-0"
+          <SheetBody>
+            {/* ------------------------------------------------ Titre */}
+            <div className="flex items-start gap-3">
+              <button
+                ref={box}
+                type="button"
+                onClick={() => completeTask(current, today, box.current)}
+                aria-label={done ? 'Rouvrir la tâche' : 'Terminer la tâche'}
+                aria-pressed={done}
+                className="-m-1 mt-0 shrink-0 p-1"
               >
-                <option value="">Tâches</option>
-                {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-              </select>
-            </label>
-          </div>
+                <CheckMark checked={done} shape="square" />
+              </button>
+              <AutoTextarea
+                value={title}
+                onChange={(e) => setTitle(e.target.value.replace(/\n/g, ' '))}
+                onBlur={saveText}
+                onKeyDown={(e) => {
+                  // Entrée valide le titre plutôt que d'y ajouter une ligne.
+                  if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+                }}
+                enterKeyHint="done"
+                maxLength={200}
+                aria-label="Titre de la tâche"
+                className={`display titre-tiroir min-w-0 flex-1 rounded-[10px] bg-transparent !leading-[1.15] focus:outline-none ${
+                  done ? 'text-muted line-through decoration-faint' : 'text-ink'
+                }`}
+              />
+            </div>
 
-          {/* -------------------------------------------- Actions */}
-          <div className="flex items-center gap-2 pt-1">
+            {hasDescription ? (
+              <label className="saisie flex items-start gap-3 !py-3">
+                <NoteIcon className="mt-0.5 h-5 w-5 shrink-0 text-faint" />
+                <AutoTextarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  onBlur={saveText}
+                  maxLength={2000}
+                  placeholder="Ajouter une description…"
+                  aria-label="Description"
+                  className="min-h-[1.5rem] min-w-0 flex-1 bg-transparent text-[15px] leading-relaxed text-ink focus:outline-none"
+                />
+              </label>
+            ) : null}
+
+            {/* ------------------------------------------ Propriétés */}
+            <div className="flex flex-col divide-y divide-line rounded-[16px] bg-raised">
+              <div className="flex items-center gap-3 px-3.5 py-3">
+                <SunIcon className="h-5 w-5 shrink-0 text-muted" />
+                <span className="flex-1 text-[15px] font-medium">Ma journée</span>
+                <Switch
+                  label="Dans Ma journée"
+                  checked={inMyDay}
+                  onChange={(on) => commit((d) => patchTask(d, current.id, { myDay: on ? today : null }))}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2.5 px-3.5 py-3">
+                <div className="flex items-center gap-3">
+                  <CalendarIcon className="h-5 w-5 shrink-0 text-muted" />
+                  <span className="flex-1 text-[15px] font-medium">Échéance</span>
+                  {due === null ? (
+                    <span className="text-[13px] text-muted">Aucune</span>
+                  ) : (
+                    <span className={`date ${due < today ? 'retard' : due <= tomorrow ? 'proche' : '!bg-card'}`}>
+                      {due < today ? 'En retard · ' : ''}{formatRelative(due, today)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5 pl-8">
+                  <Chip active={due === today} onClick={() => setDue(due === today ? null : today)}>Aujourd’hui</Chip>
+                  <Chip active={due === tomorrow} onClick={() => setDue(due === tomorrow ? null : tomorrow)}>Demain</Chip>
+                  <label className="relative">
+                    <span className="sr-only">Choisir une date</span>
+                    <input
+                      type="date"
+                      value={due ?? ''}
+                      onChange={(e) => setDue(isDay(e.target.value) ? e.target.value : null)}
+                      className="absolute inset-0 opacity-0"
+                    />
+                    <Chip active={customDue} as="span">{customDue && due !== null ? formatRelative(due, today) : 'Date…'}</Chip>
+                  </label>
+                  {due !== null ? (
+                    <button type="button" onClick={() => setDue(null)} className="puce !border-transparent text-muted">
+                      Retirer
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              <label className="relative flex items-center gap-3 px-3.5 py-3">
+                <ListIcon className="h-5 w-5 shrink-0 text-muted" />
+                <span className="flex-1 text-[15px] font-medium">Liste</span>
+                <span className="text-[13px] text-muted">{listLabel}</span>
+                <ChevronRightIcon className="h-4 w-4 text-faint" />
+                {/* Le sélecteur natif, invisible par-dessus la ligne : la roue
+                    d'iOS et la liste d'Android, sans en subir l'apparence. */}
+                <select
+                  aria-label="Liste"
+                  value={current.listId ?? ''}
+                  onChange={(e) => commit((d) => patchTask(d, current.id, {
+                    listId: e.target.value === '' ? null : e.target.value,
+                  }))}
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                >
+                  <option value="">Tâches</option>
+                  {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                </select>
+              </label>
+            </div>
+          </SheetBody>
+
+          {/* -------------------------------------------------- Pied */}
+          <SheetFoot>
             {/* Corbeille en icône : à 390 px, trois boutons libellés ne
                 tiennent pas sur une ligne. Deux touchers pour supprimer. */}
             <button
@@ -215,8 +233,8 @@ export function TaskEditor({ task, today, onClose }: {
               </Button>
             ) : null}
             <Button variant="primary" onClick={close}>Fermer</Button>
-          </div>
-        </div>
+          </SheetFoot>
+        </>
       ) : null}
     </Sheet>
   );

@@ -351,16 +351,24 @@
   .rail { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; gap: 4px; padding: 20px 14px; overflow-y: auto; }
   .rail__logo { display: flex; align-items: center; gap: 10px; padding: 6px 10px 18px; text-decoration: none; }
   .rail__logo b { display: block; font: 700 19px/1 var(--display); font-stretch: 80%; letter-spacing: -.02em; }
-  .rail__logo span { display: block; font: italic 400 15px/1 var(--serif); color: var(--doux); }
+  .rail__logo { color: var(--encre); }
+  .rail__logo .rail__nom { display: flex; flex-direction: column; gap: 4px; }
+  .rail__logo i { display: block; font: italic 400 15px/1 var(--serif); color: var(--doux); }
   .rail .lien { display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 12px; border: 0; background: none; border-radius: 14px; text-decoration: none; font-weight: 500; text-align: left; transition: background .15s, transform .15s; }
-  .rail .lien:hover { background: var(--trait); }
+  /* Survol sur les onglets inactifs seulement : sur l'onglet actif, il
+     remplacerait le fond plein et laisserait une icône claire sur du gris
+     (le survol reste « collé » après un toucher sur téléphone). */
+  .rail .lien:not([aria-current='page']):hover { background: var(--trait); }
   .rail .lien:active { transform: scale(.97); }
   .rail .lien[aria-current='page'] { background: var(--encre); color: var(--fond); }
   .rail .lien svg { width: 19px; height: 19px; flex: none; }
   .rail .lien .cpt { margin-left: auto; font: 500 12px var(--mono); padding: 1px 7px; border-radius: 8px; background: var(--hibiscus); color: var(--sur-hibiscus); }
   .rail__bas { margin-top: auto; padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
   .vue { padding: 26px 30px 80px 12px; min-width: 0; outline: none; }
-  .vue > * { animation: entree .35s ease both; }
+  /* `backwards` et non `both` : une animation qui reste « en vigueur »
+     garde sa transformation, et le conteneur devient alors le repère des
+     éléments `fixed` de la page. */
+  .vue > * { animation: entree .35s ease backwards; }
 
   .fab {
     position: fixed; z-index: 30; display: none; place-items: center;
@@ -381,8 +389,7 @@
     }
     .rail__logo, .rail__bas, .rail .lien .cpt { display: none; }
     .rail .lien { flex: 1; flex-direction: column; gap: 3px; padding: 8px 10px; font-size: 11px; color: var(--fond); justify-content: center; text-align: center; white-space: nowrap; }
-    .rail .lien:hover { background: rgba(255, 255, 255, .08); }
-    [data-mode='sombre'] .rail .lien:hover { background: rgba(0, 0, 0, .06); }
+    .rail .lien:not([aria-current='page']):hover { background: color-mix(in srgb, var(--fond) 12%, transparent); }
     .rail .lien[aria-current='page'] { background: var(--fond); color: var(--encre); }
     .vue { padding: 16px 16px calc(env(safe-area-inset-bottom) + 150px); }
     .fab { display: grid; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 86px); }
@@ -392,6 +399,15 @@
 /* ===== Tiroir / panneau ===== */
 @layer components {
   .voile { background: rgba(14, 12, 24, .45); }
+  .tiroir__tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 22px 12px; flex: none; }
+  .tiroir__corps { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: grid; gap: 14px; align-content: start; padding: 4px 22px 18px; }
+  .tiroir__pied { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 22px; border-top: 1.5px solid var(--trait); flex: none; }
+  .tiroir--bas .tiroir__tete { padding: 12px 20px 10px; }
+  .tiroir--bas .tiroir__corps { padding: 4px 20px 16px; }
+  .tiroir--bas .tiroir__pied { padding: 12px 20px; }
+  .fermer { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border: 0; border-radius: 12px; background: var(--creux); color: var(--encre); transition: transform .15s var(--ressort), background .15s; }
+  .fermer:hover { background: var(--trait); }
+  .fermer:active { transform: scale(.94); }
 }
 
 /* ===== Anneau d'avancement ===== */
@@ -410,9 +426,10 @@
 @keyframes monte { from { transform: translateY(16px) scale(.94); opacity: 0; } }
 
 /* Champs à 16 px sur mobile : en dessous, Safari iOS zoome sur chaque
-   saisie et ne redescend jamais (même règle que Hive). */
+   saisie et ne redescend jamais (même règle que Hive). Les titres
+   modifiables (`.display`, 28 px dans le tiroir) sont déjà au-dessus. */
 @media (max-width: 640px) {
-  input, select, textarea { font-size: 16px !important; }
+  :is(input, select, textarea):not(.display) { font-size: 16px !important; }
 }
 
 /* ===== Mouvement réduit ===== */
