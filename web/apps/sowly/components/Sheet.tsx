@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion, type PanInfo } from 'motion/react';
+import { AnimatePresence, motion, useDragControls, type PanInfo } from 'motion/react';
 
 /**
  * Panneau (le « Tiroir » du hub) : sur téléphone, il monte du bas de
@@ -79,6 +79,19 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
   // des éléments `fixed`), et passerait sous la barre de navigation.
   const [host, setHost] = useState<HTMLElement | null>(null);
   useEffect(() => setHost(document.body), []);
+  // Le glissement part de la poignée seulement : sur tout le panneau, il
+  // bloquait le défilement du contenu au doigt.
+  const drag = useDragControls();
+
+  // Le clavier s'ouvre (ou change de hauteur) : le champ en cours de saisie
+  // revient dans la partie visible.
+  useEffect(() => {
+    if (!open || keyboard.visible === null) return;
+    const el = document.activeElement;
+    if (!(el instanceof HTMLElement) || ref.current?.contains(el) !== true) return;
+    const id = requestAnimationFrame(() => el.scrollIntoView({ block: 'nearest' }));
+    return () => cancelAnimationFrame(id);
+  }, [open, keyboard.visible, keyboard.inset, ref]);
 
   useEffect(() => {
     if (!open) return;
@@ -117,6 +130,7 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
       role="dialog"
       aria-modal="true"
       aria-label={label}
+      data-clavier={keyboard.inset > 0 ? '' : undefined}
       // Fermé, le panneau reste dans le DOM mais sort de l'arbre focalisable.
       inert={!open}
       className="tiroir tiroir--bas fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full max-w-xl flex-col rounded-t-[calc(var(--r)+4px)] bg-card pt-2.5 shadow-[0_30px_80px_-20px_rgba(0,0,0,.5)]"
@@ -133,11 +147,19 @@ export function Sheet({ open, onClose, label, children, keepMounted = false, pan
       exit={{ y: '110%' }}
       transition={{ duration: 0.32, ease: ENTREE }}
       drag="y"
+      dragListener={false}
+      dragControls={drag}
       dragConstraints={{ top: 0, bottom: 0 }}
       dragElastic={{ top: 0, bottom: 0.6 }}
       onDragEnd={onDragEnd}
     >
-      <div aria-hidden className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-line" />
+      <div
+        aria-hidden
+        onPointerDown={(e) => drag.start(e)}
+        className="-mt-2.5 flex shrink-0 cursor-grab touch-none justify-center pt-2.5 pb-2"
+      >
+        <span className="h-1.5 w-10 rounded-full bg-line" />
+      </div>
       {children}
     </motion.div>
   );

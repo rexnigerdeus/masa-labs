@@ -102,7 +102,7 @@ export function TasksScreen() {
               onClick={() => commit((d) => bringBack(d, view.leftovers.map((t) => t.id), today))}
               className="btn btn--petit self-start"
             >
-              Reprendre <span className="mono">{view.leftovers.length}</span> tâche{view.leftovers.length > 1 ? 's' : ''} des jours précédents
+              <span>Reprendre <span className="mono">{view.leftovers.length}</span> tâche{view.leftovers.length > 1 ? 's' : ''} des jours précédents</span>
             </button>
           ) : null}
           <SimpleList tasks={view.myDay} today={today} context="myday" listName={listName} onOpen={setEditing}

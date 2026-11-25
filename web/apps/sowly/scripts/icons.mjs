@@ -38,4 +38,10 @@ await writeFile(file('apple-touch-icon.png'), await png(maskable, 180));
 const favicon = await png(svg, 48);
 await writeFile(file('favicon-48.png'), favicon);
 await writeFile(file('favicon.ico'), ico(favicon, 48));
+// Pastille des notifications Android : la pousse seule, blanche sur fond
+// transparent (le système n'en garde que la silhouette).
+const paths = svg.match(/<path[^>]*\/>/g).join('');
+await writeFile(file('badge-96.png'), await png(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="76 84 376 400" fill="#fff">${paths}</svg>`, 96,
+));
 console.log('Icônes générées dans public/.');

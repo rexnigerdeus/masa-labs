@@ -27,16 +27,18 @@ const PREFS_KEY = 'sowly.feedback';
 export interface FeedbackPrefs {
   sound: boolean;
   haptics: boolean;
+  /** Sonnerie des rappels plein écran. */
+  alarm: boolean;
 }
 
-const DEFAULT_PREFS: FeedbackPrefs = { sound: true, haptics: true };
+const DEFAULT_PREFS: FeedbackPrefs = { sound: true, haptics: true, alarm: true };
 
 export function readFeedbackPrefs(): FeedbackPrefs {
   try {
     const raw = localStorage.getItem(PREFS_KEY);
     if (raw === null) return DEFAULT_PREFS;
     const p = JSON.parse(raw) as Partial<FeedbackPrefs>;
-    return { sound: p.sound !== false, haptics: p.haptics !== false };
+    return { sound: p.sound !== false, haptics: p.haptics !== false, alarm: p.alarm !== false };
   } catch {
     return DEFAULT_PREFS;
   }
@@ -153,4 +155,67 @@ export function play(kind: Feedback): void {
       [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(ctx, f, t + i * 0.08, 0.45, 0.07, 'sine'));
       break;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Alarme
+
+/** Débloque le son au premier geste : sans lui, une alarme resterait muette. */
+export function unlockAudio(): void {
+  const ctx = context();
+  if (ctx !== null && ctx.state !== 'running') void ctx.resume().catch(() => undefined);
+}
+
+function audioSession(type: 'ambient' | 'playback'): void {
+  try {
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session !== undefined) session.type = type;
+  } catch {
+    // Safari seulement.
+  }
+}
+
+const RING_MS = 2400;
+const RING_MAX_MS = 60_000;
+let ringing: ReturnType<typeof setInterval> | null = null;
+let ringEnd: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Sonnerie en boucle, une minute au plus. Contrairement aux sons de
+ * récompense, elle se déclare « playback » : une alarme qu'on a demandée
+ * doit s'entendre même téléphone en silencieux, là où Safari le permet.
+ */
+export function startAlarm(): void {
+  stopAlarm();
+  const p = prefs();
+  const ring = (): void => {
+    if (p.haptics && typeof navigator.vibrate === 'function') navigator.vibrate([280, 120, 280, 120, 480]);
+    if (!p.alarm) return;
+    const ctx = context();
+    if (ctx === null) return;
+    if (ctx.state !== 'running') {
+      // Contexte encore bloqué : programmer des notes maintenant les ferait
+      // toutes partir d'un coup au premier geste.
+      void ctx.resume().catch(() => undefined);
+      return;
+    }
+    const t = ctx.currentTime + 0.02;
+    [659.25, 783.99, 1046.5, 783.99, 1046.5, 1318.5].forEach((f, i) => {
+      note(ctx, f, t + i * 0.19, 0.5, 0.22, 'triangle');
+    });
+  };
+  if (p.alarm) audioSession('playback');
+  ring();
+  ringing = setInterval(ring, RING_MS);
+  ringEnd = setTimeout(stopAlarm, RING_MAX_MS);
+}
+
+export function stopAlarm(): void {
+  if (ringing === null) return;
+  clearInterval(ringing);
+  if (ringEnd !== null) clearTimeout(ringEnd);
+  ringing = null;
+  ringEnd = null;
+  if (typeof navigator.vibrate === 'function') navigator.vibrate(0);
+  audioSession('ambient');
 }

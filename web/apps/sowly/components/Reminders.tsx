@@ -64,8 +64,8 @@ export function RemindersSettings() {
     return (
       <div className="flex flex-col gap-3">
         <p className="text-sm text-muted">
-          Un mot le matin pour ce qui t’attend, et un le soir s’il reste une habitude à valider.
-          Jamais de reproche, jamais plus de deux par jour.
+          Un mot le matin pour ce qui t’attend, un le soir s’il reste une habitude à valider, et un rappel
+          à l’heure que tu choisis sur une tâche ou une habitude. Jamais de reproche.
         </p>
         <Button variant="primary" className="self-start" disabled={busy} onClick={() => void run(enablePush)}>
           <BellIcon className="h-4 w-4" /> Activer les rappels

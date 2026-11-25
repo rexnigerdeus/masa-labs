@@ -6,8 +6,8 @@
  * Côté appareil : demander la permission, s'abonner auprès du service push
  * du navigateur, puis confier l'abonnement et les heures de rappel au
  * serveur (`sowly_push_register`). L'envoi, lui, est fait par l'Edge
- * Function `sowly-push`, toutes les 15 minutes — voir la migration
- * 20261012100100_sowly_push.sql.
+ * Function `sowly-push`, à la minute — voir la migration
+ * 20261012200000_sowly_rappels_heure.sql.
  *
  * iPhone : Safari n'accorde les notifications qu'à une app installée sur
  * l'écran d'accueil (iOS 16.4+). Dans l'onglet, `PushManager` n'existe pas :
@@ -185,10 +185,12 @@ export async function saveReminderPrefs(prefs: ReminderPrefs): Promise<void> {
 /** Notification d'essai, affichée par l'appareil lui-même : vérifie l'affichage. */
 export async function testNotification(): Promise<void> {
   const registration = await navigator.serviceWorker.ready;
-  await registration.showNotification('Sowly est prêt', {
-    body: 'C’est ainsi que tes rappels apparaîtront.',
+  const options: NotificationOptions & { vibrate?: number[] } = {
+    body: 'Essai : il est 8 h · avec le café\n🔥 6 jours d’affilée, on continue ?',
     icon: '/icon-192.png',
-    badge: '/favicon-48.png',
+    badge: '/badge-96.png',
     tag: 'sowly-test',
-  });
+    vibrate: [200, 100, 200],
+  };
+  await registration.showNotification('🌱 Boire un verre d’eau', options);
 }

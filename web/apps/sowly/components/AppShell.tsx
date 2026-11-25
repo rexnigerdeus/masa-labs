@@ -7,6 +7,7 @@ import { MotionConfig } from 'motion/react';
 import { startSync } from '../lib/sync';
 import { applyTheme, readThemeChoice, syncThemeColor } from '../lib/theme';
 import { AppBadge, ListIcon, PlusIcon, SettingsIcon, SproutIcon } from './icons';
+import { AlarmHost } from './alarm/AlarmHost';
 import { QuickAdd, type QuickAddHandle } from './tasks/QuickAdd';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -120,6 +121,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </button>
 
       <QuickAdd ref={quickAdd} />
+      <AlarmHost />
     </MotionConfig>
   );
 }

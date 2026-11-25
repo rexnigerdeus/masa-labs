@@ -9,7 +9,8 @@ import { postponeTask, toggleMyDay } from '../../lib/mutations';
 import { isOverdue } from '../../lib/selectors';
 import { commit } from '../../lib/store';
 import { CheckMark } from '../CheckMark';
-import { CalendarIcon, NoteIcon, SunIcon } from '../icons';
+import { formatStamp } from '../../lib/clock';
+import { BellIcon, CalendarIcon, NoteIcon, SunIcon } from '../icons';
 
 const SWIPE = 84;
 
@@ -66,6 +67,13 @@ export function TaskRow({ task, today, listName, context, onOpen, handle, nested
       <span key="e" className={`date ${overdue ? 'retard' : soon ? 'proche' : ''} ${surface === 'creux' && !overdue && !soon ? '!bg-card' : ''}`}>
         <CalendarIcon className="h-3 w-3" />
         {overdue ? `En retard · ${formatRelative(task.dueDay, today)}` : formatRelative(task.dueDay, today)}
+      </span>,
+    );
+  }
+  if (task.remindAt !== null && !done) {
+    meta.push(
+      <span key="r" className="mono inline-flex items-center gap-1">
+        <BellIcon className="h-3 w-3" /><span className="sr-only">Rappel </span>{formatStamp(task.remindAt, today)}
       </span>,
     );
   }

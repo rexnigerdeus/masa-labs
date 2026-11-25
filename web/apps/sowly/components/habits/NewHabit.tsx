@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { silenceDue } from '../../lib/alarm-state';
 import { createHabit, type HabitDraft } from '../../lib/mutations';
 import { useGate } from '../../lib/gate';
 import { commit, newId, today } from '../../lib/store';
@@ -47,6 +48,7 @@ export function NewHabit() {
         disabled={draft.action.trim() === ''}
         onClick={() => {
           commit((d) => createHabit(d, draft, newId(), today()));
+          silenceDue('habit');
           router.push('/');
         }}
       >

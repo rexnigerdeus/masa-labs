@@ -6,8 +6,11 @@ import { createTask } from '../../lib/mutations';
 import { liveLists } from '../../lib/selectors';
 import { commit, getState, newId, today as getToday } from '../../lib/store';
 import { Sheet, SheetBody, SheetHead } from '../Sheet';
-import { CalendarIcon, SunIcon } from '../icons';
-import { Button, Chip } from '../ui';
+import { BellIcon, CalendarIcon, SunIcon } from '../icons';
+import { nextHour, stampOf } from '../../lib/clock';
+import { useColumnAvailable } from '../../lib/sync';
+import { ReminderField } from '../ReminderField';
+import { Button, Chip, openPicker } from '../ui';
 
 export interface QuickAddHandle {
   /** À appeler dans le gestionnaire du toucher, pour que le clavier s'ouvre sur iOS. */
@@ -34,7 +37,9 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
   const [listId, setListId] = useState<string | null>(null);
   const [myDay, setMyDay] = useState(false);
   const [dueDay, setDueDay] = useState<string | null>(null);
+  const [remindAt, setRemindAt] = useState<string | null>(null);
   const [added, setAdded] = useState(0);
+  const canRemind = useColumnAvailable('sowly_tasks', 'remind_at');
 
   useImperativeHandle(handle, () => ({
     open(defaults) {
@@ -45,6 +50,7 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
       setListId(defaults.listId);
       setMyDay(defaults.myDay);
       setDueDay(null);
+      setRemindAt(null);
       setAdded(0);
       setOpen(true);
     },
@@ -61,9 +67,11 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
     if (title.trim() === '') return;
     const today = getToday();
     commit((data) => createTask(data, {
-      title, listId, myDay: myDay ? today : null, dueDay,
+      title, listId, myDay: myDay ? today : null, dueDay, remindAt,
     }, newId()));
     setTitle('');
+    // Le rappel vaut pour la tâche ajoutée, pas pour la suivante.
+    setRemindAt(null);
     setAdded((n) => n + 1);
   };
 
@@ -117,6 +125,7 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
               type="date"
               min={today}
               value={dueDay ?? ''}
+              onClick={(e) => openPicker(e.currentTarget)}
               onChange={(e) => setDueDay(isDay(e.target.value) ? e.target.value : null)}
               className="absolute inset-0 opacity-0"
             />
@@ -125,6 +134,20 @@ export const QuickAdd = forwardRef<QuickAddHandle>(function QuickAdd(_, handle) 
             </Chip>
           </label>
         </div>
+
+        {canRemind ? (
+          remindAt === null ? (
+            <div className="flex">
+              <Chip active={false} onClick={() => setRemindAt(dueDay !== null && dueDay > today ? `${dueDay}T08:00` : nextHour(stampOf()))}>
+                <BellIcon className="h-4 w-4" /> Ajouter un rappel
+              </Chip>
+            </div>
+          ) : (
+            <div className="rounded-[16px] bg-raised">
+              <ReminderField value={remindAt} onChange={setRemindAt} today={today} day={dueDay ?? today} />
+            </div>
+          )
+        ) : null}
 
         {lists.length > 0 ? (
           <div className="flex gap-2 overflow-x-auto pb-1" role="radiogroup" aria-label="Liste">

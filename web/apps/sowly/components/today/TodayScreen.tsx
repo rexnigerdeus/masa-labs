@@ -159,7 +159,7 @@ export function TodayScreen() {
               onClick={() => commit((d) => bringBack(d, leftovers.map((t) => t.id), today))}
               className="btn btn--petit self-start"
             >
-              Reprendre <span className="mono">{leftovers.length}</span> tâche{leftovers.length > 1 ? 's' : ''} d’avant
+              <span>Reprendre <span className="mono">{leftovers.length}</span> tâche{leftovers.length > 1 ? 's' : ''} d’avant</span>
             </button>
           ) : null}
 

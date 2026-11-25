@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { silenceDue } from '../../lib/alarm-state';
 import { addDays, formatDays, type Day } from '../../lib/dates';
 import { identityById } from '../../lib/identities';
 import { MOMENTS } from '../../lib/model';
@@ -63,7 +64,7 @@ export function HabitDetail() {
         </div>
         <Button
           variant="primary" size="lg" disabled={editing.action.trim() === ''}
-          onClick={() => { commit((d) => updateHabit(d, habit.id, editing)); setEditing(null); }}
+          onClick={() => { commit((d) => updateHabit(d, habit.id, editing)); silenceDue('habit'); setEditing(null); }}
         >
           Enregistrer
         </Button>
@@ -81,7 +82,8 @@ export function HabitDetail() {
       <header className="carte carte--lagune hero !flex-row items-end justify-between gap-5 max-[520px]:!flex-col-reverse max-[520px]:!items-start">
         <div className="flex min-w-0 flex-col gap-2">
           <p className="sur">
-            {[identity?.short, MOMENTS.find((m) => m.id === habit.moment)?.label, formatDays(habit.days)]
+            {[identity?.short, MOMENTS.find((m) => m.id === habit.moment)?.label, formatDays(habit.days),
+              habit.remindTime !== null ? `rappel ${habit.remindTime}` : null]
               .filter(Boolean).join(' · ')}
           </p>
           <h1 className="titre-hero break-words"><Accent text={habit.action} /></h1>
@@ -121,7 +123,7 @@ export function HabitDetail() {
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => setEditing({
           action: habit.action, moment: habit.moment, cue: habit.cue, place: habit.place,
-          identity: habit.identity, why: habit.why, days: habit.days,
+          identity: habit.identity, why: habit.why, days: habit.days, remindTime: habit.remindTime,
         })}
         >
           Modifier

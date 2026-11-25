@@ -13,6 +13,8 @@
  */
 
 import { isDay } from './dates.ts';
+import { isStamp, isTime } from './clock.ts';
+import { PRAYER_HOURS } from './verses.ts';
 import {
   checkKey, type Change, type Check, type Habit, type Moment, type Profile,
   type Table, type Task, type TaskList,
@@ -35,7 +37,9 @@ export const COLUMNS: Record<Table, string> = {
  * `lib/sync.ts`) — l'app peut donc être déployée avant la migration.
  */
 export const OPTIONAL_COLUMNS: Partial<Record<Table, readonly string[]>> = {
-  sowly_tasks: ['description'],
+  sowly_profiles: ['prayer_hours'],
+  sowly_habits: ['remind_time', 'snooze_at'],
+  sowly_tasks: ['description', 'remind_at'],
 };
 
 /** Clé d'`upsert` de chaque table, pour `onConflict`. */
@@ -61,6 +65,7 @@ export function profileChange(p: Profile): Change {
       identities: p.identities,
       committed_at: p.committedAt,
       onboarded_at: p.onboardedAt,
+      prayer_hours: p.prayerHours,
     },
   };
 }
@@ -79,6 +84,8 @@ export function habitChange(h: Habit): Change {
       why: h.why,
       days: h.days,
       start_day: h.startDay,
+      remind_time: h.remindTime,
+      snooze_at: h.snoozeAt,
       position: h.position,
       archived_at: h.archivedAt,
       deleted_at: h.deletedAt,
@@ -113,6 +120,7 @@ export function taskChange(t: Task): Change {
       description: t.description,
       due_day: t.dueDay,
       my_day: t.myDay,
+      remind_at: t.remindAt,
       done_at: t.doneAt,
       position: t.position,
       deleted_at: t.deletedAt,
@@ -132,6 +140,14 @@ const strOrNull = (v: unknown): string | null => (typeof v === 'string' ? v : nu
 const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 const dayOrNull = (v: unknown): string | null => (isDay(v) ? v : null);
 
+/** Postgres rend « 18:30:00 » et « 2026-11-25T18:30:00 » ; l'app s'arrête à la minute. */
+const timeOrNull = (v: unknown): string | null =>
+  (typeof v === 'string' && isTime(v.slice(0, 5)) ? v.slice(0, 5) : null);
+const stampOrNull = (v: unknown): string | null => {
+  const s = typeof v === 'string' ? v.slice(0, 16).replace(' ', 'T') : '';
+  return isStamp(s) ? s : null;
+};
+
 const MOMENT_IDS: readonly string[] = ['matin', 'journee', 'soir'];
 
 export function profileFromRow(r: Row): Profile {
@@ -141,6 +157,9 @@ export function profileFromRow(r: Row): Profile {
       : [],
     committedAt: strOrNull(r.committed_at),
     onboardedAt: strOrNull(r.onboarded_at),
+    prayerHours: Array.isArray(r.prayer_hours)
+      ? PRAYER_HOURS.filter((h) => (r.prayer_hours as unknown[]).includes(h))
+      : [],
   };
 }
 
@@ -161,6 +180,8 @@ export function habitFromRow(r: Row): Habit | null {
     why: str(r.why),
     days: days.length > 0 ? days : [0, 1, 2, 3, 4, 5, 6],
     startDay: r.start_day,
+    remindTime: timeOrNull(r.remind_time),
+    snoozeAt: stampOrNull(r.snooze_at),
     position: num(r.position),
     archivedAt: strOrNull(r.archived_at),
     deletedAt: strOrNull(r.deleted_at),
@@ -191,6 +212,7 @@ export function taskFromRow(r: Row): Task | null {
     description: typeof r.description === 'string' ? r.description : '',
     dueDay: dayOrNull(r.due_day),
     myDay: dayOrNull(r.my_day),
+    remindAt: stampOrNull(r.remind_at),
     doneAt: strOrNull(r.done_at),
     position: num(r.position),
     deletedAt: strOrNull(r.deleted_at),

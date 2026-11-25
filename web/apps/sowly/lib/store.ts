@@ -40,6 +40,8 @@ export interface Meta {
   ownerId: string | null;
   cursors: Partial<Record<Table, string>>;
   lastSyncAt: string | null;
+  /** Version du modèle local ; plus ancienne, on relit tout une fois. */
+  schema: number;
 }
 
 export interface State {
@@ -52,7 +54,9 @@ export interface State {
 const KEY = 'sowly.state.v1';
 
 const DEFAULT_PREFS: Prefs = { groupBy: 'moment' };
-const DEFAULT_META: Meta = { ownerId: null, cursors: {}, lastSyncAt: null };
+/** 2 : rappels à l'heure (remind_at, remind_time, snooze_at). */
+const SCHEMA = 2;
+const DEFAULT_META: Meta = { ownerId: null, cursors: {}, lastSyncAt: null, schema: SCHEMA };
 
 function initial(): State {
   return { data: emptyData(), outbox: {}, meta: DEFAULT_META, prefs: DEFAULT_PREFS };
@@ -108,7 +112,14 @@ function revive(raw: unknown): State {
       tasks: pick(d.tasks, taskFromRow, snake),
     },
     outbox: typeof r.outbox === 'object' && r.outbox !== null ? r.outbox : {},
-    meta: { ...base.meta, ...(r.meta ?? {}) },
+    // Lignes lues par une version qui ignorait les nouvelles colonnes : sans
+    // relecture, un rappel posé sur un autre appareil serait écrasé ici.
+    meta: {
+      ...base.meta,
+      ...(r.meta ?? {}),
+      ...(r.meta?.schema === SCHEMA ? {} : { cursors: {} }),
+      schema: SCHEMA,
+    },
     prefs: { ...base.prefs, ...(r.prefs ?? {}) },
   };
 }

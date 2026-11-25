@@ -1,8 +1,10 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useGate } from '../../lib/gate';
+import { getSyncStatus, syncNow } from '../../lib/sync';
 import { ChevronLeftIcon } from '../icons';
 import { ThemeToggle } from '../ThemeToggle';
 import { AuthForm } from './AuthForm';
@@ -24,6 +26,13 @@ export function ConnexionScreen() {
   // La décision n'est prise qu'à l'arrivée : pendant la connexion, le compte
   // apparaît sur l'appareil et c'est le formulaire qui choisit où aller.
   const store = useGate('guest', { once: true, enabled: !reconnect });
+  // La session est peut-être encore bonne (serveur momentanément en panne) :
+  // si la synchronisation passe, il n'y a rien à ressaisir.
+  const router = useRouter();
+  useEffect(() => {
+    if (!reconnect) return;
+    void syncNow().then(() => { if (getSyncStatus() === 'idle') router.replace('/'); });
+  }, [reconnect, router]);
   if (store === null) return null;
 
   const mode = reconnect || params.get('mode') === 'connexion' ? 'connexion' : 'inscription';

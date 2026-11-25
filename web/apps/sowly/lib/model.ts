@@ -26,6 +26,8 @@ export interface Profile {
   identities: string[];
   committedAt: string | null;
   onboardedAt: string | null;
+  /** Heures de prière activées ; vide = option désactivée. */
+  prayerHours: number[];
 }
 
 /**
@@ -44,6 +46,10 @@ export interface Habit {
   /** 0 = dimanche … 6 = samedi. */
   days: number[];
   startDay: Day;
+  /** Heure de rappel « 18:30 », chaque jour prévu ; `null` sans rappel. */
+  remindTime: string | null;
+  /** Rappel ponctuel (« dans 10 minutes »), heure locale « AAAA-MM-JJTHH:MM ». */
+  snoozeAt: string | null;
   position: number;
   archivedAt: string | null;
   deletedAt: string | null;
@@ -73,6 +79,8 @@ export interface Task {
   dueDay: Day | null;
   /** Jour où la tâche a été mise dans « Ma journée ». */
   myDay: Day | null;
+  /** Jour et heure du rappel, heure locale « AAAA-MM-JJTHH:MM ». */
+  remindAt: string | null;
   doneAt: string | null;
   position: number;
   deletedAt: string | null;
@@ -93,7 +101,7 @@ export function checkKey(habitId: string, day: Day): string {
 
 export function emptyData(): Data {
   return {
-    profile: { identities: [], committedAt: null, onboardedAt: null },
+    profile: { identities: [], committedAt: null, onboardedAt: null, prayerHours: [] },
     habits: {},
     checks: {},
     lists: {},

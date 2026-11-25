@@ -26,6 +26,7 @@ const DRAFT: HabitDraft = {
   identity: 'lecture',
   why: '',
   days: [0, 1, 2, 3, 4, 5, 6],
+  remindTime: null,
 };
 
 test('l’onboarding écrit profil, habitude et tâches en une fois', () => {

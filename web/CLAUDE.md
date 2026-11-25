@@ -125,6 +125,13 @@ Copier `.env.example` en `.env.local` dans chaque app.
 - Sowly est déployé sur Vercel (projet `sowly`, racine `web/apps/sowly`) : https://sowly-one.vercel.app. Toutes ses icônes sortent de `public/icon.svg` via `npm run icons --workspace apps/sowly`.
 - Le détail d'une habitude est `/habitude?id=…` et non une route dynamique : c'est ce
   qui lui permet de s'ouvrir hors-ligne — [apps/sowly/components/habits/HabitDetail.tsx:1](apps/sowly/components/habits/HabitDetail.tsx#L1).
+- Rappels à l'heure de Sowly (tâches, habitudes, heures de prière) : heures **locales sans
+  fuseau** ; envoi par `pg_cron` chaque minute → `sowly_push_tick()` (n'appelle l'Edge
+  Function que s'il y a à envoyer) → `sowly_claim_reminders()` qui réserve avant l'envoi, donc
+  jamais deux fois. Sowly ouverte : alarme plein écran —
+  [apps/sowly/components/alarm/AlarmHost.tsx](apps/sowly/components/alarm/AlarmHost.tsx#L1),
+  [apps/sowly/lib/alarms.ts](apps/sowly/lib/alarms.ts#L1). Versets LSG 1910 générés par
+  `apps/sowly/scripts/versets.mjs` (deux copies, un test les compare).
 - Sowly suit le **brief design « Hub side hustles »** (18/11/2026) : tokens, quatre
   palettes (`data-theme`), mode (`data-mode`), densité et police des titres posés sur
   `<html>` avant le premier affichage, classes du hub (`.carte`, `.btn`, `.puce`, `.etat`,

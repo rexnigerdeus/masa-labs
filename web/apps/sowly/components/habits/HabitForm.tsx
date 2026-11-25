@@ -4,6 +4,9 @@ import { WEEK_FR } from '../../lib/dates';
 import { IDENTITIES, identityById } from '../../lib/identities';
 import { MOMENTS } from '../../lib/model';
 import type { HabitDraft } from '../../lib/mutations';
+import { isTime } from '../../lib/clock';
+import { useColumnAvailable } from '../../lib/sync';
+import { PushHint } from '../ReminderField';
 import { Field, Input, Segmented, Textarea } from '../ui';
 
 export const EMPTY_DRAFT: HabitDraft = {
@@ -14,6 +17,14 @@ export const EMPTY_DRAFT: HabitDraft = {
   identity: null,
   why: '',
   days: [0, 1, 2, 3, 4, 5, 6],
+  remindTime: null,
+};
+
+/** Heures proposées selon le moment de la journée. */
+const SUGGESTED_TIMES: Record<HabitDraft['moment'], readonly string[]> = {
+  matin: ['06:00', '07:00', '08:00'],
+  journee: ['12:00', '13:00', '16:00'],
+  soir: ['19:00', '20:30', '22:00'],
 };
 
 /**
@@ -37,6 +48,7 @@ export function HabitForm({ value, onChange, identities, showWhy = true }: {
     ...identities.map((id) => identityById(id)).filter((i) => i !== null),
     ...IDENTITIES.filter((i) => !identities.includes(i.id)),
   ];
+  const canRemind = useColumnAvailable('sowly_habits', 'remind_time');
   const suggestions = identityById(value.identity)?.suggestions ?? [];
 
   return (
@@ -126,6 +138,35 @@ export function HabitForm({ value, onChange, identities, showWhy = true }: {
           })}
         </div>
       </fieldset>
+
+      {canRemind ? (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[13px] font-semibold text-muted">Heure de rappel</span>
+          {value.remindTime === null ? (
+            <div className="flex flex-wrap gap-1.5">
+              {SUGGESTED_TIMES[value.moment].map((t) => (
+                <button key={t} type="button" className="puce" onClick={() => set({ remindTime: t })}><b>{t}</b></button>
+              ))}
+              <button type="button" className="puce" onClick={() => set({ remindTime: SUGGESTED_TIMES[value.moment][1] ?? '12:00' })}>
+                Choisir…
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="time"
+                aria-label="Heure de rappel"
+                value={value.remindTime}
+                onChange={(e) => { if (isTime(e.target.value.slice(0, 5))) set({ remindTime: e.target.value.slice(0, 5) }); }}
+                className="saisie mono !w-auto"
+              />
+              <button type="button" className="puce !border-transparent text-muted" onClick={() => set({ remindTime: null })}>Retirer</button>
+            </div>
+          )}
+          <span className="text-[12.5px] text-muted">Une alarme plein écran, chaque jour prévu, tant que ce n’est pas validé.</span>
+          {value.remindTime !== null ? <PushHint /> : null}
+        </div>
+      ) : null}
 
       {showWhy ? (
         <Field label="Pourquoi c’est important pour moi" hint="Facultatif. Tu le reliras les jours sans envie.">

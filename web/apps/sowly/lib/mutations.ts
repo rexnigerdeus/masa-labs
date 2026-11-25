@@ -12,7 +12,9 @@
  * fixent l'heure, et une même action pose le même instant partout.
  */
 
+import { isStamp, isTime, stampTime } from './clock.ts';
 import { addDays, type Day } from './dates.ts';
+import { PRAYER_HOURS } from './verses.ts';
 import {
   checkKey, type Change, type Data, type Habit, type Moment, type Task, type TaskList,
 } from './model.ts';
@@ -41,6 +43,7 @@ export interface HabitDraft {
   identity: string | null;
   why: string;
   days: number[];
+  remindTime: string | null;
 }
 
 export interface Onboarding {
@@ -58,6 +61,7 @@ export function completeOnboarding(
   data: Data, input: Onboarding, ids: () => string, now: string, today: Day,
 ): Result {
   const profile = {
+    ...data.profile,
     identities: input.identities,
     committedAt: now,
     onboardedAt: now,
@@ -79,6 +83,12 @@ export function setIdentities(data: Data, identities: string[]): Result {
   return { data: { ...data, profile }, changes: [profileChange(profile)] };
 }
 
+/** Heures de prière : liste vide = option désactivée. */
+export function setPrayerHours(data: Data, hours: readonly number[]): Result {
+  const profile = { ...data.profile, prayerHours: PRAYER_HOURS.filter((h) => hours.includes(h)) };
+  return { data: { ...data, profile }, changes: [profileChange(profile)] };
+}
+
 // ---------------------------------------------------------------------------
 // Habitudes
 
@@ -87,6 +97,7 @@ export function createHabit(data: Data, draft: HabitDraft, id: string, today: Da
     id,
     ...cleanDraft(draft),
     startDay: today,
+    snoozeAt: null,
     position: nextPosition(live(data.habits)),
     archivedAt: null,
     deletedAt: null,
@@ -100,7 +111,10 @@ export function createHabit(data: Data, draft: HabitDraft, id: string, today: Da
 export function updateHabit(data: Data, id: string, draft: HabitDraft): Result {
   const current = data.habits[id];
   if (current === undefined) return { data, changes: [] };
-  const habit: Habit = { ...current, ...cleanDraft(draft) };
+  const clean = cleanDraft(draft);
+  // Changer l'heure annule un « dans 10 minutes » en attente.
+  const snoozeAt = clean.remindTime === current.remindTime ? current.snoozeAt : null;
+  const habit: Habit = { ...current, ...clean, snoozeAt };
   return {
     data: { ...data, habits: { ...data.habits, [id]: habit } },
     changes: [habitChange(habit)],
@@ -124,6 +138,11 @@ export function setHabitArchived(data: Data, id: string, archived: boolean, now:
 
 export function deleteHabit(data: Data, id: string, now: string): Result {
   return patchHabit(data, id, { deletedAt: now });
+}
+
+/** « Dans 10 minutes » sur une habitude : un rappel ponctuel, l'heure habituelle ne bouge pas. */
+export function snoozeHabit(data: Data, id: string, at: string): Result {
+  return isStamp(at) ? patchHabit(data, id, { snoozeAt: at }) : { data, changes: [] };
 }
 
 /** Valide ou dévalide un jour. Un jour futur ne se valide pas. */
@@ -150,6 +169,7 @@ function cleanDraft(d: HabitDraft): HabitDraft {
     identity: d.identity,
     why: d.why.trim().slice(0, 280),
     days: days.length > 0 ? days : [0, 1, 2, 3, 4, 5, 6],
+    remindTime: isTime(d.remindTime) ? d.remindTime : null,
   };
 }
 
@@ -161,6 +181,7 @@ export interface TaskDraft {
   listId: string | null;
   myDay: Day | null;
   dueDay: Day | null;
+  remindAt?: string | null;
 }
 
 export function createTask(data: Data, draft: TaskDraft, id: string): Result {
@@ -174,6 +195,7 @@ export function createTask(data: Data, draft: TaskDraft, id: string): Result {
     description: '',
     dueDay: draft.dueDay,
     myDay: draft.myDay,
+    remindAt: isStamp(draft.remindAt) ? draft.remindAt : null,
     doneAt: null,
     position: nextPosition(siblings),
     deletedAt: null,
@@ -213,10 +235,18 @@ export function toggleMyDay(data: Data, id: string, today: Day): Result {
 
 /**
  * Reporter à demain (brief §9) : la tâche quitte « Ma journée » pour y
- * revenir d'elle-même demain. Rien n'est supprimé, rien n'est marqué en retard.
+ * revenir d'elle-même demain, et son rappel suit, à la même heure. Rien
+ * n'est supprimé, rien n'est marqué en retard.
  */
 export function postponeTask(data: Data, id: string, today: Day): Result {
-  return patchTask(data, id, { myDay: addDays(today, 1) });
+  const tomorrow = addDays(today, 1);
+  const remindAt = data.tasks[id]?.remindAt ?? null;
+  // Un rappel déjà prévu plus tard que demain reste où il est.
+  return patchTask(data, id, {
+    myDay: tomorrow,
+    ...(remindAt !== null && remindAt.slice(0, 10) < tomorrow
+      ? { remindAt: `${tomorrow}T${stampTime(remindAt)}` } : {}),
+  });
 }
 
 /** Ramène dans « Ma journée » les tâches non faites des jours précédents. */

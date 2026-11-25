@@ -6,6 +6,7 @@ import type { Day } from '../../lib/dates';
 import { completeHabit } from '../../lib/complete';
 import type { HabitLine } from '../../lib/selectors';
 import { CheckMark } from '../CheckMark';
+import { BellIcon } from '../icons';
 
 /**
  * Une habitude du jour. La pastille est à droite, sous le pouce ; le texte
@@ -27,10 +28,15 @@ export function HabitRow({ line, today }: { line: HabitLine; today: Day }) {
         <span className={`truncate text-[16px] font-semibold transition-colors ${done ? 'text-muted' : 'text-ink'}`}>
           {habit.action}
         </span>
-        {detail !== '' || streak.current >= 2 ? (
+        {detail !== '' || streak.current >= 2 || habit.remindTime !== null ? (
           <span className="flex items-center gap-2 text-[12.5px] text-muted">
             {streak.current >= 2 ? (
               <span className="mono font-medium text-ok">{streak.current} j<span className="sr-only"> de série</span></span>
+            ) : null}
+            {habit.remindTime !== null ? (
+              <span className="mono inline-flex shrink-0 items-center gap-1">
+                <BellIcon className="h-3 w-3" /><span className="sr-only">Rappel à </span>{habit.remindTime}
+              </span>
             ) : null}
             {detail !== '' ? <span className="truncate">{detail}</span> : null}
           </span>

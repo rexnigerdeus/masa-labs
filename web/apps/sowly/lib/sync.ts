@@ -40,6 +40,10 @@ function setStatus(next: SyncStatus): void {
   for (const l of statusListeners) l();
 }
 
+export function getSyncStatus(): SyncStatus {
+  return status;
+}
+
 export function useSyncStatus(): SyncStatus {
   return useSyncExternalStore(
     (l) => { statusListeners.add(l); return () => statusListeners.delete(l); },
@@ -98,13 +102,30 @@ function withoutMissing(table: Table, row: Record<string, unknown>): Record<stri
  * à la lecture suivante.
  */
 function keepLocal(table: Table, row: Record<string, unknown>): Record<string, unknown> {
-  if (table === 'sowly_tasks' && missing.has('sowly_tasks.description') && typeof row.id === 'string') {
-    return { ...row, description: getState().data.tasks[row.id]?.description ?? '' };
+  const { data } = getState();
+  if (table === 'sowly_profiles' && missing.has('sowly_profiles.prayer_hours')) {
+    return { ...row, prayer_hours: data.profile.prayerHours };
   }
-  return row;
+  if (typeof row.id !== 'string') return row;
+  const out = { ...row };
+  if (table === 'sowly_tasks') {
+    const t = data.tasks[row.id];
+    if (missing.has('sowly_tasks.description')) out.description = t?.description ?? '';
+    if (missing.has('sowly_tasks.remind_at')) out.remind_at = t?.remindAt ?? null;
+  } else if (table === 'sowly_habits') {
+    const h = data.habits[row.id];
+    if (missing.has('sowly_habits.remind_time')) out.remind_time = h?.remindTime ?? null;
+    if (missing.has('sowly_habits.snooze_at')) out.snooze_at = h?.snoozeAt ?? null;
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
+
+/** Serveur d'authentification injoignable (réseau, panne), par opposition à un refus. */
+export function isUnreachable(error: { name?: string } | null | undefined): boolean {
+  return error?.name === 'AuthRetryableFetchError';
+}
 
 let running: Promise<void> | null = null;
 let again = false;
@@ -133,8 +154,14 @@ async function runOnce(): Promise<void> {
   // `getSession` et non `getUser` : on ne prend ici aucune décision de
   // confiance, on choisit seulement s'il y a lieu d'envoyer. Le serveur
   // revérifie le jeton à chaque requête, et la RLS fait le reste.
-  const { data } = await supabase.auth.getSession();
+  const { data, error: authError } = await supabase.auth.getSession();
   const session = data.session;
+  if (session === null && isUnreachable(authError)) {
+    // Jeton à rafraîchir mais serveur injoignable : la session est toujours
+    // là, gardée par la librairie. Ce n'est pas une session expirée.
+    setStatus(navigator.onLine ? 'error' : 'offline');
+    return;
+  }
   if (session === null) {
     setStatus('anonymous');
     return;
@@ -275,6 +302,11 @@ export function startSync(): void {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') void syncNow();
   });
+  // Téléphone et ordinateur ouverts en même temps : un écran visible relit
+  // les changements de l'autre toutes les 30 s. Écran caché, rien.
+  window.setInterval(() => {
+    if (document.visibilityState === 'visible') void syncNow();
+  }, 30_000);
   void syncNow().then(client).then((supabase) => {
     supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') void syncNow();

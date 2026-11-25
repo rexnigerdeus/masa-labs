@@ -391,7 +391,7 @@
     .rail .lien { flex: 1; flex-direction: column; gap: 3px; padding: 8px 10px; font-size: 11px; color: var(--fond); justify-content: center; text-align: center; white-space: nowrap; }
     .rail .lien:not([aria-current='page']):hover { background: color-mix(in srgb, var(--fond) 12%, transparent); }
     .rail .lien[aria-current='page'] { background: var(--fond); color: var(--encre); }
-    .vue { padding: 16px 16px calc(env(safe-area-inset-bottom) + 150px); }
+    .vue { padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 150px); }
     .fab { display: grid; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 86px); }
   }
 }
@@ -405,10 +405,37 @@
   .tiroir--bas .tiroir__tete { padding: 12px 20px 10px; }
   .tiroir--bas .tiroir__corps { padding: 4px 20px 16px; }
   .tiroir--bas .tiroir__pied { padding: 12px 20px; }
+  /* Clavier ouvert : la place va au champ qu'on remplit. */
+  .tiroir[data-clavier] .tiroir__pied { display: none; }
+  .tiroir[data-clavier] .tiroir__corps { scroll-padding: 12px 0; padding-bottom: 12px; }
+  .champ textarea.zone-longue { min-height: 132px; max-height: 42dvh; padding: 12px 14px; line-height: 1.5; overscroll-behavior: contain; }
+  .tiroir[data-clavier] .champ textarea.zone-longue { min-height: 96px; max-height: 168px; }
   .fermer { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border: 0; border-radius: 12px; background: var(--creux); color: var(--encre); transition: transform .15s var(--ressort), background .15s; }
   .fermer:hover { background: var(--trait); }
   .fermer:active { transform: scale(.94); }
 }
+
+/* ===== Alarme plein écran ===== */
+@layer components {
+  .alarme {
+    position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; gap: 20px;
+    padding: calc(env(safe-area-inset-top) + 26px) 26px calc(env(safe-area-inset-bottom) + 26px);
+    overflow-y: auto; overscroll-behavior: contain;
+  }
+  .alarme > * { width: 100%; max-width: 860px; margin-inline: auto; }
+  .alarme__tete { display: flex; align-items: center; gap: 16px; }
+  .alarme__tete .chiffre { font-size: clamp(48px, 9vw, 84px); }
+  .alarme__cloche {
+    display: grid; place-items: center; width: 62px; height: 62px; flex: none; border-radius: 20px;
+    background: rgba(255, 255, 255, .32); animation: sonne 1.2s ease-in-out infinite; transform-origin: 50% 20%;
+  }
+  .carte--indigo .alarme__cloche { background: rgba(255, 255, 255, .16); }
+  .alarme__corps { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 14px; }
+  .alarme__verset { font: italic 400 clamp(26px, 4.4vw, 42px)/1.18 var(--serif); letter-spacing: 0; text-wrap: pretty; }
+  .alarme__pied { display: flex; flex-wrap: wrap; gap: 10px; }
+  .alarme__pied .btn { flex: 1 1 200px; min-height: 56px; }
+}
+@keyframes sonne { 0%, 60%, 100% { transform: none; } 10%, 30%, 50% { transform: rotate(-9deg); } 20%, 40% { transform: rotate(9deg); } }
 
 /* ===== Anneau d'avancement ===== */
 @layer components {

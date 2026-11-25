@@ -19,7 +19,7 @@
  * deux fois le poids de ce fichier pour les mêmes trois règles.
  */
 
-const VERSION = 'sowly-v4';
+const VERSION = 'sowly-v5';
 const PAGES = [
   '/',
   '/bienvenue',
@@ -84,21 +84,34 @@ self.addEventListener('fetch', (event) => {
 
 /**
  * Rappels (Web Push, voir lib/push.ts). Le message vient de l'Edge Function
- * `sowly-push` : { title, body, url, tag }. `tag` remplace un rappel du
+ * `sowly-push` : { title, body, url, tag, kind }. `tag` remplace un rappel du
  * même créneau encore affiché au lieu d'en empiler deux.
+ *
+ * `kind: 'alarm'` (tâche, habitude, prière à l'heure) : reste affiché, vibre
+ * plus longtemps et propose deux boutons là où le système les montre
+ * (Android, ordinateur ; l'iPhone n'affiche que le texte).
  */
 self.addEventListener('push', (event) => {
-  let message = { title: 'Sowly', body: '', url: '/', tag: 'sowly' };
+  let message = { title: 'Sowly', body: '', url: '/', tag: 'sowly', kind: 'digest' };
   try {
     message = { ...message, ...event.data.json() };
   } catch {
     // Charge illisible : un rappel générique plutôt que rien.
   }
+  const alarm = message.kind === 'alarm';
+  const prayer = message.url.includes('alarme=prayer');
   event.waitUntil(self.registration.showNotification(message.title, {
     body: message.body,
+    lang: 'fr',
     icon: '/icon-192.png',
-    badge: '/favicon-48.png',
+    badge: '/badge-96.png',
     tag: message.tag,
+    renotify: true,
+    requireInteraction: alarm,
+    vibrate: alarm ? [400, 150, 400, 150, 800] : [180, 90, 180],
+    actions: !alarm ? [] : prayer
+      ? [{ action: 'ouvrir', title: 'Lire le verset' }]
+      : [{ action: 'fait', title: 'C’est fait' }, { action: 'plus-tard', title: 'Dans 10 min' }],
     data: { url: message.url },
   }));
 });
@@ -106,7 +119,9 @@ self.addEventListener('push', (event) => {
 /** Toucher la notification ouvre Sowly — l'onglet existant s'il y en a un. */
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = new URL(event.notification.data?.url ?? '/', self.location.origin).href;
+  const target = new URL(event.notification.data?.url ?? '/', self.location.origin);
+  if (event.action === 'fait' || event.action === 'plus-tard') target.searchParams.set('action', event.action);
+  const url = target.href;
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
       const open = windows.find((w) => w.url.startsWith(self.location.origin));

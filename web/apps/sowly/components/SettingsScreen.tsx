@@ -9,10 +9,11 @@ import { archivedHabits } from '../lib/selectors';
 import { useAccount } from '../lib/session';
 import { useGate } from '../lib/gate';
 import { commit, setPrefs } from '../lib/store';
-import { pendingCount, signOut, syncNow, useSyncStatus } from '../lib/sync';
+import { pendingCount, signOut, syncNow, useColumnAvailable, useSyncStatus } from '../lib/sync';
 import { useInstallPrompt } from '@everyday/pwa';
 import { applyTheme, PALETTES, setAppearance, type Palette } from '../lib/theme';
 import { InstallCard } from './pwa/InstallCard';
+import { PrayerSettings } from './PrayerSettings';
 import { RemindersSettings } from './Reminders';
 import { useAppearance, useThemeChoice } from './ThemeToggle';
 import { Button, ScreenTitle, Segmented, Switch } from './ui';
@@ -23,7 +24,7 @@ const STATUS_LABEL = {
   syncing: 'Synchronisation…',
   offline: 'Hors connexion — tout est gardé sur l’appareil',
   anonymous: 'Session expirée',
-  error: 'Échec de la dernière synchronisation, nouvel essai automatique',
+  error: 'Serveur injoignable, nouvel essai automatique. Tout est gardé sur l’appareil',
 } as const;
 
 const PALETTE_LABEL: Record<Palette, string> = { wax: 'Wax', sorbet: 'Sorbet', lagune: 'Lagune', neon: 'Néon' };
@@ -42,6 +43,7 @@ export function SettingsScreen() {
   const installState = useInstallPrompt().state;
   const theme = useThemeChoice();
   const appearance = useAppearance();
+  const prayerAvailable = useColumnAvailable('sowly_profiles', 'prayer_hours');
   const [confirmOut, setConfirmOut] = useState(false);
   // Lu après l'hydratation : le serveur ne connaît pas le stockage local.
   const [feedback, setFeedback] = useState<FeedbackPrefs | null>(null);
@@ -80,7 +82,11 @@ export function SettingsScreen() {
       <div className="bento">
 
       <Section title="Compte">
-        {account === undefined ? null : account === null ? (
+        {account === undefined ? (
+          sync === 'error' || sync === 'offline' ? (
+            <p className="text-[15px] text-muted">{STATUS_LABEL[sync]}</p>
+          ) : null
+        ) : account === null ? (
           <div className="flex flex-col gap-3">
             <p className="text-[15px] text-muted">
               Ta session a expiré. Tes habitudes et tes tâches sont toujours sur cet appareil ;
@@ -200,10 +206,16 @@ export function SettingsScreen() {
         <RemindersSettings />
       </Section>
 
+      {prayerAvailable ? (
+        <Section title="Heures de prière">
+          <PrayerSettings hours={data.profile.prayerHours} />
+        </Section>
+      ) : null}
+
       {feedback !== null ? (
         <Section title="Sons et vibrations">
           <p className="text-sm text-muted">
-            Quand tu valides une habitude ou termines une tâche. Le son suit le mode silencieux du téléphone.
+            Quand tu valides une habitude ou termines une tâche, le son suit le mode silencieux du téléphone. La sonnerie des rappels, elle, cherche à s’entendre.
           </p>
           <SettingRow label="Sons">
             <Switch
@@ -214,6 +226,17 @@ export function SettingsScreen() {
                 writeFeedbackPrefs(next);
                 setFeedback(next);
                 if (sound) play('task');
+              }}
+            />
+          </SettingRow>
+          <SettingRow label="Sonnerie des rappels">
+            <Switch
+              label="Sonnerie des rappels"
+              checked={feedback.alarm}
+              onChange={(alarm) => {
+                const next = { ...feedback, alarm };
+                writeFeedbackPrefs(next);
+                setFeedback(next);
               }}
             />
           </SettingRow>

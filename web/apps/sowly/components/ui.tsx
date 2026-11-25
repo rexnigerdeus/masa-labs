@@ -203,14 +203,38 @@ export function Accent({ text }: { text: string }) {
  * Zone de texte qui grandit avec son contenu : un titre long se lit en
  * entier, sans barre de défilement ni coupure.
  */
-export function AutoTextarea({ className = '', value, ...props }:
-React.TextareaHTMLAttributes<HTMLTextAreaElement> & { value: string }) {
+export function AutoTextarea({ className = '', value, scroll = false, ...props }:
+React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  value: string;
+  /** Défile au-delà de sa hauteur maximale (CSS), au lieu de grandir sans fin. */
+  scroll?: boolean;
+}) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useLayoutEffect(() => {
     const el = ref.current;
     if (el === null) return;
+    // Mesurer oblige à replier le champ un instant : le conteneur saute et
+    // le champ sort de l'écran en pleine saisie. On garde sa position, et
+    // celle du texte dans le champ.
+    const holders: Array<[HTMLElement, number]> = [];
+    for (let p = el.parentElement; p !== null; p = p.parentElement) {
+      if (p.scrollTop > 0) holders.push([p, p.scrollTop]);
+    }
+    const top = el.scrollTop;
+    const atEnd = document.activeElement === el && el.selectionEnd === el.value.length;
     el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
+    el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+    // Écriture à la fin : la dernière ligne reste visible.
+    el.scrollTop = atEnd ? el.scrollHeight : top;
+    for (const [p, y] of holders) p.scrollTop = y;
   }, [value]);
-  return <textarea ref={ref} rows={1} value={value} {...props} className={`resize-none overflow-hidden ${className}`} />;
+  return <textarea ref={ref} rows={1} value={value} {...props} className={`resize-none ${scroll ? 'overflow-y-auto' : 'overflow-hidden'} ${className}`} />;
+}
+
+/**
+ * Ouvre le calendrier d'un champ date invisible : au doigt, le toucher
+ * suffit ; à la souris, Chrome ne l'ouvre que depuis sa petite icône.
+ */
+export function openPicker(input: HTMLInputElement): void {
+  try { input.showPicker(); } catch { /* le champ reste utilisable au clavier */ }
 }

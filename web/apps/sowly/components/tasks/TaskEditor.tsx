@@ -9,9 +9,10 @@ import { liveLists } from '../../lib/selectors';
 import { commit, getState, nowIso, useStore } from '../../lib/store';
 import { useColumnAvailable } from '../../lib/sync';
 import { CheckMark } from '../CheckMark';
-import { CalendarIcon, ChevronRightIcon, ListIcon, NoteIcon, SunIcon, TrashIcon } from '../icons';
+import { CalendarIcon, ChevronRightIcon, ListIcon, SunIcon, TrashIcon } from '../icons';
 import { Sheet, SheetBody, SheetFoot, SheetHead } from '../Sheet';
-import { AutoTextarea, Button, Chip, Switch } from '../ui';
+import { ReminderField } from '../ReminderField';
+import { AutoTextarea, Button, Chip, openPicker, Switch } from '../ui';
 
 /**
  * Détail d'une tâche (brief §3.2), dans un panneau :
@@ -21,6 +22,7 @@ import { AutoTextarea, Button, Chip, Switch } from '../ui';
  *   ─────────────────────────────
  *   Ma journée                            [interrupteur]
  *   Échéance          Aujourd'hui · Demain · Date… · Retirer
+ *   Rappel            Dans 1 h · Ce soir · Demain 8 h · Choisir…
  *   Liste                                     Tâches ›
  *   ─────────────────────────────
  *   [corbeille]          Reporter à demain     Fermer
@@ -49,6 +51,7 @@ export function TaskEditor({ task, today, onClose }: {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const box = useRef<HTMLButtonElement>(null);
   const hasDescription = useColumnAvailable('sowly_tasks', 'description');
+  const canRemind = useColumnAvailable('sowly_tasks', 'remind_at');
   // Dernière tâche ouverte, gardée pendant l'animation de fermeture : sans
   // elle, le panneau descendrait vide.
   const [shown, setShown] = useState<Task | null>(task);
@@ -128,16 +131,20 @@ export function TaskEditor({ task, today, onClose }: {
             </div>
 
             {hasDescription ? (
-              <label className="saisie flex items-start gap-3 !py-3">
-                <NoteIcon className="mt-0.5 h-5 w-5 shrink-0 text-faint" />
+              <label className="champ">
+                <span className="flex items-baseline justify-between gap-3">
+                  Description
+                  {description.length > 1500 ? <span className="mono">{description.length}/2000</span> : null}
+                </span>
                 <AutoTextarea
+                  scroll
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   onBlur={saveText}
                   maxLength={2000}
-                  placeholder="Ajouter une description…"
+                  placeholder="Détails, lien, adresse, liste de courses…"
                   aria-label="Description"
-                  className="min-h-[1.5rem] min-w-0 flex-1 bg-transparent text-[15px] leading-relaxed text-ink focus:outline-none"
+                  className="zone-longue"
                 />
               </label>
             ) : null}
@@ -174,6 +181,7 @@ export function TaskEditor({ task, today, onClose }: {
                     <input
                       type="date"
                       value={due ?? ''}
+                      onClick={(e) => openPicker(e.currentTarget)}
                       onChange={(e) => setDue(isDay(e.target.value) ? e.target.value : null)}
                       className="absolute inset-0 opacity-0"
                     />
@@ -186,6 +194,15 @@ export function TaskEditor({ task, today, onClose }: {
                   ) : null}
                 </div>
               </div>
+
+              {canRemind ? (
+                <ReminderField
+                  value={current.remindAt}
+                  onChange={(remindAt) => commit((d) => patchTask(d, current.id, { remindAt }))}
+                  today={today}
+                  day={due ?? current.myDay ?? today}
+                />
+              ) : null}
 
               <label className="relative flex items-center gap-3 px-3.5 py-3">
                 <ListIcon className="h-5 w-5 shrink-0 text-muted" />

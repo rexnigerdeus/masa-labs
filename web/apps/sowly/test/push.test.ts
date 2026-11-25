@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { computeStreak } from '../lib/streak.ts';
+import { PRAYER_HOURS, VERSES } from '../lib/verses.ts';
 import {
-  compose, dueSlot, localNow, scheduledHabits, type HabitRow, type Subscription,
+  compose, composeAlarm, composePrayer, currentStreak, dueSlot, localNow, scheduledHabits, type HabitRow, type Subscription,
 } from '../../../../supabase/functions/sowly-push/logic.ts';
 
 const SUB: Subscription = {
@@ -53,8 +56,11 @@ test('habitudes du jour : même règle que l’app', () => {
 test('soir : seulement s’il reste des habitudes, et sans reproche', () => {
   const today = scheduledHabits(HABITS, '2026-10-12', 1);
   const msg = compose('evening', '2026-10-12', today, new Set(['h1']), []);
-  assert.equal(msg?.title, 'Une graine à arroser ce soir');
-  assert.match(msg?.body ?? '', /Faire 5 pompes/);
+  assert.equal(msg?.title, '🌙 Faire 5 pompes ?');
+  const streak = compose('evening', '2026-10-12', today, new Set(['h1']), [], new Map([['h2', 5]]));
+  assert.match(streak?.body ?? '', /5 jours d’affilée/);
+  const two = compose('evening', '2026-10-12', today, new Set(), []);
+  assert.match(two?.body ?? '', /Lire une page\n🌱 Faire 5 pompes/);
   assert.equal(compose('evening', '2026-10-12', today, new Set(['h1', 'h2']), []), null);
 });
 
@@ -66,6 +72,57 @@ test('matin : habitudes et tâches à échéance, rien si la journée est vide',
     { title: 'Plus tard', due_day: '2026-10-20', my_day: null },
   ];
   const msg = compose('morning', '2026-10-12', today, new Set(), tasks);
-  assert.equal(msg?.title, 'Aujourd’hui : 2 habitudes et 2 tâches à échéance');
+  assert.match(msg?.title ?? '', /2 graines et 2 tâches pour aujourd’hui$/);
+  assert.match(msg?.body ?? '', /✅ Payer la facture/);
+  assert.match(msg?.body ?? '', /⏰ En retard \(à rattraper\)/);
+  assert.doesNotMatch(msg?.body ?? '', /Plus tard/);
   assert.equal(compose('morning', '2026-10-12', [], new Set(), []), null);
+});
+
+test('série : même résultat que l’app', () => {
+  const day = '2026-10-12';
+  const cases: string[][] = [
+    [], ['2026-10-11'], ['2026-10-11', '2026-10-10', '2026-10-08'], ['2026-10-12', '2026-10-11'],
+    ['2026-10-09', '2026-10-07', '2026-10-05'],
+  ];
+  for (const h of HABITS.slice(0, 3)) {
+    for (const days of cases) {
+      const checked = new Set(days);
+      assert.equal(
+        currentStreak(h, checked, day),
+        computeStreak({ days: h.days, startDay: h.start_day }, checked, day).current,
+        `${h.id} ${days.join()}`,
+      );
+    }
+  }
+});
+
+const REMINDER = {
+  subscription_id: 's', user_id: 'u', item_id: 'i', remind_at: '2026-10-12T18:30:00', day: '2026-10-12',
+};
+
+test('rappel à l’heure : nomme la chose et ouvre son alarme', () => {
+  const task = composeAlarm({ ...REMINDER, kind: 'task' }, { title: 'Payer la CIE', description: 'Réf.  4521', listName: 'Maison' });
+  assert.equal(task.title, '⏰ Payer la CIE');
+  assert.equal(task.body, 'C’est l’heure : 18 h 30 · Maison\nRéf. 4521');
+  assert.equal(task.url, '/?alarme=task:i');
+  const habit = composeAlarm({ ...REMINDER, kind: 'habit' }, {
+    title: 'Lire', habit: { ...HABITS[0]!, cue: 'au coucher', place: '' }, streak: 7,
+  });
+  assert.equal(habit.body, 'Il est 18 h 30 · au coucher\n🔥 7 jours d’affilée, on continue ?');
+});
+
+test('prière : l’heure, un verset de cette heure et sa référence', () => {
+  const msg = composePrayer({ ...REMINDER, kind: 'prayer', remind_at: '2026-10-12T15:00:00' });
+  assert.match(msg.title, /15 h/);
+  assert.ok(VERSES[15]!.some((v) => msg.body.includes(v.text) && msg.body.includes(v.ref)));
+  assert.equal(msg.url, '/?alarme=prayer:15');
+  assert.match(composePrayer({ ...REMINDER, kind: 'prayer', remind_at: '2026-10-12T00:00:00' }).title, /Minuit/);
+});
+
+test('versets : l’app et la fonction ont la même copie, chaque heure en a', async () => {
+  const read = (p: string): Promise<string> => readFile(new URL(p, import.meta.url), 'utf8');
+  const [app, fn] = await Promise.all([read('../lib/verses.ts'), read('../../../../supabase/functions/sowly-push/verses.ts')]);
+  assert.equal(app.replace(/\r/g, ''), fn.replace(/\r/g, ''));
+  for (const h of PRAYER_HOURS) assert.ok((VERSES[h] ?? []).length >= 3);
 });

@@ -6,7 +6,7 @@ import { getSupabaseClient } from '../../lib/supabase/client';
 import { phoneToEmail } from '../../lib/phone';
 import { redirectFor } from '../../lib/routing';
 import { getState } from '../../lib/store';
-import { adoptAccount, syncNow } from '../../lib/sync';
+import { adoptAccount, isUnreachable, syncNow } from '../../lib/sync';
 import { Button, Field, Input, Notice, Segmented } from '../ui';
 import { PasswordInput } from './PasswordInput';
 
@@ -53,7 +53,7 @@ export function AuthForm({ initialMode, lockMode = false }: {
       : await supabase.auth.signInWithPassword({ email, password });
 
     if (authError !== null || data.user === null) {
-      setError(translate(authError?.message ?? ''));
+      setError(translate(authError));
       setBusy(false);
       return;
     }
@@ -113,7 +113,8 @@ export function AuthForm({ initialMode, lockMode = false }: {
 }
 
 /** Les messages de GoTrue arrivent en anglais ; l'interface est en français. */
-function translate(message: string): string {
+function translate(error: { message?: string; name?: string; status?: number } | null): string {
+  const message = error?.message ?? '';
   const known: Record<string, string> = {
     'Invalid login credentials': 'Numéro ou mot de passe incorrect.',
     'User already registered': 'Un compte existe déjà avec ce numéro. Choisis « J’ai un compte ».',
@@ -121,6 +122,12 @@ function translate(message: string): string {
     'Signups not allowed for this instance': 'Les inscriptions sont fermées pour le moment.',
   };
   if (known[message] !== undefined) return known[message];
-  if (/fetch|network/i.test(message)) return 'Pas de connexion. Réessaie quand le réseau revient.';
+  if (!navigator.onLine) return 'Pas de connexion. Réessaie quand le réseau revient.';
+  if (error?.status === 429) return 'Trop d’essais d’affilée. Patiente une minute puis réessaie.';
+  // Safari dit « Load failed », Chrome « Failed to fetch » : le serveur n'a
+  // pas répondu. Le dire évite de chercher l'erreur dans le mot de passe.
+  if (isUnreachable(error) || /fetch|network|load failed/i.test(message)) {
+    return 'Le serveur de Sowly ne répond pas. Ton mot de passe n’est pas en cause et tes données restent sur cet appareil. Réessaie dans quelques minutes.';
+  }
   return 'Connexion impossible pour le moment. Réessaie dans un instant.';
 }
